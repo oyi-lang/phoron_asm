@@ -1,0 +1,262 @@
+;; Showcasing all the salient features of Jasmin's assembly format.
+
+.source AllInOne.j
+.class public AllInOne
+.super java/lang/Thread
+
+; int x 
+.field private x I
+
+; double d = 1.2345
+.field private y D = 1.2345
+
+; public static final String PREFIX = "FooBar";
+.field public static final PREFIX Ljava/lang/String; = "FooBar"
+
+; the constructor (default)
+.method public <init>()V
+  aload_0 ; load `this`
+  invokespecial java/lang/Thread/<init>()V ; invoke the constructor
+  return
+.end method
+
+.method private static exceptionsDemo()V
+  .limit stack 3
+  .limit locals 1
+  .catch java/lang/Exception from Label1 to Label2 using Handler
+
+Label1:
+  new java/lang/Exception
+  dup
+  invokespecial java/lang/Exception/<init>()V
+  athrow
+Label2:
+Handler:
+  pop
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  ldc "Exception caught"
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  return
+.end method
+
+.method private static finallyDemo()V
+  .limit stack 3
+  .limit locals 4
+  .catch java/io/FileNotFoundException from Start to End1 using NotFound
+  .catch java/io/IOException from Start to End2 using IOE
+  .catch all from Start to Done using Other_Exception
+
+Start:
+  new java/io/FileInputStream
+  dup
+  ldc "myfile"
+  invokespecial java/io/FileInputStream/<init>(Ljava/lang/String;)V
+  astore_1
+End1:
+  goto Done
+
+NotFound:
+  pop
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  ldc "No such file"
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  goto Done
+
+IOE:
+  pop
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  ldc "IO Exception occurred"
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  goto Done
+End2:
+
+Done:
+  jsr FinalSub ; jump to the subroutine
+  return
+
+Other_Exception:
+  astore_2
+  jsr FinalSub
+  aload_2
+  athrow
+
+FinalSub:
+  astore_3 ; the return address
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  ldc "Done"
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  ret 3
+.end method
+
+.method synchronized synchronizedMethoDemo()V
+  .limit stack 1
+  .limit locals 1
+  return
+.end method
+
+.method private monitoDemo(Ljava/lang/Object;)V
+  .limit stack 2
+  .limit locals 2
+  aload_1
+  monitorenter
+  aload_1
+  monitorexit
+  return
+.end method
+
+.method private checkCastDemo()V
+  .limit stack 2
+  .limit locals 2
+
+  aload_0
+  checkcast java/lang/Object
+  return
+.end method
+
+.method private instanceofDemo()V
+  .limit stack 2
+  .limit locals 2
+
+  aload_0
+  instanceof java/lang/Thread
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  swap
+  invokestatic java/lang/String/valueOf(I)Ljava/lang/String;
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  return
+.end method
+
+
+.method private static subroutinesDemo()V
+  .limit stack 2
+  .limit locals 2
+
+  ldc "Hello"
+  jsr PrintString
+
+  ldc ", world"
+  jsr PrintString
+  return
+
+PrintString:
+  astore_1
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  swap
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  ret 1
+.end method
+
+.method private static lookupswitchDemo()I
+  .limit stack 2
+  .limit locals 2
+
+  bipush 10
+  istore_1
+  iload_1
+
+  lookupswitch 
+    1 : R1
+    10 : R2
+    100 : R3
+    default : R4
+
+R1:
+  iconst_1
+  ireturn
+R2:
+  iconst_2
+  ireturn
+R3:
+  iconst_3
+  ireturn
+R4:
+  iconst_0
+  ireturn
+.end method
+
+.method private static tableswitchDemo()I
+  .limit stack 2
+  .limit locals 3
+
+  iconst_3
+  istore_1
+
+  iload_1
+  tableswitch 1 3
+    R1
+    R2
+    R3
+    default: R4
+R1:
+  iconst_1
+  ireturn
+R2:
+  iconst_2
+  ireturn
+R3:
+  iconst_3
+  ireturn
+R4:
+  iconst_0
+  ireturn
+.end method
+
+.method private static varDemo()V
+  .limit locals 1
+  .var 0 is Count I from Label1 to Label2
+
+Label1:
+  bipush 10
+  istore_0
+Label2:
+  return
+.end method
+
+
+; the main method
+.method public static main([Ljava/lang/String;)V
+  .limit stack 2 ; maximum number of values on the operand stack
+  .limit locals 3 ; maximum number of local variables
+  .throws java/lang/RuntimeException
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  ldc "Hello, world"
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+
+  invokestatic AllInOne/exceptionsDemo()V
+  invokestatic AllInOne/finallyDemo()V
+
+  ; create a new instance of the AllInOne class
+  ; and store it in reference 1
+  new AllInOne
+  dup
+  invokespecial AllInOne/<init>()V
+  astore_1
+
+  aload_1
+  invokevirtual AllInOne/instanceofDemo()V
+
+  aload_1
+  invokevirtual AllInOne/checkCastDemo()V
+
+  invokestatic AllInOne/subroutinesDemo()V
+
+  invokestatic AllInOne/lookupswitchDemo()I
+  jsr PrintInt
+
+  invokestatic AllInOne/tableswitchDemo()I
+  jsr PrintInt
+  return
+
+; this is a subroutine
+PrintInt:
+  astore_2
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  swap
+  invokestatic java/lang/String/valueOf(I)Ljava/lang/String;
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  ret 2
+.end method

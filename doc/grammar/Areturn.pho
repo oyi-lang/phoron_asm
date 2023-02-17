@@ -1,0 +1,27 @@
+.class public Areturn
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method public static makeIntArray(I)[I
+  .limit locals 2
+  iload_0 ; array size
+  newarray int
+  areturn
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 3
+  .limit locals 3
+
+  ; make an array of 10 ints
+  bipush 10
+  invokestatic Areturn/makeIntArray(I)[I
+  astore_1
+
+  return
+.end method

@@ -1,0 +1,51 @@
+; showing class and object operations using a StringBuffer.
+
+.class public StringBufferDemo
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method private static sbDemo(Ljava/lang/Object;)V
+  .limit stack 2
+  .limit locals 2
+  ; local 0 contains the sb, cast it from 
+  ; java.lang.Object to java.lang.StringBuffer
+
+  aload_0
+  ; this cast is required
+  checkcast java/lang/StringBuffer
+  ldc "Hello, mundo!"
+  ; append string to sb
+  invokevirtual java/lang/StringBuffer/append(Ljava/lang/String;)Ljava/lang/StringBuffer;
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 3
+  .limit locals 2
+
+  ; create a new StringBuffer
+  new java/lang/StringBuffer
+  dup
+  invokespecial java/lang/StringBuffer/<init>()V
+  astore_1 ; sb is now in local 1
+
+  ; initialise sb with value
+  aload_1
+  ;checkcast java/lang/Object
+  ; auto-cast to Object
+  invokestatic StringBufferDemo/sbDemo(Ljava/lang/Object;)V
+
+  ; print the contents of the initialised sb
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  aload_1
+  invokevirtual java/lang/StringBuffer/toString()Ljava/lang/String;
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  return
+.end method
+
+

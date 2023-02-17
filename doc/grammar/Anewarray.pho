@@ -1,0 +1,39 @@
+.class public Anewarray
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 3
+  .limit locals 4
+
+  ; Thread[] x = new Thread[10]
+  bipush 10
+  anewarray java/lang/Thread
+  astore_1
+
+  ; new String[2][5]
+  iconst_2
+  anewarray [Ljava/lang/String;
+  astore_2
+
+  ; first row
+  aload_2
+  iconst_0
+  bipush 5
+  anewarray java/lang/String
+  aastore
+
+  ; second row
+  aload_2
+  iconst_1
+  bipush 5
+  anewarray java/lang/String
+  aastore
+
+  return
+.end method

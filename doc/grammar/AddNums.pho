@@ -1,0 +1,62 @@
+; Program to add two numbers and display the sum
+
+.class public AddNums
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 5
+  .limit locals 8
+
+  ; Scanner in = new Scanner(System.in)
+  new java/util/Scanner
+  dup
+  getstatic java/lang/System/in Ljava/io/InputStream;
+  invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
+  astore_1
+
+  jsr ReadNum
+  istore_3
+
+  jsr ReadNum
+  istore 4
+
+  iload_3
+  iload 4
+  jsr AddNum
+  istore 5
+
+  iload 5
+  jsr PrintSum
+  return
+
+
+PrintSum:
+  astore 7
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  swap
+  invokestatic java/lang/String/valueOf(I)Ljava/lang/String;
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+
+  ret 7
+
+AddNum:
+  astore 6
+
+  iadd
+  ret 6
+
+ReadNum:
+  astore_2
+
+  aload_1
+  invokevirtual java/util/Scanner/nextInt()I
+  ret 2
+
+.end method

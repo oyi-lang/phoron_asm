@@ -1,0 +1,49 @@
+; example show the various direct-to-stack operations
+
+.class public StackPushJasmin
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 40
+  .limit locals 1 ; default
+
+  iconst_m1 ; push -1
+  iconst_0
+  iconst_1
+  iconst_2
+  iconst_3
+  iconst_4
+  iconst_5
+
+  lconst_0
+  lconst_1
+
+  fconst_0
+  fconst_1
+
+  dconst_0
+  dconst_1
+
+  bipush 10
+  sipush 1000
+
+  ; these retrieve values from the CONSTANT POOL
+  ;
+  ; CONSTANT_Integer use ldc or ldc_w
+  ; CONSTANT_Float use ldc or ldc_w
+  ; CONSTANT_String use ldc or ldc_w
+  ; CONSTANT use ldc2_w
+  ; CONSTANT_Double use ldc2_w
+  ;
+  ldc "Hello, world"
+  ldc_w "Hola, mundo"
+  ldc2_w 12345
+
+  return
+.end method

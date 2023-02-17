@@ -1,0 +1,535 @@
+# Jasmin-compatible Phoron Assembly Format.
+ 
+PhoronProgram <- line_comment* Header eof
+
+Header <- SourceFileDef? (ClassDef /InterfaceDef)  SuperDef FieldDef* MethodDef*
+
+SourceFileDef <- SOURCE_keyword newline
+
+## Classes
+
+ClassDef <- CLASS_keyword AccessFlag* ClassName newline
+InterfaceDef <- INTERFACE_keyword AccessFlag* ClassName newline
+AccessFlag <- PUBLIC_keyword / FINAL_keyword / ABSTRACT_keyword
+ClassName <- [a-zA-Z_][a-zA-Z0-9_$/]* skip
+
+SuperDef <- SUPER_keyword ClassName newline
+
+## Fields
+
+FieldDef <- line_comment* FIELD_keyword FieldAccessFlag* FieldName FieldDescriptor (EQ_symbol FieldIniValue)? newline
+FieldAccessFlag <- PUBLIC_keyword / PRIVATE_keyword / PROTECTED_keyword / STATIC_keyword / FINAL_keyword / VOLATILE_keyword / TRANSIENT_keyword
+FieldName <- [a-zA-Z_][a-zA-Z0-9_$/]* skip
+FieldDescriptor <- FieldType
+FieldType <- BaseType / ObjectType / ArrayType
+BaseType <- 'B' / 'C' / 'D' / 'F' / 'I' / 'J' / 'S' / 'Z'
+ObjectType <- 'L' ClassName ';'
+ArrayType <- '[' ComponentType
+ComponentType <- FieldType
+FieldIniValue <- Double / Integer / QuotedString
+
+## Methods
+
+MethodDef <- line_comment*
+    METHOD_keyword  MethodAccessFlag* MethodName MethodDescriptor newline
+      Instruction*
+    END_Keyword METHOD_END_keyword newline
+
+MethodName <- [a-zA-Z_<][a-zA-Z0-9_$/<>]* skip
+MethodAccessFlag <- PUBLIC_keyword / PRIVATE_keyword / PROTECTED_keyword / STATIC_keyword 
+              / FINAL_keyword / SYNCHRONIZED_keyword / NATIVE_keyword / ABSTRACT_keyword
+MethodDescriptor <- LPAREN_symbol ParameterDescriptor* RPAREN_symbol ReturnDescriptor 
+ParameterDescriptor <- FieldType
+ReturnDescriptor <- FieldType / VoidType
+VoidType <- 'V'
+
+Instruction <- line_comment* (Directive / JvmInstruction / Label) line_comment?  newline
+
+Directive <- (LIMIT_keyword (StackDirective / LocalDirective) / ThrowsDirective / LineNumberDirective / VarDirective / CatchDirective) newline
+StackDirective <-  STACK_keyword Integer
+LocalDirective <- LOCAL_keyword Integer
+ThrowsDirective <- THROWS_keyword ClassName
+LineNumberDirective <- LINE_keyword Integer 
+VarDirective <- VAR_keyword Integer IS_keyword VarName FieldDescriptor FROM_keyword Label TO_keyword Label
+CatchDirective <- CATCH_keyword ClassName FROM_keyword Label TO_keyword Label USING_keyword Label
+
+VarName <- skip [a-zA-Z_][a-zA-Z0-9_$]* skip
+
+Label <- skip !Keyword [a-zA-Z_][a-zA-Z0-9_$:]* skip
+
+JvmInstruction <- 
+    AALOAD
+  / ANEWARRAY
+  / ARETURN
+  / AASTORE
+  / ACONST_NULL
+  / ALOAD_0
+  / ALOAD_1
+  / ALOAD_2
+  / ALOAD_3
+  / ALOAD
+  / ARRAYLENGTH
+  / ASTORE_0
+  / ASTORE_1
+  / ASTORE_2
+  / ASTORE_3
+  / ASTORE
+  / ATHROW
+  / BALOAD
+  / BASTORE
+  / BIPUSH
+  / CALOAD
+  / CASTORE
+  / CHECKCAST
+  / DADD
+  / DALOAD
+  / DASTORE
+  / DCMPG
+  / DCMPL
+  / DCONST_0
+  / DCONST_1
+  / DDIV
+  / D2F
+  / D2I
+  / D2L
+  / DLOAD_0
+  / DLOAD_1
+  / DLOAD_2
+  / DLOAD_3
+  / DLOAD
+  / DMUL
+  / DNEG
+  / DREM
+  / DRETURN
+  / DSTORE_0
+  / DSTORE_1
+  / DSTORE_2
+  / DSTORE_3
+  / DSTORE
+  / DSUB
+  / DUP2_X1
+  / DUP2_X2
+  / DUP2
+  / DUP_X1
+  / DUP_X2
+  / DUP
+  / F2D
+  / F2I
+  / F2L
+  / FADD
+  / FALOAD
+  / FASTORE
+  / FCMPG
+  / FCMPL
+  / FCONST_0
+  / FCONST_1
+  / FCONST_2
+  / FDIV
+  / FLOAD_0
+  / FLOAD_1
+  / FLOAD_2
+  / FLOAD_3
+  / FLOAD 
+  / FMUL
+  / FNEG
+  / FREM
+  / FRETURN
+  / FSTORE_0
+  / FSTORE_1
+  / FSTORE_2
+  / FSTORE_3
+  / FSTORE
+  / FSUB
+  / GETSTATIC
+  / GETFIELD
+  / GOTO
+  / GOTO_W
+  / I2B
+  / I2C
+  / I2D
+  / I2F
+  / I2L
+  / I2S
+  / IADD
+  / IALOAD
+  / IAND
+  / IASTORE
+  / ICONST_M1
+  / ICONST_0
+  / ICONST_1
+  / ICONST_2
+  / ICONST_3
+  / ICONST_4
+  / ICONST_5
+  / IDIV
+  / IF_ACMPEQ
+  / IF_ACMPNE
+  / IF_ICMPEQ
+  / IF_ICMPGE
+  / IF_ICMPGT
+  / IF_ICMPLE
+  / IF_ICMPLT
+  / IF_ICMPNE
+  / IFEQ
+  / IFGE
+  / IFGT
+  / IFLE
+  / IFLT
+  / IFNE
+  / IFNONNULL
+  / IFNULL
+  / IINC
+  / ILOAD_0
+  / ILOAD_1
+  / ILOAD_2
+  / ILOAD_3
+  / ILOAD
+  / IMUL
+  / INEG
+  / INSTANCEOF
+  / INVOKEINTERFACE
+  / INVOKESPECIAL
+  / INVOKESTATIC
+  / INVOKEVIRTUAL
+  / IOR
+  / IREM
+  / IRETURN
+  / ISHL
+  / ISHR
+  / ISTORE_0
+  / ISTORE_1
+  / ISTORE_2
+  / ISTORE_3
+  / ISTORE
+  / ISUB
+  / IUSHR
+  / IXOR
+  / JSR_W
+  / JSR
+  / L2D
+  / L2F
+  / L2I
+  / LADD
+  / LOALOAD
+  / LAND
+  / LASTORE
+  / LCMP
+  / LCONST_0
+  / LCONST_1
+  / LDC2_W  
+  / LDC_W
+  / LDC
+  / LDIV
+  / LLOAD
+  / LLOAD_0
+  / LLOAD_1
+  / LLOAD_2
+  / LLOAD_3
+  / LMUL
+  / LNEG
+  / LOOKUPSWITCH
+  / LOR
+  / LREM
+  / LRETURN
+  / LSHL
+  / LSHR
+  / LSTORE
+  / LSTORE_0
+  / LSTORE_1
+  / LSTORE_2
+  / LSTORE_3
+  / LSUB
+  / LUSHR
+  / LXOR
+  / MONITORENTER
+  / MONITOREXIT
+  / MULTIANEWARRAY
+  / NEWARRAY
+  / NEW
+  / NOP
+  / POP2
+  / POP
+  / PUTFIELD
+  / PUTSTATIC
+  / RETURN
+  / RET
+  / SALOAD
+  / SASTORE
+  / SIPUSH 
+  / SWAP
+  / TABLESWITCH
+
+
+Integer <- skip (PLUS_symbol / MINUS_symbol)? [0-9][0-9]* skip
+Double <- skip [0-9]* DOT_symbol [0-9]+ skip
+QuotedString <- skip DOUBLE_QUOTE_symbol [^\"]* DOUBLE_QUOTE_symbol skip
+
+# for `newarray int`
+PrimitiveName <- skip [a-zA-Z_][a-zA-Z0-9_]* skip
+
+## JVM Instructions
+
+AALOAD                <-  skip             'aaload'           skip
+AASTORE               <-  skip             'aastor'           skip
+ACONST_NULL           <-  skip             'aconst_null'      skip
+ALOAD                 <-  skip             'aload'            skip       Integer
+ALOAD_0               <-  skip             'aload_0'          skip
+ALOAD_1               <-  skip             'aload_1'          skip
+ALOAD_2               <-  skip             'aload_2'          skip
+ALOAD_3               <-  skip             'aload_3'          skip
+ANEWARRAY             <-  skip             'anewarray'        skip       (ArrayType        /                  ClassName)
+ARETURN               <-  skip             'areturn'          skip
+ARRAYLENGTH           <-  skip             'arraylength'      skip
+ASTORE                <-  skip             'astore'           skip       Integer
+ASTORE_0              <-  skip             'astore_0'         skip
+ASTORE_1              <-  skip             'astore_1'         skip
+ASTORE_2              <-  skip             'astore_2'         skip
+ASTORE_3              <-  skip             'astore_3'         skip
+ATHROW                <-  skip             'athrow'           skip
+BALOAD                <-  skip             'baload'           skip
+BASTORE               <-  skip             'bastore'          skip
+BIPUSH                <-  skip             'bipush'           skip       Integer
+CALOAD                <-  skip             'caload'           skip
+CASTORE               <-  skip             'castore'          skip
+CHECKCAST             <-  skip             'checkcast'        skip       ClassName
+D2F                   <-  skip             'd2f'              skip
+D2I                   <-  skip             'd2i'              skip
+D2L                   <-  skip             'd2l'              skip
+DADD                  <-  skip             'dadd'             skip
+DALOAD                <-  skip             'daload'           skip
+DASTORE               <-  skip             'dastore'          skip
+DCMPG                 <-  skip             'dcmpg'            skip
+DCMPL                 <-  skip             'dcmpl'            skip
+DCONST_0              <-  skip             'dconst_0'         skip
+DCONST_1              <-  skip             'dconst_1'         skip
+DDIV                  <-  skip             'ddiv'             skip
+DLOAD                 <-  skip             'dload'            skip       Integer
+DLOAD_0               <-  skip             'dload_0'          skip
+DLOAD_1               <-  skip             'dload_1'          skip
+DLOAD_2               <-  skip             'dload_2'          skip
+DLOAD_3               <-  skip             'dload_3'          skip
+DMUL                  <-  skip             'dmul'             skip
+DNEG                  <-  skip             'dneg'             skip
+DREM                  <-  skip             'drem'             skip
+DRETURN               <-  skip             'dreturn'          skip
+DSTORE                <-  skip             'dstore'           skip       Integer
+DSTORE_0              <-  skip             'dstore_0'         skip
+DSTORE_1              <-  skip             'dstore_1'         skip
+DSTORE_2              <-  skip             'dstore_2'         skip
+DSTORE_3              <-  skip             'dstore_3'         skip
+DSUB                  <-  skip             'dsub'             skip
+DUP                   <-  skip             'dup'              skip
+DUP2                  <-  skip             'dup2'             skip
+DUP2_X1               <-  skip             'dup2_x1'          skip
+DUP2_X2               <-  skip             'dup2_x2'          skip
+DUP_X1                <-  skip             'dup_x1'           skip
+DUP_X2                <-  skip             'dup_x2'           skip
+DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label      newline
+F2D                   <-  skip             'f2d'              skip
+F2I                   <-  skip             'f2i'              skip
+F2L                   <-  skip             'f2l'              skip
+FADD                  <-  skip             'fadd'             skip
+FALOAD                <-  skip             'faload'           skip
+FASTORE               <-  skip             'fastore'          skip
+FCMPG                 <-  skip             'fcmpg'            skip
+FCMPL                 <-  skip             'fcmpl'            skip
+FCONST_0              <-  skip             'fconst_0'         skip
+FCONST_1              <-  skip             'fconst_1'         skip
+FCONST_2              <-  skip             'fconst_2'         skip
+FDIV                  <-  skip             'fdiv'             skip
+FLOAD                 <-  skip             'fload'            skip       Integer
+FLOAD_0               <-  skip             'fload_0'          skip
+FLOAD_1               <-  skip             'fload_1'          skip
+FLOAD_2               <-  skip             'fload_2'          skip
+FLOAD_3               <-  skip             'fload_3'          skip
+FMUL                  <-  skip             'fmul'             skip
+FNEG                  <-  skip             'fneg'             skip
+FREM                  <-  skip             'frem'             skip
+FRETURN               <-  skip             'freturn'          skip
+FSTORE                <-  skip             'fstore'           skip       Integer
+FSTORE_0              <-  skip             'fstore_0'         skip
+FSTORE_1              <-  skip             'fstore_1'         skip
+FSTORE_2              <-  skip             'fstore_2'         skip
+FSTORE_3              <-  skip             'fstore_3'         skip
+FSUB                  <-  skip             'fsub'             skip
+GETFIELD              <-  skip             'getfield'         FieldName  FieldDescriptor
+GETSTATIC             <-  skip             'getstatic'        skip       FieldName         FieldDescriptor
+GOTO                  <-  skip             'goto'             skip       Label
+GOTO_W                <-  skip             'goto_w'           skip
+High                  <-  Integer
+I2B                   <-  skip             'i2b'              skip
+I2C                   <-  skip             'i2c'              skip
+I2D                   <-  skip             'i2d'              skip
+I2F                   <-  skip             'i2f'              skip
+I2L                   <-  skip             'i2l'              skip
+I2S                   <-  skip             'i2s'              skip
+IADD                  <-  skip             'iadd'             skip
+IALOAD                <-  skip             'iaload'           skip
+IAND                  <-  skip             'iand'             skip
+IASTORE               <-  skip             'iastore'          skip
+ICONST_0              <-  skip             'iconst_0'         skip
+ICONST_1              <-  skip             'iconst_1'         skip
+ICONST_2              <-  skip             'iconst_2'         skip
+ICONST_3              <-  skip             'iconst_3'         skip
+ICONST_4              <-  skip             'iconst_4'         skip
+ICONST_5              <-  skip             'iconst_5'         skip
+ICONST_M1             <-  skip             'iconst_m1'        skip
+IDIV                  <-  skip             'idiv'             skip
+IFEQ                  <-  skip             'ifeq'             skip       Label
+IFGE                  <-  skip             'ifge'             skip       Label
+IFGT                  <-  skip             'ifgt'             skip       Label
+IFLE                  <-  skip             'ifle'             skip       Label
+IFLT                  <-  skip             'iflt'             skip       Label
+IFNE                  <-  skip             'ifne'             skip       Label
+IFNONNULL             <-  skip             'ifnonnull'        skip       Label
+IFNULL                <-  skip             'ifnull'           skip       Label
+IF_ACMPEQ             <-  skip             'if_acmpeq'        skip       Label
+IF_ACMPNE             <-  skip             'if_acmpne'        skip       Label
+IF_ICMPEQ             <-  skip             'if_icmpeq'        skip       Label
+IF_ICMPGE             <-  skip             'if_icmpge'        skip       Label
+IF_ICMPGT             <-  skip             'if_icmpgt'        skip       Label
+IF_ICMPLE             <-  skip             'if_icmple'        skip       Label
+IF_ICMPLT             <-  skip             'if_icmplt'        skip       Label
+IF_ICMPNE             <-  skip             'if_icmpne'        skip       Label
+IINC                  <-  skip             'iinc'             skip       Integer           Integer
+ILOAD                 <-  skip             'iload'            skip       Integer
+ILOAD_0               <-  skip             'iload_0'          skip
+ILOAD_1               <-  skip             'iload_1'          skip
+ILOAD_2               <-  skip             'iload_2'          skip
+ILOAD_3               <-  skip             'iload_3'          skip
+IMUL                  <-  skip             'imul'             skip
+INEG                  <-  skip             'ineg'             skip
+INSTANCEOF            <-  skip             'instanceof'       skip       (FieldDescriptor  /                  ClassName)
+INVOKEINTERFACE       <-  skip             'invokeinterface'  skip       MethodName        MethodDescriptor
+INVOKESPECIAL         <-  skip             'invokespecial'    skip       MethodName        MethodDescriptor
+INVOKESTATIC          <-  skip             'invokestatic'     skip       MethodName        MethodDescriptor
+INVOKEVIRTUAL         <-  skip             'invokevirtual'    skip       MethodName        MethodDescriptor
+IOR                   <-  skip             'ior'              skip
+IREM                  <-  skip             'irem'             skip
+IRETURN               <-  skip             'ireturn'          skip
+ISHL                  <-  skip             'ishl'             skip
+ISHR                  <-  skip             'ishr'             skip
+ISTORE                <-  skip             'istore'           skip       Integer
+ISTORE_0              <-  skip             'istore_0'         skip
+ISTORE_1              <-  skip             'istore_1'         skip
+ISTORE_2              <-  skip             'istore_2'         skip
+ISTORE_3              <-  skip             'istore_3'         skip
+ISUB                  <-  skip             'isub'             skip
+IUSHR                 <-  skip             'iushr'            skip
+IXOR                  <-  skip             'ixor'             skip
+JSR                   <-  skip             'jsr'              skip       Label
+JSR_W                 <-  skip             'jsr_w'            skip       Label
+L2D                   <-  skip             'l2d'              skip
+L2F                   <-  skip             'l2f'              skip
+L2I                   <-  skip             'l2i'              skip
+LADD                  <-  skip             'ladd'             skip
+LAND                  <-  skip             'land'             skip
+LASTORE               <-  skip             'lastore'          skip
+LCMP                  <-  skip             'lcmp'             skip
+LCONST_0              <-  skip             'lconst_0'         skip
+LCONST_1              <-  skip             'lconst_1'         skip
+LDC                   <-  skip             'ldc'              skip       (QuotedString     /                  Double             /                      /                  Integer  )
+LDC2_W                <-  skip             'ldc2_w'           skip       (Double           /                  Integer)
+LDC_W                 <-  skip             'ldc_w'            skip       (QuotedString     /                  Double             /                      Integer            )
+LDIV                  <-  skip             'ldiv'             skip
+LLOAD                 <-  skip             'lload'            skip       Integer
+LLOAD_0               <-  skip             'lload_0'          skip
+LLOAD_1               <-  skip             'lload_1'          skip
+LLOAD_2               <-  skip             'lload_2'          skip
+LLOAD_3               <-  skip             'lload_3'          skip
+LMUL                  <-  skip             'lmul'             skip
+LNEG                  <-  skip             'lneg'             skip
+LOALOAD               <-  skip             'loaload'          skip
+LOOKUPSWITCH          <-  skip             'lookupswitch'     skip       newline           LookupSwitchPair*  DefaultSwitchPair
+LOR                   <-  skip             'lor'              skip
+LREM                  <-  skip             'lrem'             skip
+LRETURN               <-  skip             'lreturn'          skip
+LSHL                  <-  skip             'lshl'             skip
+LSHR                  <-  skip             'lshr'             skip
+LSTORE                <-  skip             'lstore'           skip       Integer
+LSTORE_0              <-  skip             'lstore_0'         skip
+LSTORE_1              <-  skip             'lstore_1'         skip
+LSTORE_2              <-  skip             'lstore_2'         skip
+LSTORE_3              <-  skip             'lstore_3'         skip
+LSUB                  <-  skip             'lsub'             skip
+LUSHR                 <-  skip             'lushr'            skip
+LXOR                  <-  skip             'lxor'             skip
+LookupSwitchPair      <-  Integer          COLON_symbol       Label      newline
+Low                   <-  Integer
+MONITORENTER          <-  skip             'monitorenter'     skip
+MONITOREXIT           <-  skip             'monitorexit'      skip
+MULTIANEWARRAY        <-  skip             'multianewarray'   skip       FieldDescriptor   Integer
+NEW                   <-  skip             'new'              skip       ClassName
+NEWARRAY              <-  skip             'newarray'         skip       PrimitiveName
+NOP                   <-  skip             'nop'              skip
+POP                   <-  skip             'pop'              skip
+POP2                  <-  skip             'pop2'             skip
+PUTFIELD              <-  skip             'putfield'         skip       FieldName         FieldDescriptor
+PUTSTATIC             <-  skip             'putstatic'        skip       FieldName         FieldDescriptor
+RET                   <-  skip             'ret'              skip       Integer
+RETURN                <-  skip             'return'           skip
+SALOAD                <-  skip             'saload'           skip
+SASTORE               <-  skip             'sastore'          skip
+SIPUSH                <-  skip             'sipush'           skip       Integer
+SWAP                  <-  skip             'swap'             skip
+TABLESWITCH           <-  skip             'tableswitch'      skip       Low               High               newline            TableSwitchSingleton*  DefaultSwitchPair
+TableSwitchSingleton  <-  Label            newline
+
+## Keywords
+
+ABSTRACT_keyword      <-  skip  'abstract'      skip
+CATCH_keyword         <-  skip  '.catch'        skip
+CLASS_keyword         <-  skip  '.class'        skip
+DEFAULT_keyword       <-  skip  'default'       skip
+END_Keyword           <-  skip  '.end'          skip
+FIELD_keyword         <-  skip  '.field'        skip
+FINAL_keyword         <-  skip  'final'         skip
+FROM_keyword          <-  skip  'from'          skip
+INTERFACE_keyword     <-  skip  '.interface'    skip
+IS_keyword            <-  skip  'is'            skip
+LIMIT_keyword         <-  skip  '.limit'        skip
+LINE_keyword          <-  skip  '.line'         skip
+LOCAL_keyword         <-  skip  'locals'        skip
+METHOD_END_keyword    <-  skip  'method'        skip
+METHOD_keyword        <-  skip  '.method'       skip
+NATIVE_keyword        <-  skip  'native'        skip
+PRIVATE_keyword       <-  skip  'private'       skip
+PROTECTED_keyword     <-  skip  'protected'     skip
+PUBLIC_keyword        <-  skip  'public'        skip
+SOURCE_keyword        <-  skip  '.source'       skip  FileName
+STACK_keyword         <-  skip  'stack'         skip
+STATIC_keyword        <-  skip  'static'        skip
+SUPER_keyword         <-  skip  '.super'        skip
+SYNCHRONIZED_keyword  <-  skip  'synchronized'  skip
+THROWS_keyword        <-  skip  '.throws'       skip
+TO_keyword            <-  skip  'to'            skip
+TRANSIENT_keyword     <-  skip  'transient'     skip
+USING_keyword         <-  skip  'using'         skip
+VAR_keyword           <-  skip  '.var'          skip
+VOLATILE_keyword      <-  skip  'volatile'      skip
+
+Keyword <- ABSTRACT_keyword / CLASS_keyword / END_Keyword / FIELD_keyword / FINAL_keyword / LIMIT_keyword / LOCAL_keyword 
+          / METHOD_END_keyword / METHOD_keyword / NATIVE_keyword / PRIVATE_keyword / PROTECTED_keyword 
+          / PUBLIC_keyword / STACK_keyword / STATIC_keyword / SYNCHRONIZED_keyword / THROWS_keyword / SUPER_keyword 
+          / TRANSIENT_keyword / VOLATILE_keyword / CATCH_keyword / FROM_keyword / TO_keyword / USING_keyword / DEFAULT_keyword
+          / SOURCE_keyword / INTERFACE_keyword / LINE_keyword / VAR_keyword / IS_keyword
+
+
+## Symbols
+
+COLON_symbol         <-  skip  ':'  skip
+DOT_symbol           <-  skip  '.'  skip
+DOUBLE_QUOTE_symbol  <-  skip  '"'  skip
+EQ_symbol            <-  skip  '='  skip
+LPAREN_symbol        <-  skip  '('  skip
+MINUS_symbol         <-  skip  '-'  skip
+PLUS_symbol          <-  skip  '+'  skip
+RPAREN_symbol        <-  skip  ')'  skip
+SEMI_COLON_symbol    <-  skip  ';'  skip
+
+FileName <- skip [a-zA-Z_][a-zA-Z0-9_.]* skip
+
+line_comment <- SEMI_COLON_symbol [^\n]* newline
+skip <- [ \t]*
+newline <- [\n]*
+eof <- !.

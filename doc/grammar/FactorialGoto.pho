@@ -1,0 +1,46 @@
+; factorial using goto
+
+.class public FactorialGoto
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method private static factorial(I)I
+  .limit stack 3
+  .limit locals 3
+
+  iconst_1
+  istore_1 ; f = 1
+  iconst_2
+  istore_2 ; i = 2
+
+floop:
+  iload_2 ; load the argument
+  iload_0 ; load i
+  if_icmpgt back ; break loop if i >= arg
+  iload_1
+  iload_2
+  imul
+  istore_1 ; f *= i
+  iinc 2 1 ; i += 1
+  goto floop 
+
+back:
+  iload_1 ; return f
+  ireturn
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 2
+  .limit locals 1
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  bipush 10
+  invokestatic FactorialGoto/factorial(I)I
+  invokevirtual java/io/PrintStream/println(I)V
+  return
+.end method
