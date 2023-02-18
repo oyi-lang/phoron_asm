@@ -51,6 +51,8 @@ How Phoron directives map to the JVM model:
 
   .interface sets the [ACC_INTERFACE}() access flag in the `ClassFile`.
 
+  .implements popiulates the `interfaces` field of `ClassFile`.
+
   .field sets the `fields` fields of `ClassFile`. Each entry in this vector is a `FieldInfo` object.
 
   .method populates the `methods` field of `ClassFile`. Each entry in this vector is a `MethodInfo` object.
