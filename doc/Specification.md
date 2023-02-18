@@ -9,7 +9,8 @@ The implementation of `phoron_asm` will proceed in three phases:
 The core features supported by Phoron are those of Jasmin. On top of that, to support newer JVM features as well as in the shape of improvements, some
 additional features have been/will be added.
 
-## Grammar for Phoron syntax
+
+## Phoron Grammar
 
 ```
     phoron_assembly_file ::=
@@ -113,19 +114,19 @@ Directive statements are for metadata used by Phoron during the process of assem
 
   File structure:
 
-  `.source` - Optional directive, specifies the [SourceFile](https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.7.10) attribute in the JVM spec. If no sourcefile 
+  .source - Optional directive, specifies the [SourceFile](https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.7.10) attribute in the JVM spec. If no sourcefile 
   is provided, then the name of the Phoron assembly file itself is taken as the value for this attribute.
 
-  `.class` - Grammar: `.class <access-spec> <classname>` specifies the fully qualified name of the class being defined. 
-  Eg: ```.super public foo/bar/MyClass```
+  .class - Grammar: `.class <access-spec> <classname>` specifies the fully qualified name of the class being defined. 
+  Eg: `.class public foo/bar/MyClass`
 
-  `.super` - Grammar: `.super <access-spec> <classname>` specifies the fully qualified name of the superclass for the class being defined. 
-  Eg: ```.super public java/lang/Object```
+  .super - Grammar: `.super <access-spec> <classname>` specifies the fully qualified name of the superclass for the class being defined. 
+  Eg: `.super public java/lang/Object`
 
-  `.interface` - Same as `.class` except that it implies that the entity being defined is an interface, not a class. 
-  Eg: ```.interface public Foo```
+  .interface - Same as `.class` except that it implies that the entity being defined is an interface, not a class. 
+  Eg: `.interface public Foo`
 
-  `.implements` - Grammar: `.implements <interface-name>` specifies the interfaces implemented by the class being defined.
+  .implements - Grammar: `.implements <interface-name>` specifies the interfaces implemented by the class being defined.
   Eg:
 
       ```
@@ -136,14 +137,14 @@ Directive statements are for metadata used by Phoron during the process of assem
       .implements IThree
       ```
 
-  `.version` - Grammar: `.version <major>.<minor>` supplies a JVM bytecode version in the format `Major.minor`. For example: `45.2` or `65.0`. Default is `45.3`.
+  .version - Grammar: `.version <major>.<minor>` supplies a JVM bytecode version in the format `Major.minor`. For example: `45.2` or `65.0`. Default is `45.3`.
 
-  `.end` - Grammar: `.end method` marks the end of a method.
+  .end - Grammar: `.end method` marks the end of a method.
 
 
   Field definitions:
 
-  `.field` - Grammar: `.field <access-spec> <field-name> <descriptor> [=<value>]` defines a field using the grammar, where
+  .field - Grammar: `.field <access-spec> <field-name> <descriptor> [=<value>]` defines a field using the grammar, where
     `access-spec` can be zero or more of - public, protected, private, static, final, transient, volatile. Eg:
 
     ```
@@ -154,7 +155,7 @@ Directive statements are for metadata used by Phoron during the process of assem
 
   Method definitions:
 
-  `.method` - Grammar: `.method <access-spec> <method-spec> <statements> .end method` defines a method for the class being defined, where
+  .method - Grammar: `.method <access-spec> <method-spec> <statements> .end method` defines a method for the class being defined, where
     `access-spec` is zero or more of the following - public, protected, private, abstract, static, final, synchronized, native. Eg:
 
     ```
@@ -169,12 +170,12 @@ Directive statements are for metadata used by Phoron during the process of assem
 
   These are directives that can only be used within a method definition.
 
-  `.limit` - set maximum values used by the stack and for locals. 
+  .limit - set maximum values used by the stack and for locals. 
 
       Eg: .limit stack 1, .limit locals 10
 
 
-  `.line` - Grammar: `.line <integer>` is used to tag the subsequent instructions with a line numeber. Uses the [LineNumberTableAttribute](https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.7.12)
+  .line - Grammar: `.line <integer>` is used to tag the subsequent instructions with a line numeber. Uses the [LineNumberTableAttribute](https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.7.12)
   attribute. Eg:
 
     ```
@@ -185,7 +186,7 @@ Directive statements are for metadata used by Phoron during the process of assem
       .line 6
     ```
 
-  `.var` -  Grammar: `.var <var-number> is <name>  <descriptor> from <label1> to <label2>` defines the name, type descritor, and scope of a local variable.
+  .var -  Grammar: `.var <var-number> is <name>  <descriptor> from <label1> to <label2>` defines the name, type descritor, and scope of a local variable.
   Uses the [LocalVariableTableAttribute](https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.7.13) attribute.
   Eg:
     ```
@@ -201,9 +202,9 @@ Directive statements are for metadata used by Phoron during the process of assem
       .end method
     ```
 
-  `.throws` - Grammar: `.throws <classname>` indicates that this method can throw an exception of type `<classname>`. Eg: `.throws java/io/IOException`.
+  .throws - Grammar: `.throws <classname>` indicates that this method can throw an exception of type `<classname>`. Eg: `.throws java/io/IOException`.
 
-  `.catch` - Grammar: `.catch <classname> from <label1> to <label2> using <label3>` appends an entry to the end of the exceptions table for this method. Eg:
+  .catch - Grammar: `.catch <classname> from <label1> to <label2> using <label3>` appends an entry to the end of the exceptions table for this method. Eg:
     ```
       .catch java/io/IOException from L1 to L2 using IO_Handler
     ```
@@ -213,6 +214,7 @@ Directive statements are for metadata used by Phoron during the process of assem
     Abstract Methods:
 
     Eg:
+
       ```
         .method abstract myAbstract()V
         .end method

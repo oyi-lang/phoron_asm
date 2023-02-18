@@ -3,9 +3,9 @@ name = "phoron_asm"
 description = "An Assembler and Disassembler for JVM bytecode"
 version = "0.1.0"
 authors = ["Timmy Jose"]
-homepage = "https://github.com/oyi-lang/oyi-manifesto/tree/master/projects/phoron/phoron_rs/phoron_asm"
+homepage = "https://github.com/oyi-lang/phoron_asm"
 documentation = "https://github.com/oyi-lang/oyi-manifesto/tree/master/projects/phoron/phoron_rs/phoron_asm"
-repository = "https://github.com/oyi-lang/oyi-manifesto/tree/master/projects/phoron/phoron_rs/phoron_asm"
+repository = "ifesto/tree/master/projects/phoron/phoron_rs/phoron_asm"
 readme = "README.md"
 license-file = "LICENSE"
 keywords = ["jvm", "bytecode", "assembler", "disassembler"]
@@ -14,5 +14,5 @@ edition = "2021"
 
 [dependencies]
 
-#phoron_core = "0.3.0"
+#phoron_core = "0.4.1"
 phoron_core =  { path = "../phoron_core" }
