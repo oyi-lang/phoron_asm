@@ -1,3 +1,5 @@
+use std::{iter::Peekable, str::Chars};
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
     TAaload,
@@ -300,55 +302,32 @@ enum Number {
     Int(i64),
 }
 
-pub struct Lexer {
-    src: String,
-    curr_pos: usize,
-    size: usize,
+pub struct Lexer<'a> {
+    src: Peekable<Chars<'a>>,
 }
 
-impl Lexer {
-    pub fn new(src: &str) -> Self {
-        let size = src.len();
-
+impl<'a> Lexer<'a> {
+    pub fn new(src: &'a str) -> Self {
         Lexer {
-            src: src.to_owned(),
-            curr_pos: 0,
-            size,
+            src: src.chars().peekable(),
         }
     }
 
-    fn curr_char(&self) -> LexerResult<char> {
-        Ok(self
-            .src
-            .chars()
-            .nth(self.curr_pos)
-            .ok_or(LexerError::OutOfCharacters)?)
-    }
-
-    fn forward(&mut self) {
-        self.curr_pos += 1;
-    }
-
-    fn forward_n(&mut self, n: usize) {
-        self.curr_pos += n;
+    fn next(&mut self) -> LexerResult<char> {
+        Ok(self.src.next().ok_or(LexerError::OutOfCharacters)?)
     }
 
     fn extract_float_or_int(&mut self) -> LexerResult<Number> {
         let mut numbuf = String::new();
-        while self.curr_pos < self.size && self.curr_char()?.is_digit(10) {
-            numbuf.push(self.curr_char()?);
-            self.forward();
+        while let Some(d) = self.src.peek() && d.is_digit(10) {
+            numbuf.push(self.next()?);
         }
 
-        if self.curr_pos < self.size && self.curr_char()? == '.' {
-            numbuf.push(self.curr_char()?);
-            self.forward();
-
-            while self.curr_pos < self.size && self.curr_char()?.is_digit(10) {
-                numbuf.push(self.curr_char()?);
-                self.forward();
+        if let Some('.') = self.src.peek() {
+            numbuf.push(self.next()?);
+            while let Some(d) = self.src.peek() && d.is_digit(10) {
+                numbuf.push(self.next()?);
             }
-
             Ok(Number::Float(numbuf.parse::<f64>()?))
         } else {
             Ok(Number::Int(numbuf.parse::<i64>()?))
@@ -363,22 +342,13 @@ impl Lexer {
             _ => false,
         };
 
-        let start_pos = self.curr_pos;
-        let mut running_pos = self.curr_pos;
+        let mut identbuf = String::new();
+        while let Some(c) = self.src.peek() && is_ident_char(*c) {
+            identbuf.push(self.next()?);
 
-        while running_pos < self.size
-            && is_ident_char(
-                self.src
-                    .chars()
-                    .nth(running_pos)
-                    .ok_or(LexerError::OutOfCharacters)?,
-            )
-        {
-            running_pos += 1;
         }
 
-        self.curr_pos = running_pos;
-        Ok(self.src[start_pos..running_pos].to_owned())
+        Ok(identbuf)
     }
 
     fn extract_directive(&mut self, ident: &str) -> LexerResult<Token> {
@@ -632,21 +602,21 @@ impl Lexer {
 
         Ok(match c {
             ' ' | '\t' | '\n' => {
-                self.forward();
+                self.next()?;
                 self.lex()?
             }
 
             ';' => {
-                while self.curr_pos < self.size && self.curr_char()? != '\n' {
-                    self.forward();
+                while let Some(c) = self.src.peek() && *c != '\n' {
+                    self.next()?;
                 }
                 self.lex()?
             }
 
             '.' => {
-                self.forward();
+                self.next()?;
 
-                if self.curr_char()?.is_alphabetic() {
+                if let Some(c) = self.src.peek() && c.is_alphabetic() {
                     let ident = self.extract_ident()?;
                     self.extract_directive(&ident)?
                 } else {
@@ -655,54 +625,52 @@ impl Lexer {
             }
 
             ':' => {
-                self.forward();
+                self.next()?;
                 TColon
             }
 
             '(' => {
-                self.forward();
+                self.next()?;
                 TLeftParen
             }
 
             ')' => {
-                self.forward();
+                self.next()?;
                 TRightParen
             }
             '[' => {
-                self.forward();
+                self.next()?;
                 TLeftSquareBracket
             }
 
             '=' => {
-                self.forward();
+                self.next()?;
                 TAssign
             }
 
             '+' => {
-                self.forward();
+                self.next()?;
                 TPlus
             }
 
             '-' => {
-                self.forward();
+                self.next()?;
                 TMinus
             }
 
             '"' => {
-                // TODO: handle Unicode
-                self.forward();
+                self.next()?;
 
                 let mut strbuf = String::new();
-                while self.curr_pos < self.size && self.curr_char()? != '"' {
-                    strbuf.push(self.curr_char()?);
-                    self.forward();
+                while let Some(c) = self.src.peek() && *c != '"' {
+                    strbuf.push(self.next()?);
                 }
 
-                if self.curr_pos >= self.size {
+                if self.src.peek().is_none() {
                     return Err(LexerError::IncompleteString);
                 }
 
-                self.forward(); // consume the closing double quote
+                self.next()?; // consume the closing double quote
                 TString(strbuf)
             }
 
@@ -730,10 +698,11 @@ impl Lexer {
     }
 
     pub fn lex(&mut self) -> LexerResult<Token> {
-        if self.curr_pos >= self.size {
+        if self.src.peek().is_none() {
             Ok(Token::TEof)
         } else {
-            self.lex_char(self.curr_char()?)
+            let c = *self.src.peek().unwrap();
+            self.lex_char(c)
         }
     }
 }

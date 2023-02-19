@@ -7,3 +7,12 @@ For the specification, please refer to the [specification document](doc/Specific
 For the testable grammar for `Phoron`, please refer to the [grammar](doc/grammar/Grammar.md).
 
 For the design, please refer to the [Design doc](doc/Design.md).
+
+## Build
+
+Note: This crate requires nightly Rust.
+
+```
+  $ cargo +nightly build --release 
+
+```
