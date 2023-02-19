@@ -26,7 +26,7 @@ where
 }
 
 #[test]
-fn test_malign() -> Result<(), Box<dyn Error>> {
+fn test_lex_malign() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -82,7 +82,7 @@ fn test_malign() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_fields() -> Result<(), Box<dyn Error>> {
+fn test_lex_fields() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -152,7 +152,7 @@ fn test_fields() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_hola_mundo() -> Result<(), Box<dyn Error>> {
+fn test_lex_hola_mundo() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -209,7 +209,7 @@ fn test_hola_mundo() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_hello_world() -> Result<(), Box<dyn Error>> {
+fn test_lex_hello_world() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -266,7 +266,7 @@ fn test_hello_world() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_malign_jasmin() -> Result<(), Box<dyn Error>> {
+fn test_lex_malign_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -322,7 +322,7 @@ fn test_malign_jasmin() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_privet_mir() -> Result<(), Box<dyn Error>> {
+fn test_lex_privet_mir() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -379,7 +379,7 @@ fn test_privet_mir() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_areturn() -> Result<(), Box<dyn Error>> {
+fn test_lex_areturn() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -456,7 +456,7 @@ fn test_areturn() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_create_array_of_threads() -> Result<(), Box<dyn Error>> {
+fn test_lex_create_array_of_threads() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -523,7 +523,7 @@ fn test_create_array_of_threads() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_swap_top_two_items() -> Result<(), Box<dyn Error>> {
+fn test_lex_swap_top_two_items() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -585,7 +585,7 @@ fn test_swap_top_two_items() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
+fn test_lex_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -662,7 +662,7 @@ fn test_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_count() -> Result<(), Box<dyn Error>> {
+fn test_lex_count() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -746,7 +746,7 @@ fn test_count() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_catcher() -> Result<(), Box<dyn Error>> {
+fn test_lex_catcher() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -830,7 +830,7 @@ fn test_catcher() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_anewarray() -> Result<(), Box<dyn Error>> {
+fn test_lex_anewarray() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -903,7 +903,7 @@ fn test_anewarray() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_args_to_main() -> Result<(), Box<dyn Error>> {
+fn test_lex_args_to_main() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -963,7 +963,7 @@ fn test_args_to_main() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_count_jasmin2() -> Result<(), Box<dyn Error>> {
+fn test_lex_count_jasmin2() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1037,7 +1037,7 @@ fn test_count_jasmin2() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
+fn test_lex_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1124,7 +1124,7 @@ fn test_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
+fn test_lex_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1196,7 +1196,7 @@ fn test_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_factorial_goto() -> Result<(), Box<dyn Error>> {
+fn test_lex_factorial_goto() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1301,7 +1301,7 @@ fn test_factorial_goto() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_factorial_jasmin() -> Result<(), Box<dyn Error>> {
+fn test_lex_factorial_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1402,7 +1402,7 @@ fn test_factorial_jasmin() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_check_array_type() -> Result<(), Box<dyn Error>> {
+fn test_lex_check_array_type() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1487,7 +1487,7 @@ fn test_check_array_type() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_print_hello_10_times() -> Result<(), Box<dyn Error>> {
+fn test_lex_print_hello_10_times() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1578,7 +1578,7 @@ fn test_print_hello_10_times() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_add_nums() -> Result<(), Box<dyn Error>> {
+fn test_lex_add_nums() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1698,7 +1698,7 @@ fn test_add_nums() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_count_jasmin() -> Result<(), Box<dyn Error>> {
+fn test_lex_count_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1782,7 +1782,7 @@ fn test_count_jasmin() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_string_buffer_demo() -> Result<(), Box<dyn Error>> {
+fn test_lex_string_buffer_demo() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -1890,7 +1890,7 @@ fn test_string_buffer_demo() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_array_demo() -> Result<(), Box<dyn Error>> {
+fn test_lex_array_demo() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TClass,
         TPublic,
@@ -2107,7 +2107,7 @@ fn test_array_demo() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_all_in_one() -> Result<(), Box<dyn Error>> {
+fn test_lex_all_in_one() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TSource,
         TIdent("AllInOne.j".to_string()),

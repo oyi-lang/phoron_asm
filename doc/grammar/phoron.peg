@@ -1,10 +1,10 @@
 # Jasmin-compatible Phoron Assembly Format.
  
-PhoronProgram <- line_comment* Header eof
+PhoronProgram <- line_comment* Header Body eof
 
-Header <- SourceFileDef? (ClassDef /InterfaceDef)  SuperDef FieldDef* MethodDef*
+Header <- SourceFileDef? (ClassDef / InterfaceDef) SuperDef
 
-SourceFileDef <- SOURCE_keyword newline
+SourceFileDef <- SOURCE_keyword FileName newline
 
 ## Classes
 
@@ -14,6 +14,8 @@ AccessFlag <- PUBLIC_keyword / FINAL_keyword / ABSTRACT_keyword
 ClassName <- [a-zA-Z_][a-zA-Z0-9_$/]* skip
 
 SuperDef <- SUPER_keyword ClassName newline
+
+Body <- FieldDef* MethodDef*
 
 ## Fields
 
@@ -496,7 +498,7 @@ NATIVE_keyword        <-  skip  'native'        skip
 PRIVATE_keyword       <-  skip  'private'       skip
 PROTECTED_keyword     <-  skip  'protected'     skip
 PUBLIC_keyword        <-  skip  'public'        skip
-SOURCE_keyword        <-  skip  '.source'       skip  FileName
+SOURCE_keyword        <-  skip  '.source'       skip
 STACK_keyword         <-  skip  'stack'         skip
 STATIC_keyword        <-  skip  'static'        skip
 SUPER_keyword         <-  skip  '.super'        skip
