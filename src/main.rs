@@ -1,22 +1,19 @@
 use phoron_asm::lexer::{Lexer, Token};
-use std::io::{self, Write};
+use std::fs;
 
-const PROMPT: &'static str = ">> ";
-
-fn get_input() -> Result<String, Box<dyn std::error::Error>> {
-    let mut input = String::new();
-
-    io::stdin().read_line(&mut input)?;
-    Ok(input.trim().to_owned())
+fn usage() {
+    eprintln!("Usage: phoron <source-file>");
+    std::process::exit(0);
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        print!("{}", PROMPT);
-        io::stdout().lock().flush()?;
+    let args = std::env::args().skip(1).collect::<Vec<String>>();
 
-        let input = get_input()?;
-        let mut lexer = Lexer::new(&input);
+    if args.len() != 1 {
+        usage();
+    } else {
+        let src = fs::read_to_string(&args[0])?;
+        let mut lexer = Lexer::new(&src);
 
         loop {
             let tok = lexer.lex()?;
@@ -27,4 +24,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
+
+    Ok(())
 }

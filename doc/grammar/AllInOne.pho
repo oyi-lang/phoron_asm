@@ -10,6 +10,8 @@
 ; double d = 1.2345
 .field private y D = 1.2345
 
+.field public z I = 12345
+
 ; public static final String PREFIX = "FooBar";
 .field public static final PREFIX Ljava/lang/String; = "FooBar"
 

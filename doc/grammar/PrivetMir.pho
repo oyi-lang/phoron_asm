@@ -11,6 +11,7 @@
   .limit stack 2
   getstatic java/lang/System/out Ljava/io/PrintStream;
   ldc "Привет, мир!"
+
   invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
   return
 .end method

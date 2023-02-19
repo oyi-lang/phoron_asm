@@ -1,6 +1,3 @@
-pub type Int = i64;
-pub type Float = f64;
-
 #[derive(Debug, PartialEq)]
 pub enum Token {
     TAaload,
@@ -87,7 +84,7 @@ pub enum Token {
     TFload1,
     TFload2,
     TFload3,
-    TFloat(Float),
+    TFloat(f64),
     TFmul,
     TFneg,
     TFrem,
@@ -147,7 +144,7 @@ pub enum Token {
     TImul,
     TIneg,
     TInstanceof,
-    TInt(Int),
+    TInt(i64),
     TInterface,
     TInvokeinterface,
     TInvokespecial,
@@ -183,6 +180,7 @@ pub enum Token {
     TLdcw,
     TLdiv,
     TLeftParen,
+    TLeftSquareBracket,
     TLimit,
     TLine,
     TLload,
@@ -230,11 +228,11 @@ pub enum Token {
     TRightParen,
     TSaload,
     TSastore,
-    TSemicolon,
     TSipush,
     TSource,
     TStack,
     TStatic,
+    TString(String),
     TSuper,
     TSwap,
     TSynchronized,
@@ -245,7 +243,6 @@ pub enum Token {
     TUsing,
     TVar,
     TVolatile,
-    Tstring(String),
 }
 
 pub type LexerResult<T> = Result<T, LexerError>;
@@ -253,10 +250,12 @@ pub type LexerResult<T> = Result<T, LexerError>;
 #[derive(Debug)]
 pub enum LexerError {
     Custom(String),
+    IncompleteString,
     InvalidCharacter(char),
     InvalidDirective(String),
-    ParseIntError(std::num::ParseIntError),
     OutOfCharacters,
+    ParseFloatError(std::num::ParseFloatError),
+    ParseIntError(std::num::ParseIntError),
 }
 
 impl std::error::Error for LexerError {}
@@ -269,16 +268,36 @@ impl fmt::Display for LexerError {
             "{}",
             match *self {
                 LexerError::Custom(ref msg) => msg.into(),
+                LexerError::IncompleteString => "invalid or malformed string".into(),
                 LexerError::InvalidCharacter(ref c) =>
                     format!("Invalid character while lexing: {c}"),
                 LexerError::InvalidDirective(ref directive) =>
                     format!("Invalid directive {directive} for Phoron"),
                 LexerError::ParseIntError(ref err) =>
                     format!("error while trying to lex an integer: {err}"),
+                LexerError::ParseFloatError(ref err) =>
+                    format!("error while trying to lex a float: {err}"),
                 LexerError::OutOfCharacters => "unexpected end of input stream while lexing".into(),
             }
         )
     }
+}
+
+impl From<std::num::ParseIntError> for LexerError {
+    fn from(pie: std::num::ParseIntError) -> Self {
+        LexerError::ParseIntError(pie)
+    }
+}
+
+impl From<std::num::ParseFloatError> for LexerError {
+    fn from(pfe: std::num::ParseFloatError) -> Self {
+        LexerError::ParseFloatError(pfe)
+    }
+}
+
+enum Number {
+    Float(f64),
+    Int(i64),
 }
 
 pub struct Lexer {
@@ -310,15 +329,45 @@ impl Lexer {
         self.curr_pos += 1;
     }
 
-    fn extract_pred<P>(&mut self, pred: P) -> LexerResult<&str>
-    where
-        P: Fn(char) -> bool,
-    {
+    fn forward_n(&mut self, n: usize) {
+        self.curr_pos += n;
+    }
+
+    fn extract_float_or_int(&mut self) -> LexerResult<Number> {
+        let mut numbuf = String::new();
+        while self.curr_pos < self.size && self.curr_char()?.is_digit(10) {
+            numbuf.push(self.curr_char()?);
+            self.forward();
+        }
+
+        if self.curr_pos < self.size && self.curr_char()? == '.' {
+            numbuf.push(self.curr_char()?);
+            self.forward();
+
+            while self.curr_pos < self.size && self.curr_char()?.is_digit(10) {
+                numbuf.push(self.curr_char()?);
+                self.forward();
+            }
+
+            Ok(Number::Float(numbuf.parse::<f64>()?))
+        } else {
+            Ok(Number::Int(numbuf.parse::<i64>()?))
+        }
+    }
+
+    fn extract_ident(&mut self) -> LexerResult<String> {
+        let is_ident_char = |c| match c {
+            '/' | '.' | '<' | '>' | '_' | ';' => true,
+            c if c.is_alphabetic() => true,
+            c if c.is_digit(10) => true,
+            _ => false,
+        };
+
         let start_pos = self.curr_pos;
         let mut running_pos = self.curr_pos;
 
         while running_pos < self.size
-            && pred(
+            && is_ident_char(
                 self.src
                     .chars()
                     .nth(running_pos)
@@ -329,32 +378,7 @@ impl Lexer {
         }
 
         self.curr_pos = running_pos;
-        Ok(&self.src[start_pos..running_pos])
-    }
-
-    fn extract_int(&mut self) -> LexerResult<Int> {
-        Ok(self
-            .extract_pred(|c| c.is_digit(10))?
-            .parse::<Int>()
-            .or_else(|parse_err| Err(LexerError::ParseIntError(parse_err)))?)
-    }
-
-    fn extract_float(&mut self) -> LexerResult<Float> {
-        let before_dec = self.extract_int()? as Float;
-        if self.curr_char()? != '.' {
-            return Err(LexerError::Custom(format!(
-                "expected to lex a Float, but couldn't find decimal point"
-            )));
-        }
-
-        self.forward(); // consume the decimal point
-        let after_dec = self.extract_int()? as Float;
-
-        Ok(before_dec + after_dec)
-    }
-
-    fn extract_ident(&mut self) -> LexerResult<String> {
-        Ok(self.extract_pred(|c| c.is_alphabetic())?.to_owned())
+        Ok(self.src[start_pos..running_pos].to_owned())
     }
 
     fn extract_directive(&mut self, ident: &str) -> LexerResult<Token> {
@@ -368,6 +392,7 @@ impl Lexer {
             "interface" => TInterface,
             "limit" => TLimit,
             "line" => TLine,
+            "method" => TMethod,
             "source" => TSource,
             "super" => TSuper,
             "throws" => TThrows,
@@ -380,20 +405,220 @@ impl Lexer {
         use Token::*;
 
         Some(match ident {
+            "aaload" => TAaload,
+            "aastor" => TAastore,
             "abstract" => TAbstract,
+            "aconst_null" => TAconstnull,
+            "aload" => TAload,
+            "aload_0" => TAload0,
+            "aload_1" => TAload1,
+            "aload_2" => TAload2,
+            "aload_3" => TAload3,
+            "anewarray" => TAnewarray,
+            "areturn" => TAreturn,
+            "arraylength" => TArraylength,
+            "astore" => TAstore,
+            "astore_0" => TAstore0,
+            "astore_1" => TAstore1,
+            "astore_2" => TAstore2,
+            "astore_3" => TAstore3,
+            "athrow" => TAthrow,
+            "baload" => TBaload,
+            "bastore" => TBastore,
+            "bipush" => TBipush,
+            "caload" => TCaload,
+            "castore" => TCastore,
+            "checkcast" => TCheckcast,
+            "d2f" => TD2f,
+            "d2i" => TD2i,
+            "d2l" => TD2l,
+            "dadd" => TDadd,
+            "daload" => TDaload,
+            "dastore" => TDastore,
+            "dcmpg" => TDcmpg,
+            "dcmpl" => TDcmpl,
+            "dconst_0" => TDconst0,
+            "dconst_1" => TDconst1,
+            "ddiv" => TDdiv,
             "default" => TDefault,
+            "dload" => TDload,
+            "dload_0" => TDload0,
+            "dload_1" => TDload1,
+            "dload_2" => TDload2,
+            "dload_3" => TDload3,
+            "dmul" => TDmul,
+            "dneg" => TDneg,
+            "drem" => TDrem,
+            "dreturn" => TDreturn,
+            "dstore" => TDstore,
+            "dstore_0" => TDstore0,
+            "dstore_1" => TDstore1,
+            "dstore_2" => TDstore2,
+            "dstore_3" => TDstore3,
+            "dsub" => TDsub,
+            "dup" => TDup,
+            "dup2" => TDup2,
+            "dup2_x1" => TDup2x1,
+            "dup2_x2" => TDup2x2,
+            "dup_x1" => TDupx1,
+            "dup_x2" => TDupx2,
+            "f2d" => TF2d,
+            "f2i" => TF2i,
+            "f2l" => TF2l,
+            "fadd" => TFadd,
+            "faload" => TFaload,
+            "fastore" => TFastore,
+            "fcmpg" => TFcmpg,
+            "fcmpl" => TFcmpl,
+            "fconst_0" => TFconst0,
+            "fconst_1" => TFconst1,
+            "fconst_2" => TFconst2,
+            "fdiv" => TFdiv,
             "final" => TFinal,
+            "fload" => TFload,
+            "fload_0" => TFload0,
+            "fload_1" => TFload1,
+            "fload_2" => TFload2,
+            "fload_3" => TFload3,
+            "fmul" => TFmul,
+            "fneg" => TFneg,
+            "frem" => TFrem,
+            "freturn" => TFreturn,
             "from" => TFrom,
+            "fstore" => TFstore,
+            "fstore_0" => TFstore0,
+            "fstore_1" => TFstore1,
+            "fstore_2" => TFstore2,
+            "fstore_3" => TFstore3,
+            "fsub" => TFsub,
+            "getfield" => TGetfield,
+            "getstatic" => TGetstatic,
+            "goto" => TGoto,
+            "goto_w" => TGotow,
+            "i2b" => TI2b,
+            "i2c" => TI2c,
+            "i2d" => TI2d,
+            "i2f" => TI2f,
+            "i2l" => TI2l,
+            "i2s" => TI2s,
+            "iadd" => TIadd,
+            "iaload" => TIaload,
+            "iand" => TIand,
+            "iastore" => TIastore,
+            "iconst_0" => TIconst0,
+            "iconst_1" => TIconst1,
+            "iconst_2" => TIconst2,
+            "iconst_3" => TIconst3,
+            "iconst_4" => TIconst4,
+            "iconst_5" => TIconst5,
+            "iconst_m1" => TIconstm1,
+            "idiv" => TIdiv,
+            "if_acmpeq" => TIfacmpeq,
+            "if_acmpne" => TIfacmpne,
+            "if_icmpeq" => TIficmpeq,
+            "if_icmpge" => TIficmpge,
+            "if_icmpgt" => TIficmpgt,
+            "if_icmple" => TIficmple,
+            "if_icmplt" => TIficmplt,
+            "if_icmpne" => TIficmpne,
+            "ifeq" => TIfeq,
+            "ifge" => TIfge,
+            "ifgt" => TIfgt,
+            "ifle" => TIfle,
+            "iflt" => TIflt,
+            "ifne" => TIfne,
+            "ifnonnull" => TIfnonnull,
+            "ifnull" => TIfnull,
+            "iinc" => TIinc,
+            "iload" => TIload,
+            "iload_0" => TIload0,
+            "iload_1" => TIload1,
+            "iload_2" => TIload2,
+            "iload_3" => TIload3,
+            "imul" => TImul,
+            "ineg" => TIneg,
+            "instanceof" => TInstanceof,
+            "invokeinterface" => TInvokeinterface,
+            "invokespecial" => TInvokespecial,
+            "invokestatic" => TInvokestatic,
+            "invokevirtual" => TInvokevirtual,
+            "ior" => TIor,
+            "irem" => TIrem,
+            "ireturn" => TIreturn,
             "is" => TIs,
+            "ishl" => TIshl,
+            "ishr" => TIshr,
+            "istore" => TIstore,
+            "istore_0" => TIstore0,
+            "istore_1" => TIstore1,
+            "istore_2" => TIstore2,
+            "istore_3" => TIstore3,
+            "isub" => TIsub,
+            "iushr" => TIushr,
+            "ixor" => TIxor,
+            "jsr" => TJsr,
+            "jsr_w" => TJsrw,
+            "l2d" => TL2d,
+            "l2f" => TL2f,
+            "l2i" => TL2i,
+            "ladd" => TLadd,
+            "land" => TLand,
+            "lastore" => TLastore,
+            "lcmp" => TLcmp,
+            "lconst_0" => TLconst0,
+            "lconst_1" => TLconst1,
+            "ldc" => TLdc,
+            "ldc2_w" => TLdc2w,
+            "ldc_w" => TLdcw,
+            "ldiv" => TLdiv,
+            "lload" => TLload,
+            "lload_0" => TLload0,
+            "lload_1" => TLload1,
+            "lload_2" => TLload2,
+            "lload_3" => TLload3,
+            "lmul" => TLmul,
+            "lneg" => TLneg,
+            "loaload" => TLoaload,
             "locals" => TLocals,
-            "method" => TMethod,
+            "lookupswitch" => TLookupswitch,
+            "lor" => TLor,
+            "lrem" => TLrem,
+            "lreturn" => TLreturn,
+            "lshl" => TLshl,
+            "lshr" => TLshr,
+            "lstore" => TLstore,
+            "lstore_0" => TLstore0,
+            "lstore_1" => TLstore1,
+            "lstore_2" => TLstore2,
+            "lstore_3" => TLstore3,
+            "lsub" => TLsub,
+            "lushr" => TLushr,
+            "lxor" => TLxor,
+            "method" => TEndMethod,
+            "monitorenter" => TMonitorenter,
+            "monitorexit" => TMonitorexit,
+            "multianewarray" => TMultianewarray,
             "native" => TNative,
+            "new" => TNew,
+            "newarray" => TNewarray,
+            "nop" => TNop,
+            "pop" => TPop,
+            "pop2" => TPop2,
             "private" => TPrivate,
             "protected" => TProtected,
             "public" => TPublic,
+            "putfield" => TPutfield,
+            "putstatic" => TPutstatic,
+            "ret" => TRet,
+            "return" => TReturn,
+            "saload" => TSaload,
+            "sastore" => TSastore,
+            "sipush" => TSipush,
             "stack" => TStack,
             "static" => TStatic,
+            "swap" => TSwap,
             "synchronized" => TSynchronized,
+            "tableswitch" => TTableswitch,
             "to" => TTo,
             "transient" => TTransient,
             "using" => TUsing,
@@ -411,6 +636,13 @@ impl Lexer {
                 self.lex()?
             }
 
+            ';' => {
+                while self.curr_pos < self.size && self.curr_char()? != '\n' {
+                    self.forward();
+                }
+                self.lex()?
+            }
+
             '.' => {
                 self.forward();
 
@@ -420,11 +652,6 @@ impl Lexer {
                 } else {
                     TDot
                 }
-            }
-
-            ';' => {
-                self.forward();
-                TSemicolon
             }
 
             ':' => {
@@ -440,6 +667,10 @@ impl Lexer {
             ')' => {
                 self.forward();
                 TRightParen
+            }
+            '[' => {
+                self.forward();
+                TLeftSquareBracket
             }
 
             '=' => {
@@ -457,8 +688,34 @@ impl Lexer {
                 TMinus
             }
 
-            '0'..='9' => TInt(self.extract_int()?),
-            'a'..='z' | 'A'..='Z' | '_' => {
+            '"' => {
+                // TODO: handle Unicode
+                self.forward();
+
+                let mut strbuf = String::new();
+                while self.curr_pos < self.size && self.curr_char()? != '"' {
+                    strbuf.push(self.curr_char()?);
+                    self.forward();
+                }
+
+                if self.curr_pos >= self.size {
+                    return Err(LexerError::IncompleteString);
+                }
+
+                self.forward(); // consume the closing double quote
+                TString(strbuf)
+            }
+
+            '0'..='9' => {
+                let number = self.extract_float_or_int()?;
+
+                match number {
+                    Number::Float(float) => TFloat(float),
+                    Number::Int(int) => TInt(int),
+                }
+            }
+
+            c if c.is_alphabetic() || c == '_' || c == '<' => {
                 let ident = self.extract_ident()?;
 
                 if let Some(kw_or_instr) = self.extract_kw_or_instr(&ident) {
@@ -479,9 +736,4 @@ impl Lexer {
             self.lex_char(self.curr_char()?)
         }
     }
-}
-
-#[test]
-mod tests {
-    use super::Lexer;
 }

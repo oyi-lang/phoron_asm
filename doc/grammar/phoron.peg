@@ -270,7 +270,7 @@ PrimitiveName <- skip [a-zA-Z_][a-zA-Z0-9_]* skip
 ## JVM Instructions
 
 AALOAD                <-  skip             'aaload'           skip
-AASTORE               <-  skip             'aastor'           skip
+AASTORE               <-  skip             'aastore'           skip
 ACONST_NULL           <-  skip             'aconst_null'      skip
 ALOAD                 <-  skip             'aload'            skip       Integer
 ALOAD_0               <-  skip             'aload_0'          skip
