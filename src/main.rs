@@ -1,4 +1,7 @@
-use phoron_asm::lexer::{Lexer, Token};
+use phoron_asm::{
+    lexer::{Lexer, Token},
+    parser::Parser,
+};
 use std::fs;
 
 fn usage() {
@@ -13,16 +16,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         usage();
     } else {
         let src = fs::read_to_string(&args[0])?;
-        let mut lexer = Lexer::new(&src);
-
-        loop {
-            let tok = lexer.lex()?;
-            println!("{tok:?}");
-
-            if tok == Token::TEof {
-                break;
-            }
-        }
+        let mut parser = Parser::new(Lexer::new(&src));
+        let ast = parser.parse()?;
+        println!("{ast:#?}");
     }
 
     Ok(())

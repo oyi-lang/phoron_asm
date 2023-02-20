@@ -1,14 +1,14 @@
 #[derive(Debug)]
 pub struct PhoronProgram {
-    header: PhoronHeader,
-    body: PhoronBody,
+    pub header: PhoronHeader,
+    pub body: PhoronBody,
 }
 
 // header
 
 #[derive(Debug)]
 pub struct PhoronSourceFileDef {
-    source_file: String,
+    pub source_file: String,
 }
 
 // classes and interfaces
@@ -28,14 +28,14 @@ pub enum PhoronClassOrInterfaceAccessFlag {
 
 #[derive(Debug)]
 pub struct PhoronClassDef {
-    name: String,
-    access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
+    pub name: String,
+    pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
 }
 
 #[derive(Debug)]
 pub struct PhoronInterfaceDef {
-    name: String,
-    access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
+    pub name: String,
+    pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
 }
 
 #[derive(Debug)]
@@ -46,14 +46,14 @@ pub enum PhoronClassOrInterface {
 
 #[derive(Debug)]
 pub struct PhoronSuperDef {
-    super_class_name: String,
+    pub super_class_name: String,
 }
 
 #[derive(Debug)]
 pub struct PhoronHeader {
-    sourcefile_def: Option<PhoronSourceFileDef>,
-    class_or_interface_def: PhoronClassOrInterface,
-    super_def: PhoronSuperDef,
+    pub sourcefile_def: Option<PhoronSourceFileDef>,
+    pub class_or_interface_def: PhoronClassOrInterface,
+    pub super_def: PhoronSuperDef,
 }
 
 // body
@@ -82,10 +82,10 @@ pub enum PhoronFieldInitValue {
 
 #[derive(Debug)]
 pub struct PhoronFieldDef {
-    name: String,
-    access_flag: Vec<PhoronFieldAccessFlag>,
-    descriptor: String,
-    init_val: Option<PhoronFieldInitValue>,
+    pub name: String,
+    pub access_flag: Vec<PhoronFieldAccessFlag>,
+    pub descriptor: String,
+    pub init_val: Option<PhoronFieldInitValue>,
 }
 
 // methods
@@ -342,14 +342,14 @@ pub enum PhoronInstruction {
 
 #[derive(Debug)]
 pub struct PhoronMethodDef {
-    name: String,
-    access_flags: Vec<PhoronMethodAccessFlag>,
-    descriptor: String,
-    instructions: Vec<PhoronInstruction>,
+    pub name: String,
+    pub access_flags: Vec<PhoronMethodAccessFlag>,
+    pub descriptor: String,
+    pub instructions: Vec<PhoronInstruction>,
 }
 
 #[derive(Debug)]
 pub struct PhoronBody {
-    field_defs: Vec<PhoronFieldDef>,
-    method_defs: Vec<PhoronMethodDef>,
+    pub field_defs: Vec<PhoronFieldDef>,
+    pub method_defs: Vec<PhoronMethodDef>,
 }

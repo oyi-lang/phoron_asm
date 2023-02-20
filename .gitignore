@@ -1,6 +1,6 @@
 target/
 doc/grammar/phoron
 doc/grammar/phoron.c
-*/*.a
-*/*.o
-*/*.class
+**/*.a
+**/*.o
+**/*.class

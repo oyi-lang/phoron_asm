@@ -1,7 +1,8 @@
-use std::{iter::Peekable, str::Chars};
+use std::{fmt, iter::Peekable, str::Chars};
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
+    TSynthetic,
     TAaload,
     TAastore,
     TAbstract,
@@ -12,6 +13,7 @@ pub enum Token {
     TAload2,
     TAload3,
     TAnewarray,
+    TAnnotation,
     TAreturn,
     TArraylength,
     TAssign,
@@ -66,6 +68,7 @@ pub enum Token {
     TDupx2,
     TEnd,
     TEndMethod,
+    TEnum,
     TEof,
     TF2d,
     TF2i,
@@ -210,6 +213,7 @@ pub enum Token {
     TLxor,
     TMethod,
     TMinus,
+    TModule,
     TMonitorenter,
     TMonitorexit,
     TMultianewarray,
@@ -262,7 +266,6 @@ pub enum LexerError {
 
 impl std::error::Error for LexerError {}
 
-use std::fmt;
 impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
