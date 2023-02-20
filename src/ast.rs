@@ -372,8 +372,8 @@ pub enum JvmInstruction {
 
 #[derive(Debug)]
 pub enum PhoronInstruction {
-    PhoronDirective,
-    JvmInstruction,
+    PhoronDirective(PhoronDirective),
+    JvmInstruction(JvmInstruction),
     PhoronLabel(String),
 }
 
