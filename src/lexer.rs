@@ -2,7 +2,6 @@ use std::{fmt, iter::Peekable, str::Chars};
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    TSynthetic,
     TAaload,
     TAastore,
     TAbstract,
@@ -26,6 +25,7 @@ pub enum Token {
     TBaload,
     TBastore,
     TBipush,
+    TBridge,
     TCaload,
     TCastore,
     TCatch,
@@ -185,7 +185,6 @@ pub enum Token {
     TLdcw,
     TLdiv,
     TLeftParen,
-    TLeftSquareBracket,
     TLimit,
     TLine,
     TLload,
@@ -238,16 +237,19 @@ pub enum Token {
     TSource,
     TStack,
     TStatic,
+    TStrict,
     TString(String),
     TSuper,
     TSwap,
     TSynchronized,
+    TSynthetic,
     TTableswitch,
     TThrows,
     TTo,
     TTransient,
     TUsing,
     TVar,
+    TVarargs,
     TVolatile,
 }
 
@@ -357,7 +359,7 @@ impl<'a> Lexer<'a> {
 
     fn extract_ident(&mut self) -> LexerResult<String> {
         let is_ident_char = |c| match c {
-            '/' | '.' | '<' | '>' | '_' | ';' => true,
+            '/' | '.' | '<' | '>' | '_' | '[' | ';' => true,
             c if c.is_alphabetic() => true,
             c if c.is_digit(10) => true,
             _ => false,
@@ -677,10 +679,6 @@ impl<'a> Lexer<'a> {
                 self.next()?;
                 TRightParen
             }
-            '[' => {
-                self.next()?;
-                TLeftSquareBracket
-            }
 
             '=' => {
                 self.next()?;
@@ -728,7 +726,7 @@ impl<'a> Lexer<'a> {
                 }
             }
 
-            c if c.is_alphabetic() || c == '_' || c == '<' => {
+            c if c.is_alphabetic() || c == '_' || c == '<' || c == '[' => {
                 let ident = self.extract_ident()?;
 
                 if let Some(kw_or_instr) = self.extract_kw_or_instr(&ident) {

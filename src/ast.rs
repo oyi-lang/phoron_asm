@@ -56,6 +56,43 @@ pub struct PhoronHeader {
     pub super_def: PhoronSuperDef,
 }
 
+// Descriptors
+
+#[derive(Debug)]
+pub enum PhoronFieldDescriptor {
+    BaseType(PhoronBaseType),
+    ObjectType {
+        class_name: String,
+    },
+    ArrayType {
+        component_type: Box<PhoronFieldDescriptor>,
+    },
+}
+
+#[derive(Debug)]
+pub enum PhoronBaseType {
+    Byte,
+    Character,
+    Double,
+    Float,
+    Integer,
+    Long,
+    Short,
+    Boolean,
+}
+
+#[derive(Debug)]
+pub struct PhoronMethodDescriptor {
+    param_descriptor: Option<PhoronFieldDescriptor>,
+    return_descriptor: PhoronReturnDescriptor,
+}
+
+#[derive(Debug)]
+pub enum PhoronReturnDescriptor {
+    PhoronFieldDescriptor,
+    PhoronVoidDescriptor,
+}
+
 // body
 
 // Fields
@@ -83,8 +120,8 @@ pub enum PhoronFieldInitValue {
 #[derive(Debug)]
 pub struct PhoronFieldDef {
     pub name: String,
-    pub access_flag: Vec<PhoronFieldAccessFlag>,
-    pub descriptor: String,
+    pub access_flags: Vec<PhoronFieldAccessFlag>,
+    pub descriptor: PhoronFieldDescriptor,
     pub init_val: Option<PhoronFieldInitValue>,
 }
 
