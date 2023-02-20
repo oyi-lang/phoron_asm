@@ -83,14 +83,14 @@ pub enum PhoronBaseType {
 
 #[derive(Debug)]
 pub struct PhoronMethodDescriptor {
-    param_descriptor: Option<PhoronFieldDescriptor>,
-    return_descriptor: PhoronReturnDescriptor,
+    pub param_descriptor: Option<PhoronFieldDescriptor>,
+    pub return_descriptor: PhoronReturnDescriptor,
 }
 
 #[derive(Debug)]
 pub enum PhoronReturnDescriptor {
-    PhoronFieldDescriptor,
-    PhoronVoidDescriptor,
+    FieldDescriptor(PhoronFieldDescriptor),
+    VoidDescriptor,
 }
 
 // body
@@ -381,7 +381,7 @@ pub enum PhoronInstruction {
 pub struct PhoronMethodDef {
     pub name: String,
     pub access_flags: Vec<PhoronMethodAccessFlag>,
-    pub descriptor: String,
+    pub descriptor: PhoronMethodDescriptor,
     pub instructions: Vec<PhoronInstruction>,
 }
 
