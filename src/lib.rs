@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 pub mod ast;
 pub mod codegen;
 pub mod core_interface;

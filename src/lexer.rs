@@ -319,15 +319,33 @@ impl<'a> Lexer<'a> {
 
     fn extract_float_or_int(&mut self) -> LexerResult<Number> {
         let mut numbuf = String::new();
-        while let Some(d) = self.src.peek() && d.is_digit(10) {
-            numbuf.push(self.next()?);
+        loop {
+            if let Some(d) = self.src.peek() {
+                if d.is_digit(10) {
+                    numbuf.push(self.next()?);
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
 
         if let Some('.') = self.src.peek() {
             numbuf.push(self.next()?);
-            while let Some(d) = self.src.peek() && d.is_digit(10) {
-                numbuf.push(self.next()?);
+
+            loop {
+                if let Some(d) = self.src.peek() {
+                    if d.is_digit(10) {
+                        numbuf.push(self.next()?);
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
             }
+
             Ok(Number::Float(numbuf.parse::<f64>()?))
         } else {
             Ok(Number::Int(numbuf.parse::<i64>()?))
@@ -343,9 +361,16 @@ impl<'a> Lexer<'a> {
         };
 
         let mut identbuf = String::new();
-        while let Some(c) = self.src.peek() && is_ident_char(*c) {
-            identbuf.push(self.next()?);
-
+        loop {
+            if let Some(c) = self.src.peek() {
+                if is_ident_char(*c) {
+                    identbuf.push(self.next()?);
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
 
         Ok(identbuf)
@@ -607,18 +632,29 @@ impl<'a> Lexer<'a> {
             }
 
             ';' => {
-                while let Some(c) = self.src.peek() && *c != '\n' {
-                    self.next()?;
+                loop {
+                    if let Some(c) = self.src.peek() {
+                        if *c != '\n' {
+                            self.next()?;
+                        } else {
+                            break;
+                        }
+                    }
                 }
+
                 self.lex()?
             }
 
             '.' => {
                 self.next()?;
 
-                if let Some(c) = self.src.peek() && c.is_alphabetic() {
-                    let ident = self.extract_ident()?;
-                    self.extract_directive(&ident)?
+                if let Some(c) = self.src.peek() {
+                    if c.is_alphabetic() {
+                        let ident = self.extract_ident()?;
+                        self.extract_directive(&ident)?
+                    } else {
+                        TDot
+                    }
                 } else {
                     TDot
                 }
@@ -662,8 +698,14 @@ impl<'a> Lexer<'a> {
                 self.next()?;
 
                 let mut strbuf = String::new();
-                while let Some(c) = self.src.peek() && *c != '"' {
-                    strbuf.push(self.next()?);
+                loop {
+                    if let Some(c) = self.src.peek() {
+                        if *c != '"' {
+                            strbuf.push(self.next()?);
+                        } else {
+                            break;
+                        }
+                    }
                 }
 
                 if self.src.peek().is_none() {

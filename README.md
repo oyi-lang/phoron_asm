@@ -10,9 +10,8 @@ For the design, please refer to the [Design doc](doc/Design.md).
 
 ## Build
 
-Note: This crate requires nightly Rust.
 
 ```
-  $ cargo +nightly build --release 
+  $ cargo build --release 
 
 ```
