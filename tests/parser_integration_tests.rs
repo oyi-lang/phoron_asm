@@ -66,7 +66,11 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     descriptor: PhoronMethodDescriptor {
-                        param_descriptor: None,
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -89,7 +93,6 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
             ],
         },
     };
-
     let actual_ast = parse("doc/grammar/Malign.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
@@ -170,7 +173,11 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     descriptor: PhoronMethodDescriptor {
-                        param_descriptor: None,
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -231,7 +238,11 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     descriptor: PhoronMethodDescriptor {
-                        param_descriptor: None,
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -310,7 +321,11 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     descriptor: PhoronMethodDescriptor {
-                        param_descriptor: None,
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -389,7 +404,11 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     descriptor: PhoronMethodDescriptor {
-                        param_descriptor: None,
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -462,7 +481,11 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     descriptor: PhoronMethodDescriptor {
-                        param_descriptor: None,
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
