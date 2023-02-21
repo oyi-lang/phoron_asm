@@ -165,6 +165,13 @@ pub enum PhoronDirective {
     },
 }
 
+#[derive(Debug, PartialEq)]
+pub enum LdcValue {
+    Double(f64),
+    Integer(i64),
+    QuotedString(String),
+}
+
 // todo - fill in the exact parameters for each instruction
 #[derive(PartialEq, Debug)]
 pub enum JvmInstruction {
@@ -250,8 +257,16 @@ pub enum JvmInstruction {
     Fstore3,
     Fstore,
     Fsub,
-    Getstatic,
-    Getfield,
+    Getstatic {
+        class_name: String,
+        field_name: String,
+        descriptor: PhoronFieldDescriptor,
+    },
+    Getfield {
+        class_name: String,
+        field_name: String,
+        descriptor: PhoronFieldDescriptor,
+    },
     Goto,
     Gotow,
     I2b,
@@ -340,7 +355,7 @@ pub enum JvmInstruction {
     Lconst1,
     Ldc2w,
     Ldcw,
-    Ldc,
+    Ldc(LdcValue),
     Ldiv,
     Lload,
     Lload0,

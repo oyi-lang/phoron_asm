@@ -7,16 +7,23 @@ pub type ParserResult<T> = Result<T, ParserError>;
 
 #[derive(Debug)]
 pub enum JvmInstructionError {
-    InvokespecialInvalid,
-    InvokespecialMissingMethodName,
-    InvokespecialInvalidOrMissingMethodDescriptor,
-    InvokevirtualInvalid,
-    InvokevirtualMissingMethodName,
-    InvokevirtualInvalidOrMissingMethodDescriptor,
-    InvokestaticInvalid,
-    InvokestaticMissingMethodName,
-    InvokestaticInvalidOrMissingMethodDescriptor,
     BipushMissingByte,
+    GetfieldInvalid,
+    GetfieldInvalidOrMissingFieldDescriptor,
+    GetfieldMissingFieldName,
+    GetstaticInvalid,
+    GetstaticInvalidOrMissingFieldDescriptor,
+    GetstaticMissingFieldName,
+    InvokespecialInvalid,
+    InvokespecialInvalidOrMissingMethodDescriptor,
+    InvokespecialMissingMethodName,
+    InvokestaticInvalid,
+    InvokestaticInvalidOrMissingMethodDescriptor,
+    InvokestaticMissingMethodName,
+    InvokevirtualInvalid,
+    InvokevirtualInvalidOrMissingMethodDescriptor,
+    InvokevirtualMissingMethodName,
+    LdcIncorrectValue,
 }
 
 impl fmt::Display for JvmInstructionError {
@@ -44,6 +51,18 @@ impl fmt::Display for JvmInstructionError {
                 JvmInstructionError::InvokestaticInvalidOrMissingMethodDescriptor =>
                     "invokestatic : missing or invalid method descriptor",
                 JvmInstructionError::BipushMissingByte => "Bipush : missing byte".into(),
+                JvmInstructionError::GetfieldInvalid => "getfield : badly-formed or invalid".into(),
+                JvmInstructionError::GetfieldInvalidOrMissingFieldDescriptor =>
+                    "getfield : missing or invalid field descriptor".into(),
+                JvmInstructionError::GetfieldMissingFieldName =>
+                    "getfield : missing field name".into(),
+                JvmInstructionError::GetstaticInvalid =>
+                    "getstatic : badly-formed or invalid".into(),
+                JvmInstructionError::GetstaticInvalidOrMissingFieldDescriptor =>
+                    "getstatic : missing or invalid field descriptor".into(),
+                JvmInstructionError::GetstaticMissingFieldName =>
+                    "getstatic : missing field name".into(),
+                JvmInstructionError::LdcIncorrectValue => "ldc : incorrect value".into(),
             }
         )
     }
@@ -939,12 +958,70 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // getfield <field-spec> <descriptor>
             Token::TGetfield => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(gf_str) = self.see() {
+                    if let Some(pos) = gf_str.rfind('/') {
+                        let class_name = gf_str[..pos].to_owned();
+                        let field_name = gf_str[pos + 1..].to_owned();
+                        self.advance()?;
+
+                        if let Ok(descriptor) = self.parse_field_descriptor() {
+                            JvmInstruction::Getfield {
+                                class_name,
+                                field_name,
+                                descriptor,
+                            }
+                        } else {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::GetfieldInvalidOrMissingFieldDescriptor,
+                            ));
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::GetfieldMissingFieldName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::GetfieldInvalid,
+                    ));
+                }
             }
 
+            // getstatic <field-spec> <descriptor>
             Token::TGetstatic => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(gs_str) = self.see() {
+                    if let Some(pos) = gs_str.rfind('/') {
+                        let class_name = gs_str[..pos].to_owned();
+                        let field_name = gs_str[pos + 1..].to_owned();
+                        self.advance()?;
+
+                        if let Ok(descriptor) = self.parse_field_descriptor() {
+                            JvmInstruction::Getstatic {
+                                class_name,
+                                field_name,
+                                descriptor,
+                            }
+                        } else {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::GetstaticInvalidOrMissingFieldDescriptor,
+                            ));
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::GetstaticMissingFieldName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::GetstaticInvalid,
+                    ));
+                }
             }
 
             Token::TGoto => {
@@ -1334,8 +1411,35 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // ldc <double | integer | quoted string>
             Token::TLdc => {
-                todo!()
+                self.advance()?;
+
+                match self.see() {
+                    Token::TInt(n) => {
+                        let ival = *n as i64;
+                        self.advance()?;
+                        JvmInstruction::Ldc(LdcValue::Integer(ival))
+                    }
+
+                    Token::TFloat(f) => {
+                        let dval = *f as f64;
+                        self.advance()?;
+                        JvmInstruction::Ldc(LdcValue::Double(dval))
+                    }
+
+                    Token::TString(s) => {
+                        let sval = s.to_owned();
+                        self.advance()?;
+                        JvmInstruction::Ldc(LdcValue::QuotedString(sval))
+                    }
+
+                    _ => {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::LdcIncorrectValue,
+                        ))
+                    }
+                }
             }
 
             Token::TLdc2w => {
