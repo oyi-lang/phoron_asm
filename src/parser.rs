@@ -6,6 +6,50 @@ use crate::{
 pub type ParserResult<T> = Result<T, ParserError>;
 
 #[derive(Debug)]
+pub enum JvmInstructionError {
+    InvokespecialInvalid,
+    InvokespecialMissingMethodName,
+    InvokespecialInvalidOrMissingMethodDescriptor,
+    InvokevirtualInvalid,
+    InvokevirtualMissingMethodName,
+    InvokevirtualInvalidOrMissingMethodDescriptor,
+    InvokestaticInvalid,
+    InvokestaticMissingMethodName,
+    InvokestaticInvalidOrMissingMethodDescriptor,
+    BipushMissingByte,
+}
+
+impl fmt::Display for JvmInstructionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                JvmInstructionError::InvokespecialInvalid =>
+                    "invokespecial: badly-formed or invalid".into(),
+                JvmInstructionError::InvokespecialMissingMethodName =>
+                    "invokespecial : missing method name".into(),
+                JvmInstructionError::InvokespecialInvalidOrMissingMethodDescriptor =>
+                    "invokespecial : missing or invalid method descriptor",
+                JvmInstructionError::InvokevirtualInvalid =>
+                    "invokevirtual: badly-formed or invalid".into(),
+                JvmInstructionError::InvokevirtualMissingMethodName =>
+                    "invokevirtual : missing method name".into(),
+                JvmInstructionError::InvokevirtualInvalidOrMissingMethodDescriptor =>
+                    "invokevirtual : missing or invalid method descriptor",
+                JvmInstructionError::InvokestaticInvalid =>
+                    "invokestatic: badly-formed or invalid".into(),
+                JvmInstructionError::InvokestaticMissingMethodName =>
+                    "invokestatic : missing method name".into(),
+                JvmInstructionError::InvokestaticInvalidOrMissingMethodDescriptor =>
+                    "invokestatic : missing or invalid method descriptor",
+                JvmInstructionError::BipushMissingByte => "Bipush : missing byte".into(),
+            }
+        )
+    }
+}
+
+#[derive(Debug)]
 pub enum ParserError {
     EmptyFieldDescriptor,
     IllegalLabelError,
@@ -16,6 +60,7 @@ pub enum ParserError {
     InvalidJvmInstruction(String),
     InvalidMethodDescriptor,
     InvalidToken(String),
+    JvmInstructionError(JvmInstructionError),
     LexerError(LexerError),
     LocalsDirectiveMissingCount,
     MissingSourceFileName,
@@ -72,6 +117,7 @@ impl fmt::Display for ParserError {
                     format!("Invalid flag for field: {flag}"),
                 ParserError::UnknownMethodAccessFlag(ref flag) =>
                     format!("Invalid flag for method: {flag}"),
+                ParserError::JvmInstructionError(ref jvm_err) => jvm_err.to_string(),
             }
         )
     }
@@ -578,8 +624,19 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // bipush i8
             Token::TBipush => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TInt(b) = self.see() {
+                    let byte = *b as i8;
+                    self.advance()?;
+                    JvmInstruction::Bipush(byte)
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::BipushMissingByte,
+                    ));
+                }
             }
 
             Token::TBridge => {
@@ -1078,16 +1135,103 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // invokespecial <method-spec>
             Token::TInvokespecial => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(is_str) = self.see() {
+                    if let Some(pos) = is_str.rfind('/') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+                        self.advance()?;
+
+                        if let Ok(descriptor) = self.parse_method_descriptor() {
+                            JvmInstruction::Invokespecial {
+                                class_name,
+                                method_name,
+                                descriptor,
+                            }
+                        } else {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::InvokespecialInvalidOrMissingMethodDescriptor,
+                            ));
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::InvokespecialMissingMethodName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::InvokespecialInvalid,
+                    ));
+                }
             }
 
+            // invokestatic <method-spec>
             Token::TInvokestatic => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(is_str) = self.see() {
+                    if let Some(pos) = is_str.rfind('/') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+                        self.advance()?;
+
+                        if let Ok(descriptor) = self.parse_method_descriptor() {
+                            JvmInstruction::Invokestatic {
+                                class_name,
+                                method_name,
+                                descriptor,
+                            }
+                        } else {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::InvokestaticInvalidOrMissingMethodDescriptor,
+                            ));
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::InvokestaticMissingMethodName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::InvokestaticInvalid,
+                    ));
+                }
             }
 
+            // invokevirtual <method-spec>
             Token::TInvokevirtual => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(is_str) = self.see() {
+                    if let Some(pos) = is_str.rfind('/') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+                        self.advance()?;
+
+                        if let Ok(descriptor) = self.parse_method_descriptor() {
+                            JvmInstruction::Invokevirtual {
+                                class_name,
+                                method_name,
+                                descriptor,
+                            }
+                        } else {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::InvokevirtualInvalidOrMissingMethodDescriptor,
+                            ));
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::InvokevirtualMissingMethodName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::InvokevirtualInvalid,
+                    ));
+                }
             }
 
             Token::TIor => {
@@ -1779,9 +1923,6 @@ impl<'a> Parser<'a> {
     /// ReturnDescriptor <- FieldType / VoidType
     /// VoidType <- 'V'
     fn parse_method_descriptor(&mut self) -> ParserResult<PhoronMethodDescriptor> {
-        // param_descriptor: Option<PhoronFieldDescriptor>,
-        // return_descriptor: PhoronReturnDescriptor,
-        //
         if let Token::TLeftParen = self.see() {
             self.advance()?;
             let param_descriptor = match self.parse_field_descriptor() {
@@ -1836,7 +1977,6 @@ impl<'a> Parser<'a> {
             self.advance()?;
 
             let descriptor = self.parse_method_descriptor()?;
-            println!("name = {name:#?}, descriptor = {descriptor:#?}");
             let instructions = self.parse_instructions()?;
 
             Ok(PhoronMethodDef {
@@ -1857,15 +1997,12 @@ impl<'a> Parser<'a> {
             method_defs.push(self.parse_method_def()?);
         }
 
-        println!("methods = {method_defs:#?}");
-
         Ok(method_defs)
     }
 
     /// Body <- FieldDef* MethodDef*
     fn parse_body(&mut self) -> ParserResult<PhoronBody> {
         let field_defs = self.parse_field_defs()?;
-        println!("field_defs = {field_defs:#?}");
         let method_defs = self.parse_method_defs()?;
 
         Ok(PhoronBody {
@@ -1942,9 +2079,7 @@ impl<'a> Parser<'a> {
     /// PhoronProgram <- line_comment* Header Body eof
     pub fn parse(&mut self) -> ParserResult<PhoronProgram> {
         let header = self.parse_header()?;
-        println!("header = {header:#?}");
         let body = self.parse_body()?;
-        println!("body = {body:#?}");
 
         Ok(PhoronProgram { header, body })
     }

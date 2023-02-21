@@ -1,5 +1,8 @@
 use phoron_asm::{
-    ast::PhoronProgram,
+    ast::{
+        JvmInstruction::*, PhoronClassOrInterface::*, PhoronDirective::*, PhoronFieldDescriptor::*,
+        PhoronInstruction::*, PhoronReturnDescriptor::*, *,
+    },
     lexer::{
         Lexer,
         Token::{self, *},
@@ -21,7 +24,74 @@ where
 
 #[test]
 fn test_parse_malign() -> Result<(), Box<dyn Error>> {
-    println!("{:#?}", parse(Path::new("doc/grammar/Malign.pho"))?);
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "Malign".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(2)),
+                        PhoronDirective(LimitLocals(1)),
+                        JvmInstruction(Bipush(100)),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "clone".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: FieldDescriptor(ObjectType {
+                                    class_name: "java/lang/Object".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/Malign.pho")?;
+    assert_eq!(expected_ast, actual_ast);
+
     Ok(())
 }
 

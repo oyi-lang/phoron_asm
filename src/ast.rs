@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct PhoronProgram {
     pub header: PhoronHeader,
     pub body: PhoronBody,
@@ -6,14 +6,14 @@ pub struct PhoronProgram {
 
 // header
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct PhoronSourceFileDef {
     pub source_file: String,
 }
 
 // classes and interfaces
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum PhoronClassOrInterfaceAccessFlag {
     AccPublic,
     AccFinal,
@@ -26,30 +26,30 @@ pub enum PhoronClassOrInterfaceAccessFlag {
     AccModule,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronClassDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronInterfaceDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronClassOrInterface {
     Class(PhoronClassDef),
     Interface(PhoronInterfaceDef),
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronSuperDef {
     pub super_class_name: String,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronHeader {
     pub sourcefile_def: Option<PhoronSourceFileDef>,
     pub class_or_interface_def: PhoronClassOrInterface,
@@ -58,7 +58,7 @@ pub struct PhoronHeader {
 
 // Descriptors
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronFieldDescriptor {
     BaseType(PhoronBaseType),
     ObjectType {
@@ -69,7 +69,7 @@ pub enum PhoronFieldDescriptor {
     },
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronBaseType {
     Byte,
     Character,
@@ -81,13 +81,13 @@ pub enum PhoronBaseType {
     Boolean,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronMethodDescriptor {
     pub param_descriptor: Option<PhoronFieldDescriptor>,
     pub return_descriptor: PhoronReturnDescriptor,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronReturnDescriptor {
     FieldDescriptor(PhoronFieldDescriptor),
     VoidDescriptor,
@@ -97,7 +97,7 @@ pub enum PhoronReturnDescriptor {
 
 // Fields
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronFieldAccessFlag {
     AccPublic,
     AccPrivate,
@@ -110,14 +110,14 @@ pub enum PhoronFieldAccessFlag {
     AccEnum,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronFieldInitValue {
     Double(f64),
     Integer(i64),
     QuotedString(String),
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronFieldDef {
     pub name: String,
     pub access_flags: Vec<PhoronFieldAccessFlag>,
@@ -127,7 +127,7 @@ pub struct PhoronFieldDef {
 
 // methods
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronMethodAccessFlag {
     AccPublic,
     AccPrivate,
@@ -143,7 +143,7 @@ pub enum PhoronMethodAccessFlag {
     AccSynthetic,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronDirective {
     LimitStack(u16),
     LimitLocals(u16),
@@ -166,7 +166,7 @@ pub enum PhoronDirective {
 }
 
 // todo - fill in the exact parameters for each instruction
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum JvmInstruction {
     Aaload,
     Anewarray,
@@ -187,7 +187,7 @@ pub enum JvmInstruction {
     Athrow,
     Baload,
     Bastore,
-    Bipush,
+    Bipush(i8),
     Caload,
     Castore,
     Checkcast,
@@ -298,9 +298,21 @@ pub enum JvmInstruction {
     Ineg,
     Instanceof,
     Invokeinterface,
-    Invokespecial,
-    Invokestatic,
-    Invokevirtual,
+    Invokespecial {
+        class_name: String,
+        method_name: String,
+        descriptor: PhoronMethodDescriptor,
+    },
+    Invokestatic {
+        class_name: String,
+        method_name: String,
+        descriptor: PhoronMethodDescriptor,
+    },
+    Invokevirtual {
+        class_name: String,
+        method_name: String,
+        descriptor: PhoronMethodDescriptor,
+    },
     Ior,
     Irem,
     Ireturn,
@@ -370,14 +382,14 @@ pub enum JvmInstruction {
     Tableswitch,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum PhoronInstruction {
     PhoronDirective(PhoronDirective),
     JvmInstruction(JvmInstruction),
     PhoronLabel(String),
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronMethodDef {
     pub name: String,
     pub access_flags: Vec<PhoronMethodAccessFlag>,
@@ -385,7 +397,7 @@ pub struct PhoronMethodDef {
     pub instructions: Vec<PhoronInstruction>,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub struct PhoronBody {
     pub field_defs: Vec<PhoronFieldDef>,
     pub method_defs: Vec<PhoronMethodDef>,

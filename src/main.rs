@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let src = fs::read_to_string(&args[0])?;
         let mut parser = Parser::new(Lexer::new(&src));
         let ast = parser.parse()?;
-        //println!("{ast:#?}");
+        println!("{ast:#?}");
     }
 
     Ok(())
