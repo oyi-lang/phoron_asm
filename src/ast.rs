@@ -166,6 +166,18 @@ pub enum PhoronDirective {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum PrimitiveType {
+    Boolean,
+    Byte,
+    Char,
+    Double,
+    Float,
+    Int,
+    Long,
+    Short,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum LdcValue {
     Double(f64),
     Integer(i64),
@@ -381,8 +393,12 @@ pub enum JvmInstruction {
     Monitorenter,
     Monitorexit,
     Multianewarray,
-    Newarray,
-    New,
+    Newarray {
+        component_type: PrimitiveType,
+    },
+    New {
+        class_name: String,
+    },
     Nop,
     Pop2,
     Pop,

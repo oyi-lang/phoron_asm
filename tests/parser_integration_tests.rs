@@ -1,7 +1,8 @@
 use phoron_asm::{
     ast::{
         JvmInstruction::*, PhoronBaseType::*, PhoronClassOrInterface::*, PhoronDirective::*,
-        PhoronFieldDescriptor::*, PhoronInstruction::*, PhoronReturnDescriptor::*, *,
+        PhoronFieldDescriptor::*, PhoronInstruction::*, PhoronReturnDescriptor::*, PrimitiveType,
+        *,
     },
     lexer::{
         Lexer,
@@ -420,11 +421,179 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "PrivetMir".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(2)),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Ldc(LdcValue::QuotedString("Привет, мир!".to_string()))),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/PrivetMir.pho")?;
+    assert_eq!(expected_ast, actual_ast);
+
     Ok(())
 }
 
 #[test]
 fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "Areturn".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "makeIntArray".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(BaseType(Integer)),
+                        return_descriptor: FieldDescriptor(ArrayType {
+                            component_type: Box::new(BaseType(Integer)),
+                        }),
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitLocals(2)),
+                        JvmInstruction(Iload0),
+                        JvmInstruction(Newarray {
+                            component_type: PrimitiveType::Int,
+                        }),
+                        JvmInstruction(Areturn),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(3)),
+                        PhoronDirective(LimitLocals(3)),
+                        JvmInstruction(Bipush(10)),
+                        JvmInstruction(Invokestatic {
+                            class_name: "Areturn".to_string(),
+                            method_name: "makeIntArray".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: FieldDescriptor(ArrayType {
+                                    component_type: Box::new(BaseType(Integer)),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Astore1),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/Areturn.pho")?;
+    assert_eq!(expected_ast, actual_ast);
+
     Ok(())
 }
 

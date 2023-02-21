@@ -185,6 +185,7 @@ pub enum Token {
     TLdcw,
     TLdiv,
     TLeftParen,
+    TLeftSquareBracket,
     TLimit,
     TLine,
     TLload,
@@ -680,6 +681,11 @@ impl<'a> Lexer<'a> {
                 TRightParen
             }
 
+            '[' => {
+                self.next()?;
+                TLeftSquareBracket
+            }
+
             '=' => {
                 self.next()?;
                 TAssign
@@ -726,7 +732,7 @@ impl<'a> Lexer<'a> {
                 }
             }
 
-            c if c.is_alphabetic() || c == '_' || c == '<' || c == '[' => {
+            c if c.is_alphabetic() || c == '_' || c == '<' => {
                 let ident = self.extract_ident()?;
 
                 if let Some(kw_or_instr) = self.extract_kw_or_instr(&ident) {

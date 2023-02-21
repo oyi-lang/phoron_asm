@@ -24,6 +24,8 @@ pub enum JvmInstructionError {
     InvokevirtualInvalidOrMissingMethodDescriptor,
     InvokevirtualMissingMethodName,
     LdcIncorrectValue,
+    NewMissingClassName,
+    NewarrayInvalidType,
 }
 
 impl fmt::Display for JvmInstructionError {
@@ -63,6 +65,8 @@ impl fmt::Display for JvmInstructionError {
                 JvmInstructionError::GetstaticMissingFieldName =>
                     "getstatic : missing field name".into(),
                 JvmInstructionError::LdcIncorrectValue => "ldc : incorrect value".into(),
+                JvmInstructionError::NewMissingClassName => "newa : missing class name".into(),
+                JvmInstructionError::NewarrayInvalidType => "newarray : invalid type".into(),
             }
         )
     }
@@ -450,14 +454,13 @@ impl<'a> Parser<'a> {
                         return Err(ParserError::InvalidFieldDescriptor);
                     }
                 }
-                "[" => {
-                    self.advance()?;
-                    let component_type = self.parse_field_descriptor()?;
-                    PhoronFieldDescriptor::ArrayType {
-                        component_type: Box::new(component_type),
-                    }
-                }
                 _ => return Err(ParserError::InvalidFieldDescriptor),
+            })
+        } else if let Token::TLeftSquareBracket = self.see() {
+            self.advance()?;
+            let component_type = self.parse_field_descriptor()?;
+            Ok(PhoronFieldDescriptor::ArrayType {
+                component_type: Box::new(component_type),
             })
         } else if let Token::TRightParen = self.see() {
             Err(ParserError::EmptyFieldDescriptor)
@@ -554,53 +557,61 @@ impl<'a> Parser<'a> {
 
     fn parse_jvm_instruction(&mut self) -> ParserResult<JvmInstruction> {
         Ok(match self.see() {
+            // aaload
             Token::TAaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Aaload
             }
 
+            // aastore
             Token::TAastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Aastore
             }
 
-            Token::TAbstract => {
-                todo!()
-            }
-
+            // aconst_null
             Token::TAconstnull => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Aconstnull
             }
 
+            // aload <varnum>
             Token::TAload => {
                 todo!()
             }
 
+            // aload_0
             Token::TAload0 => {
                 self.advance()?;
                 JvmInstruction::Aload0
             }
 
+            // aload_1
             Token::TAload1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Aload1
             }
 
+            // aload_2
             Token::TAload2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Aload2
             }
 
+            // aload_3
             Token::TAload3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Aload3
             }
 
             Token::TAnewarray => {
                 todo!()
             }
 
-            Token::TAnnotation => {
-                todo!()
-            }
-
+            // areturn
             Token::TAreturn => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Areturn
             }
 
             Token::TArraylength => {
@@ -619,8 +630,10 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // astore_1
             Token::TAstore1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Astore1
             }
 
             Token::TAstore2 => {
@@ -1176,20 +1189,28 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // iload_0
             Token::TIload0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iload0
             }
 
+            // iload_1
             Token::TIload1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iload1
             }
 
+            // iload_2
             Token::TIload2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iload2
             }
 
+            // iload_3
             Token::TIload3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iload3
             }
 
             Token::TImul => {
@@ -1586,12 +1607,86 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // new <class>
             Token::TNew => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(class_name_str) = self.see() {
+                    let class_name = class_name_str.to_string();
+                    JvmInstruction::New { class_name }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::NewMissingClassName,
+                    ));
+                }
             }
 
+            // newarray <primitive_type>
             Token::TNewarray => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(prim_type) = self.see() {
+                    match prim_type.as_str() {
+                        "char" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Char,
+                            }
+                        }
+
+                        "float" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Float,
+                            }
+                        }
+
+                        "double" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Double,
+                            }
+                        }
+
+                        "byte" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Byte,
+                            }
+                        }
+
+                        "short" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Short,
+                            }
+                        }
+
+                        "int" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Int,
+                            }
+                        }
+
+                        "long" => {
+                            self.advance()?;
+                            JvmInstruction::Newarray {
+                                component_type: PrimitiveType::Long,
+                            }
+                        }
+
+                        _ => {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::NewarrayInvalidType,
+                            ))
+                        }
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::NewarrayInvalidType,
+                    ));
+                }
             }
 
             Token::TNop => {
@@ -2047,6 +2142,8 @@ impl<'a> Parser<'a> {
                     } else {
                         PhoronReturnDescriptor::FieldDescriptor(self.parse_field_descriptor()?)
                     }
+                } else if let Token::TLeftSquareBracket = self.see() {
+                    PhoronReturnDescriptor::FieldDescriptor(self.parse_field_descriptor()?)
                 } else {
                     return Err(ParserError::InvalidMethodDescriptor);
                 };
