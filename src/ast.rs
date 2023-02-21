@@ -145,8 +145,8 @@ pub enum PhoronMethodAccessFlag {
 
 #[derive(Debug)]
 pub enum PhoronDirective {
-    LimitStack(i16),
-    LimitLocals(i16),
+    LimitStack(u16),
+    LimitLocals(u16),
     Throws {
         class_name: String,
     },

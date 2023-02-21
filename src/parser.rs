@@ -7,22 +7,26 @@ pub type ParserResult<T> = Result<T, ParserError>;
 
 #[derive(Debug)]
 pub enum ParserError {
-    LexerError(LexerError),
-    InvalidToken(String),
-    IllegalLabelError,
-    InvalidFieldDescriptor,
     EmptyFieldDescriptor,
+    IllegalLabelError,
+    InvalidDirective(String),
+    InvalidFieldDescriptor,
     InvalidFieldInitValue(String),
-    InvalidMethodDescriptor,
     InvalidInstruction(String),
     InvalidJvmInstruction(String),
+    InvalidMethodDescriptor,
+    InvalidToken(String),
+    LexerError(LexerError),
+    LocalsDirectiveMissingCount,
+    MissingSourceFileName,
     MissingClassName,
-    MissingInterfaceName,
     MissingEndMethodMarker,
-    UnknownClassOrInterfaceAccessFlag(String),
-    MissingSuperclassName,
     MissingFieldName,
+    MissingInterfaceName,
     MissingMethodName,
+    MissingSuperclassName,
+    StackDirectiveMissingCount,
+    UnknownClassOrInterfaceAccessFlag(String),
     UnknownFieldAccessFlag(String),
     UnknownMethodAccessFlag(String),
 }
@@ -41,6 +45,7 @@ impl fmt::Display for ParserError {
                 ParserError::InvalidToken(ref tokstr) =>
                     format!("Invalid token at position: {:#?}", tokstr),
                 ParserError::InvalidFieldDescriptor => "invalid field descriptor".into(),
+                ParserError::InvalidDirective(ref dir) => format!("invalid directive: {dir}"),
                 ParserError::EmptyFieldDescriptor => "empty field descriptor".into(),
                 ParserError::InvalidFieldInitValue(ref tokstr) =>
                     format!("invalid field initialisation value: {:#?}", tokstr),
@@ -49,6 +54,7 @@ impl fmt::Display for ParserError {
                     format!("invalid phpron instuction: {instr}"),
                 ParserError::InvalidJvmInstruction(ref instr) =>
                     format!("invalid JVM instruction {instr}"),
+                ParserError::MissingSourceFileName => "missing source file name".into(),
                 ParserError::MissingClassName => "missing class name".into(),
                 ParserError::MissingInterfaceName => "missing interface name".into(),
                 ParserError::MissingSuperclassName => "missing super class name".into(),
@@ -56,6 +62,10 @@ impl fmt::Display for ParserError {
                 ParserError::MissingMethodName => "method name missing in definition".into(),
                 ParserError::MissingEndMethodMarker =>
                     "malformed end method - missing method keyword".into(),
+                ParserError::LocalsDirectiveMissingCount =>
+                    "missing count value for .limit locals directive".into(),
+                ParserError::StackDirectiveMissingCount =>
+                    "missing count value for .limit stack directive".into(),
                 ParserError::UnknownClassOrInterfaceAccessFlag(ref flag) =>
                     format!("Invalid flag for class/interface: {flag}"),
                 ParserError::UnknownFieldAccessFlag(ref flag) =>
@@ -73,6 +83,7 @@ impl From<LexerError> for ParserError {
     }
 }
 
+/// The Phoron parser
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     curr_tok: Token,
@@ -93,10 +104,6 @@ impl<'a> Parser<'a> {
 
     fn see(&self) -> &Token {
         &self.curr_tok
-    }
-
-    fn parse_sourcefile_def(&mut self) -> ParserResult<PhoronSourceFileDef> {
-        todo!()
     }
 
     fn is_class_or_interface_access_flag(&self, tok: &Token) -> bool {
@@ -439,7 +446,45 @@ impl<'a> Parser<'a> {
     /// VarDirective <- VAR_keyword Integer IS_keyword VarName FieldDescriptor FROM_keyword Label TO_keyword Label
     /// CatchDirective <- CATCH_keyword ClassName FROM_keyword Label TO_keyword Label USING_keyword Label
     fn parse_directive(&mut self) -> ParserResult<PhoronDirective> {
-        todo!()
+        Ok(match self.see() {
+            Token::TStack => {
+                self.advance()?;
+
+                if let Token::TInt(n) = self.see() {
+                    let max_stack = *n as u16;
+                    self.advance()?;
+                    PhoronDirective::LimitStack(max_stack)
+                } else {
+                    return Err(ParserError::StackDirectiveMissingCount);
+                }
+            }
+
+            Token::TLocals => {
+                self.advance()?;
+
+                if let Token::TInt(n) = self.see() {
+                    let max_locals = *n as u16;
+                    self.advance()?;
+                    PhoronDirective::LimitLocals(max_locals)
+                } else {
+                    return Err(ParserError::LocalsDirectiveMissingCount);
+                }
+            }
+
+            Token::TThrows => {
+                todo!()
+            }
+            Token::TLine => {
+                todo!()
+            }
+            Token::TVar => {
+                todo!()
+            }
+            Token::TCatch => {
+                todo!()
+            }
+            _ => return Err(ParserError::InvalidDirective(format!("{:#?}", self.see()))),
+        })
     }
 
     fn parse_jvm_instruction(&mut self) -> ParserResult<JvmInstruction> {
@@ -1820,6 +1865,7 @@ impl<'a> Parser<'a> {
     /// Body <- FieldDef* MethodDef*
     fn parse_body(&mut self) -> ParserResult<PhoronBody> {
         let field_defs = self.parse_field_defs()?;
+        println!("field_defs = {field_defs:#?}");
         let method_defs = self.parse_method_defs()?;
 
         Ok(PhoronBody {
@@ -1828,12 +1874,25 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// SourceFileDef <- SOURCE_keyword FileName newline
+    fn parse_sourcefile_def(&mut self) -> ParserResult<PhoronSourceFileDef> {
+        if let Token::TIdent(source_file_str) = self.see() {
+            let source_file = source_file_str.to_string();
+            self.advance()?;
+
+            Ok(PhoronSourceFileDef { source_file })
+        } else {
+            Err(ParserError::MissingSourceFileName)
+        }
+    }
+
     /// Header <- SourceFileDef? (ClassDef / InterfaceDef) SuperDef
     fn parse_header(&mut self) -> ParserResult<PhoronHeader> {
         self.advance()?;
 
         Ok(match self.see() {
             Token::TSource => {
+                self.advance()?;
                 let sourcefile_def = self.parse_sourcefile_def()?;
 
                 let class_or_interface_def = match self.see() {
@@ -1883,7 +1942,9 @@ impl<'a> Parser<'a> {
     /// PhoronProgram <- line_comment* Header Body eof
     pub fn parse(&mut self) -> ParserResult<PhoronProgram> {
         let header = self.parse_header()?;
+        println!("header = {header:#?}");
         let body = self.parse_body()?;
+        println!("body = {body:#?}");
 
         Ok(PhoronProgram { header, body })
     }
