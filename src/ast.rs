@@ -121,7 +121,7 @@ pub enum PhoronFieldInitValue {
 pub struct PhoronFieldDef {
     pub name: String,
     pub access_flags: Vec<PhoronFieldAccessFlag>,
-    pub descriptor: PhoronFieldDescriptor,
+    pub field_descriptor: PhoronFieldDescriptor,
     pub init_val: Option<PhoronFieldInitValue>,
 }
 
@@ -210,7 +210,9 @@ pub enum JvmInstruction {
     Aload1,
     Aload2,
     Aload3,
-    Aload,
+    Aload {
+        varnum: u16,
+    },
     Arraylength,
     Astore0,
     Astore1,
@@ -243,7 +245,9 @@ pub enum JvmInstruction {
     Dload1,
     Dload2,
     Dload3,
-    Dload,
+    Dload {
+        varnum: u16,
+    },
     Dmul,
     Dneg,
     Drem,
@@ -252,7 +256,9 @@ pub enum JvmInstruction {
     Dstore1,
     Dstore2,
     Dstore3,
-    Dstore,
+    Dstore {
+        varnum: u16,
+    },
     Dsub,
     Dup2x1,
     Dup2x2,
@@ -276,7 +282,9 @@ pub enum JvmInstruction {
     Fload1,
     Fload2,
     Fload3,
-    Fload,
+    Fload {
+        varnum: u16,
+    },
     Fmul,
     Fneg,
     Frem,
@@ -285,22 +293,26 @@ pub enum JvmInstruction {
     Fstore1,
     Fstore2,
     Fstore3,
-    Fstore,
+    Fstore {
+        varnum: u16,
+    },
     Fsub,
     Getstatic {
         class_name: String,
         field_name: String,
-        descriptor: PhoronFieldDescriptor,
+        field_descriptor: PhoronFieldDescriptor,
     },
     Getfield {
         class_name: String,
         field_name: String,
-        descriptor: PhoronFieldDescriptor,
+        field_descriptor: PhoronFieldDescriptor,
     },
     Goto {
         label: String,
     },
-    Gotow,
+    Gotow {
+        label: String,
+    },
     I2b,
     I2c,
     I2d,
@@ -319,10 +331,18 @@ pub enum JvmInstruction {
     Iconst4,
     Iconst5,
     Idiv,
-    Ifacmpeq,
-    Ifacmpne,
-    Ificmpeq,
-    Ificmpge,
+    Ifacmpeq {
+        label: String,
+    },
+    Ifacmpne {
+        label: String,
+    },
+    Ificmpeq {
+        label: String,
+    },
+    Ificmpge {
+        label: String,
+    },
     Ificmpgt {
         label: String,
     },
@@ -332,17 +352,33 @@ pub enum JvmInstruction {
     Ificmplt {
         label: String,
     },
-    Ificmpne,
-    Ifeq,
-    Ifge,
-    Ifgt,
-    Ifle,
-    Iflt,
+    Ificmpne {
+        label: String,
+    },
+    Ifeq {
+        label: String,
+    },
+    Ifge {
+        label: String,
+    },
+    Ifgt {
+        label: String,
+    },
+    Ifle {
+        label: String,
+    },
+    Iflt {
+        label: String,
+    },
     Ifne {
         label: String,
     },
-    Ifnonnull,
-    Ifnull,
+    Ifnonnull {
+        label: String,
+    },
+    Ifnull {
+        label: String,
+    },
     Iinc {
         varnum: u16,
         delta: i16,
@@ -363,17 +399,17 @@ pub enum JvmInstruction {
     Invokespecial {
         class_name: String,
         method_name: String,
-        descriptor: PhoronMethodDescriptor,
+        method_descriptor: PhoronMethodDescriptor,
     },
     Invokestatic {
         class_name: String,
         method_name: String,
-        descriptor: PhoronMethodDescriptor,
+        method_descriptor: PhoronMethodDescriptor,
     },
     Invokevirtual {
         class_name: String,
         method_name: String,
-        descriptor: PhoronMethodDescriptor,
+        method_descriptor: PhoronMethodDescriptor,
     },
     Ior,
     Irem,
@@ -390,7 +426,9 @@ pub enum JvmInstruction {
     Isub,
     Iushr,
     Ixor,
-    Jsrw,
+    Jsrw {
+        label: String,
+    },
     Jsr {
         label: String,
     },
@@ -398,7 +436,7 @@ pub enum JvmInstruction {
     L2f,
     L2i,
     Ladd,
-    Loaload,
+    Laload,
     Land,
     Lastore,
     Lcmp,
@@ -408,7 +446,9 @@ pub enum JvmInstruction {
     Ldcw(LdcValue),
     Ldc(LdcValue),
     Ldiv,
-    Lload,
+    Lload {
+        varnum: u16,
+    },
     Lload0,
     Lload1,
     Lload2,
@@ -424,7 +464,9 @@ pub enum JvmInstruction {
     Lreturn,
     Lshl,
     Lshr,
-    Lstore,
+    Lstore {
+        varnum: u16,
+    },
     Lstore0,
     Lstore1,
     Lstore2,
@@ -463,6 +505,7 @@ pub enum JvmInstruction {
         switches: Vec<String>,
         default: String,
     },
+    Wide,
 }
 
 #[derive(PartialEq, Debug)]
@@ -476,7 +519,7 @@ pub enum PhoronInstruction {
 pub struct PhoronMethodDef {
     pub name: String,
     pub access_flags: Vec<PhoronMethodAccessFlag>,
-    pub descriptor: PhoronMethodDescriptor,
+    pub method_descriptor: PhoronMethodDescriptor,
     pub instructions: Vec<PhoronInstruction>,
 }
 

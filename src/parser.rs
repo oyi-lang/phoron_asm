@@ -55,6 +55,35 @@ impl fmt::Display for DirectiveError {
 
 #[derive(Debug)]
 pub enum JvmInstructionError {
+    LstoreMissingOrInvalidVarnum,
+    LloadMissingOrInvalidVarnum,
+    InstanceofMissingOrInvalidCheckType,
+    IfnonnullMissingOrInvalidLabel,
+    IfnullMissingOrInvalidLabel,
+    IfleMissingOrInvalidLabel,
+    IfltMissingOrInvalidLabel,
+    IfgeMissingOrInvalidLabel,
+    IfgtMissingOrInvalidLabel,
+    IfcmpneMissingOrInvalidLabel,
+    IfeqMissingOrInvalidLabel,
+    IficmpgtMissingLabel,
+    IficmpltMissingLabel,
+    IficmpleMissingLabel,
+    IloadMissingVarnum,
+    IfneMissingLabel,
+    IficmpeqMissingOrInvalidLabel,
+    IficmpgeMissingOrInvalidLabel,
+    IfacmpneMissingOrInvalidLabel,
+    IfacmpeqMissingOrInvalidLabel,
+    GetfieldMissingOrInvalidClassName,
+    GetfieldMissingOrInvalidFieldName,
+    GetfieldMissingOrInvalidFieldDescriptor,
+    FstoreMissingOrInvalidVarnum,
+    FloadMissingOrInvalidVarnum,
+    DstoreMissingOrInvalidVarnum,
+    DloadMissingOrInvalidVarnum,
+    AnewarrayMissingOrInvalidComponentType,
+    AloadMissingVarnum,
     AstoreMissingVarnum,
     IstoreMissingVarnum,
 
@@ -70,23 +99,20 @@ pub enum JvmInstructionError {
     CheckcastInvalidOrMissingType,
     RetMissingVarnum,
     JsrMissingLabel,
+    JsrwMissingLabel,
     GotoMissingLabel,
+    GotowMissingLabel,
     SipushMissingConstant,
-    IficmpgtMissingLabel,
-    IficmpltMissingLabel,
-    IficmpleMissingLabel,
-    IloadMissingVarnum,
-    IfneMissingLabel,
     AnewarrayInvalidTypeDescriptor(String),
     BipushMissingByte,
     GetfieldInvalid,
     GetfieldInvalidOrMissingFieldDescriptor,
     GetfieldMissingFieldName,
-    GetstaticInvalid,
+    GetstaticMissingOrInvalidClassName,
     GetstaticInvalidOrMissingFieldDescriptor,
-    GetstaticMissingFieldName,
-    IincMissingVarnum,
-    IincMissingDelta,
+    GetstaticMissingOrInvalidFieldName,
+    IincMissingOrInvalidVarnum,
+    IincMissingOrInvalidDelta,
     InvokespecialInvalid,
     InvokespecialInvalidOrMissingMethodDescriptor,
     InvokespecialMissingMethodName,
@@ -110,6 +136,53 @@ impl fmt::Display for JvmInstructionError {
             f,
             "{}",
             match *self {
+                JvmInstructionError::LstoreMissingOrInvalidVarnum =>
+                    "lstore : missing or invalid var num".into(),
+                JvmInstructionError::LloadMissingOrInvalidVarnum =>
+                    "lload : missing or invalid var num".into(),
+                JvmInstructionError::InstanceofMissingOrInvalidCheckType =>
+                    "instanceof : missing or invalid check type".into(),
+                JvmInstructionError::IfeqMissingOrInvalidLabel =>
+                    "ifeq : missing or invalid label".into(),
+                JvmInstructionError::IfcmpneMissingOrInvalidLabel =>
+                    "if_cmpne : missing or invalid label".into(),
+                JvmInstructionError::IfnonnullMissingOrInvalidLabel =>
+                    "if_nonnull : missing or invalid label".into(),
+                JvmInstructionError::IfnullMissingOrInvalidLabel =>
+                    "if_null : missing or invalid label".into(),
+                JvmInstructionError::IfleMissingOrInvalidLabel =>
+                    "ifle : missing or invalid label".into(),
+                JvmInstructionError::IfltMissingOrInvalidLabel =>
+                    "iflt : missing or invalid label".into(),
+                JvmInstructionError::IfgeMissingOrInvalidLabel =>
+                    "ifge : missing or invalid label".into(),
+                JvmInstructionError::IfgtMissingOrInvalidLabel =>
+                    "ifgt : missing or invalid label".into(),
+                JvmInstructionError::IficmpeqMissingOrInvalidLabel =>
+                    "if_icmpeq : missing or invalid label".into(),
+                JvmInstructionError::IficmpgeMissingOrInvalidLabel =>
+                    "if_icmpge : missing or invalid label".into(),
+                JvmInstructionError::IfacmpneMissingOrInvalidLabel =>
+                    "if_acmpne : missing or invalid label".into(),
+                JvmInstructionError::IfacmpeqMissingOrInvalidLabel =>
+                    "if_acmpeq : missing or invalid label".into(),
+                JvmInstructionError::GetfieldMissingOrInvalidClassName =>
+                    "getfield : missing or invalid class name".into(),
+                JvmInstructionError::GetfieldMissingOrInvalidFieldName =>
+                    "getfield : missing or invalid field name".into(),
+                JvmInstructionError::GetfieldMissingOrInvalidFieldDescriptor =>
+                    "getfield : missing or invalid field descriptor".into(),
+                JvmInstructionError::FstoreMissingOrInvalidVarnum =>
+                    "fstore : missing or invalid var num".into(),
+                JvmInstructionError::FloadMissingOrInvalidVarnum =>
+                    "fload : missing or invalid var num".into(),
+                JvmInstructionError::DstoreMissingOrInvalidVarnum =>
+                    "dstore : missing or invalod var num".into(),
+                JvmInstructionError::DloadMissingOrInvalidVarnum =>
+                    "dload : missing or invalid var num".into(),
+                JvmInstructionError::AnewarrayMissingOrInvalidComponentType =>
+                    "anewarray : missing or invalid component type".into(),
+                JvmInstructionError::AloadMissingVarnum => "aload - missing varn num".into(),
                 JvmInstructionError::TableswitchMissingLow => "tableswitch : missing low".into(),
                 JvmInstructionError::TableswitchMissingHigh => "tableswitch : missing high".into(),
                 JvmInstructionError::TableswitchMissingDefault =>
@@ -126,7 +199,9 @@ impl fmt::Display for JvmInstructionError {
                     "checkcast :  invalid or missing type".into(),
                 JvmInstructionError::RetMissingVarnum => "ret : missing var num".into(),
                 JvmInstructionError::JsrMissingLabel => "jsr : missing label".into(),
+                JvmInstructionError::JsrwMissingLabel => "jsrw : missing label".into(),
                 JvmInstructionError::GotoMissingLabel => "goto : missing label".into(),
+                JvmInstructionError::GotowMissingLabel => "gotow : missing label".into(),
                 JvmInstructionError::SipushMissingConstant =>
                     "sipush : missing constant value".into(),
                 JvmInstructionError::IficmpgtMissingLabel => "if_icmpgt : missing label".into(),
@@ -134,8 +209,10 @@ impl fmt::Display for JvmInstructionError {
                 JvmInstructionError::IficmpleMissingLabel => "if_icmple : missing label".into(),
                 JvmInstructionError::IloadMissingVarnum => "iload : missing var number".into(),
                 JvmInstructionError::IfneMissingLabel => "ifne : missing label".into(),
-                JvmInstructionError::IincMissingVarnum => "iinc : missing var num".into(),
-                JvmInstructionError::IincMissingDelta => "iinc : missing delta".into(),
+                JvmInstructionError::IincMissingOrInvalidVarnum =>
+                    "iinc : missing or invalid var num".into(),
+                JvmInstructionError::IincMissingOrInvalidDelta =>
+                    "iinc : missing or invalid delta".into(),
                 JvmInstructionError::AnewarrayInvalidTypeDescriptor(ref err_type) =>
                     format!("anewarray : incorrect type - {err_type}"),
                 JvmInstructionError::InvokespecialInvalid =>
@@ -162,12 +239,12 @@ impl fmt::Display for JvmInstructionError {
                     "getfield : missing or invalid field descriptor".into(),
                 JvmInstructionError::GetfieldMissingFieldName =>
                     "getfield : missing field name".into(),
-                JvmInstructionError::GetstaticInvalid =>
-                    "getstatic : badly-formed or invalid".into(),
+                JvmInstructionError::GetstaticMissingOrInvalidClassName =>
+                    "getstatic : missing or invalid class name".into(),
                 JvmInstructionError::GetstaticInvalidOrMissingFieldDescriptor =>
                     "getstatic : missing or invalid field descriptor".into(),
-                JvmInstructionError::GetstaticMissingFieldName =>
-                    "getstatic : missing field name".into(),
+                JvmInstructionError::GetstaticMissingOrInvalidFieldName =>
+                    "getstatic : missing or invalid field name".into(),
                 JvmInstructionError::LdcIncorrectValue => "ldc : incorrect value".into(),
                 JvmInstructionError::LdcwIncorrectValue => "ldcw : incorrect value".into(),
                 JvmInstructionError::Ldc2wIncorrectValue => "ldc2_w : incorrect value".into(),
@@ -642,13 +719,13 @@ impl<'a> Parser<'a> {
             let name = ident.to_string();
             self.advance()?;
 
-            let descriptor = self.parse_field_descriptor()?;
+            let field_descriptor = self.parse_field_descriptor()?;
             let init_val = self.parse_field_init_value()?;
 
             Ok(PhoronFieldDef {
                 name,
                 access_flags,
-                descriptor,
+                field_descriptor,
                 init_val,
             })
         } else {
@@ -818,6 +895,28 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn parse_i8(&mut self) -> ParserResult<i8> {
+        if let Token::TInt(n) = self.see() {
+            let n = *n as i8;
+            self.advance()?;
+
+            Ok(n)
+        } else {
+            Err(ParserError::FailedToParsePrimitive)
+        }
+    }
+
+    fn parse_i16(&mut self) -> ParserResult<i16> {
+        if let Token::TInt(n) = self.see() {
+            let n = *n as i16;
+            self.advance()?;
+
+            Ok(n)
+        } else {
+            Err(ParserError::FailedToParsePrimitive)
+        }
+    }
+
     fn parse_u16(&mut self) -> ParserResult<u16> {
         if let Token::TInt(n) = self.see() {
             let n = *n as u16;
@@ -920,7 +1019,11 @@ impl<'a> Parser<'a> {
 
             // aload <varnum>
             Token::TAload => {
-                todo!()
+                self.advance()?;
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::AloadMissingVarnum)
+                })?;
+                JvmInstruction::Aload { varnum }
             }
 
             // aload_0
@@ -950,7 +1053,12 @@ impl<'a> Parser<'a> {
             // anewarray <type>
             Token::TAnewarray => {
                 self.advance()?;
-                let component_type = self.parse_class_or_array_type()?;
+
+                let component_type = self.parse_class_or_array_type().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::AnewarrayMissingOrInvalidComponentType,
+                    )
+                })?;
                 JvmInstruction::Anewarray { component_type }
             }
 
@@ -966,10 +1074,6 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Arraylength
             }
 
-            Token::TAssign => {
-                todo!()
-            }
-
             // astore <varnum>
             Token::TAstore => {
                 self.advance()?;
@@ -977,7 +1081,6 @@ impl<'a> Parser<'a> {
                 let varnum = self.parse_u16().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::AstoreMissingVarnum)
                 })?;
-
                 JvmInstruction::Astore { varnum }
             }
 
@@ -1011,39 +1114,38 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Athrow
             }
 
+            // baload
             Token::TBaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Baload
             }
 
+            // bastore
             Token::TBastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Bastore
             }
 
             // bipush i8
             Token::TBipush => {
                 self.advance()?;
+                let ub = self.parse_i8().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::BipushMissingByte)
+                })?;
 
-                if let Token::TInt(b) = self.see() {
-                    let byte = *b as i8;
-                    self.advance()?;
-                    JvmInstruction::Bipush(byte)
-                } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::BipushMissingByte,
-                    ));
-                }
+                JvmInstruction::Bipush(ub)
             }
 
-            Token::TBridge => {
-                todo!()
-            }
-
+            // caload
             Token::TCaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Caload
             }
 
+            // castore
             Token::TCastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Castore
             }
 
             // checkcast <type>
@@ -1057,44 +1159,52 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Checkcast { cast_type }
             }
 
-            Token::TClass => {
-                todo!()
-            }
-
-            Token::TColon => {
-                todo!()
-            }
-
+            // d2f
             Token::TD2f => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::D2f
             }
 
+            // d2i
             Token::TD2i => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::D2i
             }
 
+            // d2l
             Token::TD2l => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::D2l
             }
 
+            // dadd
             Token::TDadd => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dadd
             }
 
+            // daload
             Token::TDaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Daload
             }
 
+            // dastore
             Token::TDastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dastore
             }
 
+            // dcmpg
             Token::TDcmpg => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dcmpg
             }
 
+            // dcmpl
             Token::TDcmpl => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dcmpl
             }
 
             // dconst_0
@@ -1109,76 +1219,114 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Dconst1
             }
 
+            // ddiv
             Token::TDdiv => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ddiv
             }
 
-            Token::TDefault => {
-                todo!()
-            }
-
+            // dload <arnum>
             Token::TDload => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::DloadMissingOrInvalidVarnum,
+                    )
+                })?;
+
+                JvmInstruction::Dload { varnum }
             }
 
+            // dload_0
             Token::TDload0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dload0
             }
 
+            // dload_1
             Token::TDload1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dload1
             }
 
+            // dload_2
             Token::TDload2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dload2
             }
 
+            // dload_3
             Token::TDload3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dload3
             }
 
+            // dmul
             Token::TDmul => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dmul
             }
 
+            // dneg
             Token::TDneg => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dneg
             }
 
-            Token::TDot => {
-                todo!()
-            }
-
+            // drem
             Token::TDrem => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Drem
             }
 
+            // dreturn
             Token::TDreturn => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dreturn
             }
 
+            // dstore< <varnum>
             Token::TDstore => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::DstoreMissingOrInvalidVarnum,
+                    )
+                })?;
+
+                JvmInstruction::Dstore { varnum }
             }
 
+            // dstore_0
             Token::TDstore0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dstore0
             }
 
+            // dstore_1
             Token::TDstore1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dstore1
             }
 
+            // dstore_2
             Token::TDstore2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dstore2
             }
 
+            // dstore_3
             Token::TDstore3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dstore3
             }
 
+            // dsub
             Token::TDsub => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dsub
             }
 
             // dup
@@ -1187,72 +1335,82 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Dup
             }
 
+            // dup2
             Token::TDup2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dup2
             }
 
+            // dup2_x1
             Token::TDup2x1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dup2x1
             }
 
+            // dup2_x2
             Token::TDup2x2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dup2x2
             }
 
+            // dup_x1
             Token::TDupx1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dupx1
             }
 
+            // dup_x2
             Token::TDupx2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Dupx2
             }
 
-            Token::TEnd => {
-                todo!()
-            }
-
-            Token::TEndMethod => {
-                todo!()
-            }
-
-            Token::TEnum => {
-                todo!()
-            }
-
-            Token::TEof => {
-                todo!()
-            }
-
+            // f2d
             Token::TF2d => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::F2d
             }
 
+            // f2i
             Token::TF2i => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::F2i
             }
 
+            // f2l
             Token::TF2l => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::F2l
             }
 
+            // fadd
             Token::TFadd => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fadd
             }
 
+            // faload
             Token::TFaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Faload
             }
 
+            // fastore
             Token::TFastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fastore
             }
 
+            // fcmpg
             Token::TFcmpg => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fcmpg
             }
 
+            // fcmpl
             Token::TFcmpl => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fcmpl
             }
 
             // fconst_0
@@ -1273,76 +1431,112 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Fconst2
             }
 
+            // fdiv
             Token::TFdiv => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fdiv
             }
 
-            Token::TField => {
-                todo!()
-            }
-
-            Token::TFinal => {
-                todo!()
-            }
-
+            // fload <varnum>
             Token::TFload => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::FloadMissingOrInvalidVarnum,
+                    )
+                })?;
+                JvmInstruction::Fload { varnum }
             }
 
+            // fload_0
             Token::TFload0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fload0
             }
 
+            // fload_1
             Token::TFload1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fload1
             }
 
+            // fload_2
             Token::TFload2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fload2
             }
 
+            // fload_3
             Token::TFload3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fload3
             }
 
+            // fmul
             Token::TFmul => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fmul
             }
 
+            // fneg
             Token::TFneg => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fneg
             }
 
+            // frem
             Token::TFrem => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Frem
             }
 
+            // freturn
             Token::TFreturn => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Freturn
             }
 
+            // fstore <varnum>
             Token::TFstore => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::FstoreMissingOrInvalidVarnum,
+                    )
+                })?;
+                JvmInstruction::Fstore { varnum }
             }
 
+            // fstore_0
             Token::TFstore0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fstore0
             }
 
+            // fstore_1
             Token::TFstore1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fstore1
             }
 
+            // fstore_2
             Token::TFstore2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fstore2
             }
 
+            // fstore_3
             Token::TFstore3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fstore3
             }
 
+            // fsub
             Token::TFsub => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Fsub
             }
 
             // getfield <field-spec> <descriptor>
@@ -1355,25 +1549,25 @@ impl<'a> Parser<'a> {
                         let field_name = gf_str[pos + 1..].to_owned();
                         self.advance()?;
 
-                        if let Ok(descriptor) = self.parse_field_descriptor() {
-                            JvmInstruction::Getfield {
-                                class_name,
-                                field_name,
-                                descriptor,
-                            }
-                        } else {
-                            return Err(ParserError::JvmInstructionError(
+                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
+                            ParserError::JvmInstructionError(
                                 JvmInstructionError::GetfieldInvalidOrMissingFieldDescriptor,
-                            ));
+                            )
+                        })?;
+
+                        JvmInstruction::Getfield {
+                            class_name,
+                            field_name,
+                            field_descriptor,
                         }
                     } else {
                         return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::GetfieldMissingFieldName,
+                            JvmInstructionError::GetfieldMissingOrInvalidFieldName,
                         ));
                     }
                 } else {
                     return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::GetfieldInvalid,
+                        JvmInstructionError::GetfieldMissingOrInvalidClassName,
                     ));
                 }
             }
@@ -1388,25 +1582,25 @@ impl<'a> Parser<'a> {
                         let field_name = gs_str[pos + 1..].to_owned();
                         self.advance()?;
 
-                        if let Ok(descriptor) = self.parse_field_descriptor() {
-                            JvmInstruction::Getstatic {
-                                class_name,
-                                field_name,
-                                descriptor,
-                            }
-                        } else {
-                            return Err(ParserError::JvmInstructionError(
+                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
+                            ParserError::JvmInstructionError(
                                 JvmInstructionError::GetstaticInvalidOrMissingFieldDescriptor,
-                            ));
+                            )
+                        })?;
+
+                        JvmInstruction::Getstatic {
+                            class_name,
+                            field_name,
+                            field_descriptor,
                         }
                     } else {
                         return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::GetstaticMissingFieldName,
+                            JvmInstructionError::GetstaticMissingOrInvalidFieldName,
                         ));
                     }
                 } else {
                     return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::GetstaticInvalid,
+                        JvmInstructionError::GetstaticMissingOrInvalidClassName,
                     ));
                 }
             }
@@ -1414,38 +1608,57 @@ impl<'a> Parser<'a> {
             // goto <label>
             Token::TGoto => {
                 self.advance()?;
+
                 let label = self.parse_label().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::GotoMissingLabel)
                 })?;
                 JvmInstruction::Goto { label }
             }
 
+            // goto_w <label>
             Token::TGotow => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::GotowMissingLabel)
+                })?;
+                JvmInstruction::Gotow { label }
             }
 
+            // i2b
             Token::TI2b => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::I2b
             }
 
+            // i2c
             Token::TI2c => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::I2c
             }
 
+            // i2d
             Token::TI2d => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::I2c
             }
 
+            // i2f
             Token::TI2f => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::I2f
             }
 
+            // i2l
             Token::TI2l => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::I2l
             }
 
+            // i2s
             Token::TI2s => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::I2s
             }
 
             // iadd
@@ -1460,14 +1673,22 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Iaload
             }
 
+            // iand
             Token::TIand => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iand
             }
 
             // iastore
             Token::TIastore => {
                 self.advance()?;
                 JvmInstruction::Iastore
+            }
+
+            // iconst_m1
+            Token::TIconstm1 => {
+                self.advance()?;
+                JvmInstruction::Iconstm1
             }
 
             // iconst_0
@@ -1506,47 +1727,68 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Iconst5
             }
 
-            // iconst_m1
-            Token::TIconstm1 => {
-                self.advance()?;
-                JvmInstruction::Iconstm1
-            }
-
+            // idiv
             Token::TIdiv => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Idiv
             }
 
+            // if_acmpeq <label>
             Token::TIfacmpeq => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IfacmpeqMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ifacmpeq { label }
             }
 
+            // if_acmpne <label>
             Token::TIfacmpne => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IfacmpneMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ifacmpne { label }
             }
 
-            Token::TIfeq => {
-                todo!()
-            }
-
-            Token::TIfge => {
-                todo!()
-            }
-
-            Token::TIfgt => {
-                todo!()
-            }
-
+            // if_icmpeq <label>
             Token::TIficmpeq => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IficmpeqMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ificmpeq { label }
             }
 
+            // if_icmpge <label>
             Token::TIficmpge => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IficmpgeMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ificmpge { label }
             }
 
             // if_icmpgt <label>
             Token::TIficmpgt => {
                 self.advance()?;
+
                 let label = self.parse_label().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::IficmpgtMissingLabel)
                 })?;
@@ -1556,6 +1798,7 @@ impl<'a> Parser<'a> {
             // if_icmple <label>
             Token::TIficmple => {
                 self.advance()?;
+
                 let label = self.parse_label().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::IficmpleMissingLabel)
                 })?;
@@ -1569,18 +1812,6 @@ impl<'a> Parser<'a> {
                     ParserError::JvmInstructionError(JvmInstructionError::IficmpltMissingLabel)
                 })?;
                 JvmInstruction::Ificmplt { label }
-            }
-
-            Token::TIficmpne => {
-                todo!()
-            }
-
-            Token::TIfle => {
-                todo!()
-            }
-
-            Token::TIflt => {
-                todo!()
             }
 
             // ifne <label>
@@ -1599,53 +1830,126 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TIfnonnull => {
-                todo!()
+            // if_icmpne <label>
+            Token::TIficmpne => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IfcmpneMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ificmpne { label }
             }
 
+            // ifeq <label>
+            Token::TIfeq => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IfeqMissingOrInvalidLabel)
+                })?;
+
+                JvmInstruction::Ifeq { label }
+            }
+
+            // ifge <label>
+            Token::TIfge => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IfgeMissingOrInvalidLabel)
+                })?;
+
+                JvmInstruction::Ifge { label }
+            }
+
+            // ifgt <label>
+            Token::TIfgt => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IfgtMissingOrInvalidLabel)
+                })?;
+
+                JvmInstruction::Ifgt { label }
+            }
+
+            // ifle <label>
+            Token::TIfle => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IfleMissingOrInvalidLabel)
+                })?;
+
+                JvmInstruction::Ifle { label }
+            }
+
+            // iflt <label>
+            Token::TIflt => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IfltMissingOrInvalidLabel)
+                })?;
+
+                JvmInstruction::Iflt { label }
+            }
+
+            // ifnonnull <label>
+            Token::TIfnonnull => {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IfnonnullMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ifnonnull { label }
+            }
+
+            // ifnull <label>
             Token::TIfnull => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IfnullMissingOrInvalidLabel,
+                    )
+                })?;
+
+                JvmInstruction::Ifnull { label }
             }
 
             // iinc <varnum> <n>
             Token::TIinc => {
                 self.advance()?;
 
-                if let Token::TInt(v) = self.see() {
-                    let varnum = *v as u16;
-                    self.advance()?;
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::IincMissingOrInvalidVarnum,
+                    )
+                })?;
 
-                    if let Token::TInt(n) = self.see() {
-                        let delta = *n as i16;
-                        self.advance()?;
+                let delta = self.parse_i16().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IincMissingOrInvalidDelta)
+                })?;
 
-                        JvmInstruction::Iinc { varnum, delta }
-                    } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::IincMissingDelta,
-                        ));
-                    }
-                } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::IincMissingVarnum,
-                    ));
-                }
+                JvmInstruction::Iinc { varnum, delta }
             }
 
             // iload <varnum>
             Token::TIload => {
                 self.advance()?;
 
-                if let Token::TInt(varnum) = self.see() {
-                    let varnum = *varnum as u16;
-                    self.advance()?;
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IloadMissingVarnum)
+                })?;
 
-                    JvmInstruction::Iload { varnum }
-                } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::IloadMissingVarnum,
-                    ));
-                }
+                JvmInstruction::Iload { varnum }
             }
 
             // iload_0
@@ -1678,25 +1982,30 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Imul
             }
 
+            // ineg
             Token::TIneg => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ineg
             }
 
             // instanceof
             Token::TInstanceof => {
                 self.advance()?;
-                let check_type = self.parse_class_or_array_type()?;
+
+                let check_type = self.parse_class_or_array_type().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::InstanceofMissingOrInvalidCheckType,
+                    )
+                })?;
                 JvmInstruction::Instanceof { check_type }
             }
 
-            Token::TInterface => {
-                todo!()
-            }
-
+            // TODO
             Token::TInvokeinterface => {
                 todo!()
             }
 
+            // TODO
             // invokespecial <method-spec>
             Token::TInvokespecial => {
                 self.advance()?;
@@ -1707,11 +2016,11 @@ impl<'a> Parser<'a> {
                         let method_name = is_str[pos + 1..].to_owned();
                         self.advance()?;
 
-                        if let Ok(descriptor) = self.parse_method_descriptor() {
+                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
                             JvmInstruction::Invokespecial {
                                 class_name,
                                 method_name,
-                                descriptor,
+                                method_descriptor,
                             }
                         } else {
                             return Err(ParserError::JvmInstructionError(
@@ -1730,6 +2039,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // TODO
             // invokestatic <method-spec>
             Token::TInvokestatic => {
                 self.advance()?;
@@ -1740,11 +2050,11 @@ impl<'a> Parser<'a> {
                         let method_name = is_str[pos + 1..].to_owned();
                         self.advance()?;
 
-                        if let Ok(descriptor) = self.parse_method_descriptor() {
+                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
                             JvmInstruction::Invokestatic {
                                 class_name,
                                 method_name,
-                                descriptor,
+                                method_descriptor,
                             }
                         } else {
                             return Err(ParserError::JvmInstructionError(
@@ -1763,6 +2073,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // TODO
             // invokevirtual <method-spec>
             Token::TInvokevirtual => {
                 self.advance()?;
@@ -1773,11 +2084,11 @@ impl<'a> Parser<'a> {
                         let method_name = is_str[pos + 1..].to_owned();
                         self.advance()?;
 
-                        if let Ok(descriptor) = self.parse_method_descriptor() {
+                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
                             JvmInstruction::Invokevirtual {
                                 class_name,
                                 method_name,
-                                descriptor,
+                                method_descriptor,
                             }
                         } else {
                             return Err(ParserError::JvmInstructionError(
@@ -1796,12 +2107,16 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // ior
             Token::TIor => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ior
             }
 
+            // irem
             Token::TIrem => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Irem
             }
 
             // ireturn
@@ -1810,8 +2125,10 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Ireturn
             }
 
+            // ishl
             Token::TIshl => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ishl
             }
 
             Token::TIshr => {
@@ -1859,53 +2176,84 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Isub
             }
 
+            // iushr
             Token::TIushr => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iushr
             }
 
+            // ixor
             Token::TIxor => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ixor
             }
 
             // jsr <label>
             Token::TJsr => {
                 self.advance()?;
+
                 let label = self.parse_label().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::JsrMissingLabel)
                 })?;
                 JvmInstruction::Jsr { label }
             }
 
+            // jsr_w <label>
             Token::TJsrw => {
-                todo!()
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::JsrwMissingLabel)
+                })?;
+                JvmInstruction::Jsrw { label }
             }
 
+            // l2d
             Token::TL2d => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::L2d
             }
 
+            // l2f
             Token::TL2f => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::L2f
             }
 
+            // l2i
             Token::TL2i => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::L2i
             }
 
+            // ladd
             Token::TLadd => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ladd
             }
 
+            // laload
+            Token::TLaload => {
+                self.advance()?;
+                JvmInstruction::Laload
+            }
+
+            // land
             Token::TLand => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Land
             }
 
+            // lastore
             Token::TLastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lastore
             }
 
+            // lcmp
             Token::TLcmp => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lcmp
             }
 
             // locaonst_0
@@ -2007,58 +2355,62 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // ldiv
             Token::TLdiv => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ldiv
             }
 
-            Token::TLeftParen => {
-                todo!()
-            }
-
-            Token::TLimit => {
-                todo!()
-            }
-
-            Token::TLine => {
-                todo!()
-            }
-
+            // lload <varnum>
             Token::TLload => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::LloadMissingOrInvalidVarnum,
+                    )
+                })?;
+
+                JvmInstruction::Lload { varnum }
             }
 
+            // lload_0
             Token::TLload0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lload0
             }
 
+            // lload_1
             Token::TLload1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lload1
             }
 
+            // lload_2
             Token::TLload2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lload2
             }
 
+            //lload_3
             Token::TLload3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lload3
             }
 
+            // lmul
             Token::TLmul => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lmul
             }
 
+            // lneg
             Token::TLneg => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lneg
             }
 
-            Token::TLoaload => {
-                todo!()
-            }
-
-            Token::TLocals => {
-                todo!()
-            }
-
+            // TODO
             // lookupswitch          <-  'lookupswitch'   LookupSwitchPair*  DefaultSwitchPair
             // LookupSwitchPair      <-  Integer          COLON_symbol       Label
             // DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label
@@ -2075,64 +2427,89 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Lookupswitch { switches, default }
             }
 
+            // lor
             Token::TLor => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lor
             }
 
+            // lrem
             Token::TLrem => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lrem
             }
 
+            // lreturn
             Token::TLreturn => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lreturn
             }
 
+            // lshl
             Token::TLshl => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lshl
             }
 
+            // lshr
             Token::TLshr => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lshr
             }
 
+            // lstore <varnum>
             Token::TLstore => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::LstoreMissingOrInvalidVarnum,
+                    )
+                })?;
+
+                JvmInstruction::Lstore { varnum }
             }
 
+            // lstore_0
             Token::TLstore0 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lstore0
             }
 
+            // lstore_1
             Token::TLstore1 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lstore1
             }
 
+            // lstore_2
             Token::TLstore2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lstore2
             }
 
+            // lstore_3
             Token::TLstore3 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lstore3
             }
 
+            // lsub
             Token::TLsub => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lsub
             }
 
+            // lushr
             Token::TLushr => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lushr
             }
 
+            // lxor
             Token::TLxor => {
-                todo!()
-            }
-
-            Token::TMethod => {
-                todo!()
-            }
-
-            Token::TModule => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Lxor
             }
 
             // monitorenter
@@ -2147,6 +2524,7 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Monitorexit
             }
 
+            // TODO
             Token::TMultianewarray => {
                 self.advance()?;
 
@@ -2165,10 +2543,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TNative => {
-                todo!()
-            }
-
+            // TODO
             // new <class>
             Token::TNew => {
                 self.advance()?;
@@ -2184,6 +2559,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // TODO
             // newarray <primitive_type>
             Token::TNewarray => {
                 self.advance()?;
@@ -2252,8 +2628,10 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // nop
             Token::TNop => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Nop
             }
 
             // pop
@@ -2262,26 +2640,18 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Pop
             }
 
+            // pop2
             Token::TPop2 => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Pop2
             }
 
-            Token::TPrivate => {
-                todo!()
-            }
-
-            Token::TProtected => {
-                todo!()
-            }
-
-            Token::TPublic => {
-                todo!()
-            }
-
+            // TODO
             Token::TPutfield => {
                 todo!()
             }
 
+            // TODO
             Token::TPutstatic => {
                 todo!()
             }
@@ -2302,26 +2672,28 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            // return
             Token::TReturn => {
                 self.advance()?;
                 JvmInstruction::Return
             }
 
-            Token::TRightParen => {
-                todo!()
-            }
-
+            // saload
             Token::TSaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Saload
             }
 
+            // sastore
             Token::TSastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Sastore
             }
 
             // sipush i16
             Token::TSipush => {
                 self.advance()?;
+
                 if let Token::TInt(s) = self.see() {
                     let s = *s as i16;
                     self.advance()?;
@@ -2334,38 +2706,10 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TSource => {
-                todo!()
-            }
-
-            Token::TStack => {
-                todo!()
-            }
-
-            Token::TStatic => {
-                todo!()
-            }
-
-            Token::TStrict => {
-                todo!()
-            }
-
-            Token::TSuper => {
-                todo!()
-            }
-
             // swap
             Token::TSwap => {
                 self.advance()?;
                 JvmInstruction::Swap
-            }
-
-            Token::TSynchronized => {
-                todo!()
-            }
-
-            Token::TSynthetic => {
-                todo!()
             }
 
             // tableswitch    <-  'tableswitch'   Low   High  TableSwitchSingleton*  DefaultSwitchPair
@@ -2394,16 +2738,10 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TTransient => {
-                todo!()
-            }
-
-            Token::TVarargs => {
-                todo!()
-            }
-
-            Token::TVolatile => {
-                todo!()
+            // wide
+            Token::Twide => {
+                self.advance()?;
+                JvmInstruction::Wide
             }
 
             _ => {
@@ -2447,8 +2785,6 @@ impl<'a> Parser<'a> {
             | Token::TCaload
             | Token::TCastore
             | Token::TCheckcast
-            | Token::TClass
-            | Token::TColon
             | Token::TD2f
             | Token::TD2i
             | Token::TD2l
@@ -2483,10 +2819,7 @@ impl<'a> Parser<'a> {
             | Token::TDup2x2
             | Token::TDupx1
             | Token::TDupx2
-            | Token::TEnd
-            | Token::TEndMethod
             | Token::TEnum
-            | Token::TEof
             | Token::TF2d
             | Token::TF2i
             | Token::TF2l
@@ -2564,7 +2897,6 @@ impl<'a> Parser<'a> {
             | Token::TImul
             | Token::TIneg
             | Token::TInstanceof
-            | Token::TInterface
             | Token::TInvokeinterface
             | Token::TInvokespecial
             | Token::TInvokestatic
@@ -2597,7 +2929,6 @@ impl<'a> Parser<'a> {
             | Token::TLdc2w
             | Token::TLdcw
             | Token::TLdiv
-            | Token::TLeftParen
             | Token::TLload
             | Token::TLload0
             | Token::TLload1
@@ -2606,7 +2937,6 @@ impl<'a> Parser<'a> {
             | Token::TLmul
             | Token::TLneg
             | Token::TLoaload
-            | Token::TLocals
             | Token::TLookupswitch
             | Token::TLor
             | Token::TLrem
@@ -2621,40 +2951,26 @@ impl<'a> Parser<'a> {
             | Token::TLsub
             | Token::TLushr
             | Token::TLxor
-            | Token::TMethod
-            | Token::TModule
             | Token::TMonitorenter
             | Token::TMonitorexit
             | Token::TMultianewarray
-            | Token::TNative
             | Token::TNew
             | Token::TNewarray
             | Token::TNop
             | Token::TPop
             | Token::TPop2
-            | Token::TPrivate
-            | Token::TProtected
-            | Token::TPublic
             | Token::TPutfield
             | Token::TPutstatic
             | Token::TRet
             | Token::TReturn
-            | Token::TRightParen
             | Token::TSaload
             | Token::TSastore
             | Token::TSipush
-            | Token::TSource
-            | Token::TStack
-            | Token::TStatic
-            | Token::TStrict
             | Token::TSuper
             | Token::TSwap
-            | Token::TSynchronized
-            | Token::TSynthetic
-            | Token::TTableswitch
-            | Token::TTransient
-            | Token::TVarargs
-            | Token::TVolatile => PhoronInstruction::JvmInstruction(self.parse_jvm_instruction()?),
+            | Token::TTableswitch => {
+                PhoronInstruction::JvmInstruction(self.parse_jvm_instruction()?)
+            }
 
             Token::TIdent(label_str) => {
                 let label = label_str.to_string();
@@ -2756,13 +3072,13 @@ impl<'a> Parser<'a> {
             let name = name_str.to_string();
             self.advance()?;
 
-            let descriptor = self.parse_method_descriptor()?;
+            let method_descriptor = self.parse_method_descriptor()?;
             let instructions = self.parse_instructions()?;
 
             Ok(PhoronMethodDef {
                 name,
                 access_flags,
-                descriptor,
+                method_descriptor,
                 instructions,
             })
         } else {

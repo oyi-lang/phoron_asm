@@ -174,6 +174,7 @@ pub enum Token {
     TL2d,
     TL2f,
     TL2i,
+    TLaload,
     TLadd,
     TLand,
     TLastore,
@@ -250,6 +251,7 @@ pub enum Token {
     TVar,
     TVarargs,
     TVolatile,
+    Twide,
 }
 
 pub type LexerResult<T> = Result<T, LexerError>;
@@ -561,6 +563,7 @@ impl<'a> Lexer<'a> {
             "l2f" => TL2f,
             "l2i" => TL2i,
             "ladd" => TLadd,
+            "laload" => TLaload,
             "land" => TLand,
             "lastore" => TLastore,
             "lcmp" => TLcmp,
@@ -622,6 +625,7 @@ impl<'a> Lexer<'a> {
             "transient" => TTransient,
             "using" => TUsing,
             "volatile" => TVolatile,
+            "wide" => Twide,
             _ => return None,
         })
     }

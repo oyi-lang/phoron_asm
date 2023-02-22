@@ -38,7 +38,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -47,7 +47,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -61,7 +61,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -76,7 +76,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "clone".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/Object".to_string(),
@@ -113,19 +113,19 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                 PhoronFieldDef {
                     name: "x".to_string(),
                     access_flags: vec![PhoronFieldAccessFlag::AccPrivate],
-                    descriptor: BaseType(Integer),
+                    field_descriptor: BaseType(Integer),
                     init_val: None,
                 },
                 PhoronFieldDef {
                     name: "y".to_string(),
                     access_flags: vec![PhoronFieldAccessFlag::AccPrivate],
-                    descriptor: BaseType(Double),
+                    field_descriptor: BaseType(Double),
                     init_val: None,
                 },
                 PhoronFieldDef {
                     name: "z".to_string(),
                     access_flags: vec![PhoronFieldAccessFlag::AccPrivate],
-                    descriptor: ObjectType {
+                    field_descriptor: ObjectType {
                         class_name: "java/lang/String".to_string(),
                     },
                     init_val: Some(PhoronFieldInitValue::QuotedString("Foo".to_string())),
@@ -137,7 +137,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                         PhoronFieldAccessFlag::AccStatic,
                         PhoronFieldAccessFlag::AccFinal,
                     ],
-                    descriptor: BaseType(Double),
+                    field_descriptor: BaseType(Double),
                     init_val: Some(PhoronFieldInitValue::Double(3.14159)),
                 },
             ],
@@ -145,7 +145,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -154,7 +154,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -168,7 +168,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -210,7 +210,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -219,7 +219,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -233,7 +233,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -246,7 +246,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -254,7 +254,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -293,7 +293,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -302,7 +302,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -316,7 +316,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -329,7 +329,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -337,7 +337,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -376,7 +376,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -385,7 +385,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -399,7 +399,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -414,7 +414,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "clone".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/Object".to_string(),
@@ -453,7 +453,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -462,7 +462,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -476,7 +476,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -489,7 +489,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -497,7 +497,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -536,7 +536,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -545,7 +545,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -559,7 +559,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(BaseType(Integer)),
                         return_descriptor: FieldDescriptor(ArrayType {
                             component_type: Box::new(BaseType(Integer)),
@@ -580,7 +580,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -595,7 +595,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "Areturn".to_string(),
                             method_name: "makeIntArray".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(ArrayType {
                                     component_type: Box::new(BaseType(Integer)),
@@ -635,7 +635,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -644,7 +644,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -658,7 +658,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -679,7 +679,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -694,7 +694,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -730,7 +730,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -739,7 +739,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -753,7 +753,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -767,7 +767,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -778,7 +778,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -814,7 +814,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -823,7 +823,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -837,7 +837,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -865,7 +865,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -888,7 +888,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -925,7 +925,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -934,7 +934,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -948,7 +948,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -962,7 +962,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -976,7 +976,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "java/lang/String".to_string(),
                             method_name: "valueOf".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/String".to_string(),
@@ -989,7 +989,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -1036,7 +1036,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1045,7 +1045,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1059,7 +1059,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1084,7 +1084,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Exception".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1096,7 +1096,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1104,7 +1104,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -1143,7 +1143,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1152,7 +1152,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1166,7 +1166,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1242,7 +1242,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1251,7 +1251,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1265,7 +1265,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1279,7 +1279,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1288,7 +1288,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1324,7 +1324,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1333,7 +1333,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1347,7 +1347,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1363,7 +1363,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1374,7 +1374,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1419,7 +1419,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1428,7 +1428,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1442,7 +1442,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(BaseType(Integer)),
                         return_descriptor: FieldDescriptor(BaseType(Integer)),
                     },
@@ -1461,7 +1461,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1475,7 +1475,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1484,7 +1484,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "AddNumsJasmin".to_string(),
                             method_name: "addNums".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
@@ -1492,7 +1492,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1528,7 +1528,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1537,7 +1537,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1551,7 +1551,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1612,7 +1612,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1621,7 +1621,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1635,7 +1635,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(BaseType(Integer)),
                         return_descriptor: FieldDescriptor(BaseType(Integer)),
                     },
@@ -1674,7 +1674,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1688,7 +1688,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1696,7 +1696,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "FactorialGoto".to_string(),
                             method_name: "factorial".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
@@ -1704,7 +1704,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1741,7 +1741,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1750,7 +1750,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1764,7 +1764,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(BaseType(Integer)),
                         return_descriptor: FieldDescriptor(BaseType(Integer)),
                     },
@@ -1799,7 +1799,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1813,7 +1813,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1821,7 +1821,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "FactorialJasmin".to_string(),
                             method_name: "factorial".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
@@ -1829,7 +1829,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1866,7 +1866,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1875,7 +1875,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1889,7 +1889,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -1908,7 +1908,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1923,7 +1923,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1936,7 +1936,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -1951,7 +1951,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -1988,7 +1988,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -1997,7 +1997,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2011,7 +2011,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -2027,7 +2027,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2038,7 +2038,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "print".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2048,7 +2048,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "print".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2060,7 +2060,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2107,7 +2107,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2116,7 +2116,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2130,7 +2130,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -2148,14 +2148,14 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "in".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/InputStream".to_string(),
                             },
                         }),
                         JvmInstruction(Invokespecial {
                             class_name: "java/util/Scanner".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/io/InputStream".to_string(),
                                 }),
@@ -2187,7 +2187,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2195,7 +2195,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "java/lang/String".to_string(),
                             method_name: "valueOf".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/String".to_string(),
@@ -2205,7 +2205,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2223,7 +2223,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/util/Scanner".to_string(),
                             method_name: "nextInt".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
@@ -2259,7 +2259,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2268,7 +2268,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2282,7 +2282,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -2296,7 +2296,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2310,7 +2310,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "java/lang/String".to_string(),
                             method_name: "valueOf".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/String".to_string(),
@@ -2323,7 +2323,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2369,7 +2369,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2378,7 +2378,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2392,7 +2392,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ObjectType {
                             class_name: "java/lang/Object".to_string(),
                         }),
@@ -2411,7 +2411,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/lang/StringBuffer".to_string(),
                             method_name: "append".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2429,7 +2429,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -2447,7 +2447,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/StringBuffer".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2457,7 +2457,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "StringBufferDemo".to_string(),
                             method_name: "sbDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/Object".to_string(),
                                 }),
@@ -2467,7 +2467,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2475,7 +2475,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/lang/StringBuffer".to_string(),
                             method_name: "toString".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/String".to_string(),
@@ -2485,7 +2485,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2523,7 +2523,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2532,7 +2532,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Object".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2546,7 +2546,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(BaseType(Integer)),
                         }),
@@ -2568,7 +2568,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(BaseType(Integer)),
                         }),
@@ -2580,7 +2580,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2590,7 +2590,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2604,7 +2604,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -2623,7 +2623,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2633,7 +2633,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2644,7 +2644,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "ArrayDemo".to_string(),
                             method_name: "setArr".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ArrayType {
                                     component_type: Box::new(BaseType(Integer)),
                                 }),
@@ -2672,7 +2672,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "ArrayDemo".to_string(),
                             method_name: "printArr".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ArrayType {
                                     component_type: Box::new(BaseType(Integer)),
                                 }),
@@ -2682,7 +2682,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2692,7 +2692,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2700,7 +2700,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2710,7 +2710,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2718,7 +2718,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2728,7 +2728,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2736,7 +2736,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2746,7 +2746,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2784,19 +2784,19 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                 PhoronFieldDef {
                     name: "x".to_string(),
                     access_flags: vec![PhoronFieldAccessFlag::AccPrivate],
-                    descriptor: BaseType(Integer),
+                    field_descriptor: BaseType(Integer),
                     init_val: None,
                 },
                 PhoronFieldDef {
                     name: "y".to_string(),
                     access_flags: vec![PhoronFieldAccessFlag::AccPrivate],
-                    descriptor: BaseType(Double),
+                    field_descriptor: BaseType(Double),
                     init_val: Some(PhoronFieldInitValue::Double(1.2345)),
                 },
                 PhoronFieldDef {
                     name: "z".to_string(),
                     access_flags: vec![PhoronFieldAccessFlag::AccPublic],
-                    descriptor: BaseType(Integer),
+                    field_descriptor: BaseType(Integer),
                     init_val: Some(PhoronFieldInitValue::Integer(12345)),
                 },
                 PhoronFieldDef {
@@ -2806,7 +2806,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronFieldAccessFlag::AccStatic,
                         PhoronFieldAccessFlag::AccFinal,
                     ],
-                    descriptor: ObjectType {
+                    field_descriptor: ObjectType {
                         class_name: "java/lang/String".to_string(),
                     },
                     init_val: Some(PhoronFieldInitValue::QuotedString("FooBar".to_string())),
@@ -2816,7 +2816,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "<init>".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPublic],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2825,7 +2825,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Thread".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2839,7 +2839,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2860,7 +2860,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/lang/Exception".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -2872,7 +2872,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2880,7 +2880,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2896,7 +2896,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -2930,7 +2930,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "java/io/FileInputStream".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2947,7 +2947,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2955,7 +2955,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -2970,7 +2970,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -2980,7 +2980,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -3008,7 +3008,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -3016,7 +3016,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -3029,7 +3029,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "synchronizedMethoDemo".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccSynchronized],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -3042,7 +3042,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "monitoDemo".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPrivate],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ObjectType {
                             class_name: "java/lang/Object".to_string(),
                         }),
@@ -3061,7 +3061,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "checkCastDemo".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPrivate],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -3080,7 +3080,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                 PhoronMethodDef {
                     name: "instanceofDemo".to_string(),
                     access_flags: vec![PhoronMethodAccessFlag::AccPrivate],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -3096,7 +3096,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -3104,7 +3104,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "java/lang/String".to_string(),
                             method_name: "valueOf".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/String".to_string(),
@@ -3114,7 +3114,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -3130,7 +3130,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -3151,7 +3151,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -3159,7 +3159,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -3175,7 +3175,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: FieldDescriptor(BaseType(Integer)),
                     },
@@ -3222,7 +3222,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: FieldDescriptor(BaseType(Integer)),
                     },
@@ -3258,7 +3258,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPrivate,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: None,
                         return_descriptor: VoidDescriptor,
                     },
@@ -3284,7 +3284,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccPublic,
                         PhoronMethodAccessFlag::AccStatic,
                     ],
-                    descriptor: PhoronMethodDescriptor {
+                    method_descriptor: PhoronMethodDescriptor {
                         param_descriptor: Some(ArrayType {
                             component_type: Box::new(ObjectType {
                                 class_name: "java/lang/String".to_string(),
@@ -3301,7 +3301,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -3309,7 +3309,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
@@ -3319,7 +3319,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "AllInOne".to_string(),
                             method_name: "exceptionsDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -3327,7 +3327,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "AllInOne".to_string(),
                             method_name: "finallyDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -3339,7 +3339,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokespecial {
                             class_name: "AllInOne".to_string(),
                             method_name: "<init>".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -3349,7 +3349,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "AllInOne".to_string(),
                             method_name: "instanceofDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -3358,7 +3358,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "AllInOne".to_string(),
                             method_name: "checkCastDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -3366,7 +3366,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "AllInOne".to_string(),
                             method_name: "subroutinesDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: VoidDescriptor,
                             },
@@ -3374,7 +3374,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "AllInOne".to_string(),
                             method_name: "lookupswitchDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
@@ -3385,7 +3385,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "AllInOne".to_string(),
                             method_name: "tableswitchDemo".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: None,
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
@@ -3399,7 +3399,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Getstatic {
                             class_name: "java/lang/System".to_string(),
                             field_name: "out".to_string(),
-                            descriptor: ObjectType {
+                            field_descriptor: ObjectType {
                                 class_name: "java/io/PrintStream".to_string(),
                             },
                         }),
@@ -3407,7 +3407,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokestatic {
                             class_name: "java/lang/String".to_string(),
                             method_name: "valueOf".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(BaseType(Integer)),
                                 return_descriptor: FieldDescriptor(ObjectType {
                                     class_name: "java/lang/String".to_string(),
@@ -3417,7 +3417,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Invokevirtual {
                             class_name: "java/io/PrintStream".to_string(),
                             method_name: "println".to_string(),
-                            descriptor: PhoronMethodDescriptor {
+                            method_descriptor: PhoronMethodDescriptor {
                                 param_descriptor: Some(ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
