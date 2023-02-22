@@ -26,28 +26,27 @@ pub enum DirectiveError {
 
 impl fmt::Display for DirectiveError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use DirectiveError::*;
+
         write!(
             f,
             "{}",
             match *self {
-                DirectiveError::ThrowsMissingClassName => ".throws - missing class name".into(),
-                DirectiveError::VarMissingVarnum => ".var - missing var num".into(),
-                DirectiveError::VarMissingIsKeyword => ".var - missing is keyword".into(),
-                DirectiveError::VarMissingName => ".var - missing name".into(),
-                DirectiveError::VarMissingFieldDescriptor =>
-                    ".var - missing field descriptor".into(),
-                DirectiveError::VarMissingFromKeyword => ".var - missing from keyword".into(),
-                DirectiveError::VarMissingFromLabel => ".var - missing from label".into(),
-                DirectiveError::VarMissingToKeyword => ".var - missing to keyword".into(),
-                DirectiveError::VarMissingToLabel => ".var - missing to label".into(),
-
-                DirectiveError::StackDirectiveMissingCount =>
+                ThrowsMissingClassName => ".throws - missing class name".into(),
+                VarMissingVarnum => ".var - missing var num".into(),
+                VarMissingIsKeyword => ".var - missing is keyword".into(),
+                VarMissingName => ".var - missing name".into(),
+                VarMissingFieldDescriptor => ".var - missing field descriptor".into(),
+                VarMissingFromKeyword => ".var - missing from keyword".into(),
+                VarMissingFromLabel => ".var - missing from label".into(),
+                VarMissingToKeyword => ".var - missing to keyword".into(),
+                VarMissingToLabel => ".var - missing to label".into(),
+                StackDirectiveMissingCount =>
                     ".limit stack : missing count value for .limit stack directive".into(),
-                DirectiveError::InvalidDirective(ref tok) => format!("invalid directive {tok}"),
-                DirectiveError::LocalsDirectiveMissingCount =>
+                InvalidDirective(ref tok) => format!("invalid directive {tok}"),
+                LocalsDirectiveMissingCount =>
                     "missing count value for .limit locals directive".into(),
-                DirectiveError::MissingStackOrLocal =>
-                    "directive limit : missing `stack` or `locals`".into(),
+                MissingStackOrLocal => "directive limit : missing `stack` or `locals`".into(),
             }
         )
     }
@@ -132,129 +131,96 @@ pub enum JvmInstructionError {
 
 impl fmt::Display for JvmInstructionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use JvmInstructionError::*;
+
         write!(
             f,
             "{}",
             match *self {
-                JvmInstructionError::LstoreMissingOrInvalidVarnum =>
-                    "lstore : missing or invalid var num".into(),
-                JvmInstructionError::LloadMissingOrInvalidVarnum =>
-                    "lload : missing or invalid var num".into(),
-                JvmInstructionError::InstanceofMissingOrInvalidCheckType =>
+                LstoreMissingOrInvalidVarnum => "lstore : missing or invalid var num".into(),
+                LloadMissingOrInvalidVarnum => "lload : missing or invalid var num".into(),
+                InstanceofMissingOrInvalidCheckType =>
                     "instanceof : missing or invalid check type".into(),
-                JvmInstructionError::IfeqMissingOrInvalidLabel =>
-                    "ifeq : missing or invalid label".into(),
-                JvmInstructionError::IfcmpneMissingOrInvalidLabel =>
-                    "if_cmpne : missing or invalid label".into(),
-                JvmInstructionError::IfnonnullMissingOrInvalidLabel =>
-                    "if_nonnull : missing or invalid label".into(),
-                JvmInstructionError::IfnullMissingOrInvalidLabel =>
-                    "if_null : missing or invalid label".into(),
-                JvmInstructionError::IfleMissingOrInvalidLabel =>
-                    "ifle : missing or invalid label".into(),
-                JvmInstructionError::IfltMissingOrInvalidLabel =>
-                    "iflt : missing or invalid label".into(),
-                JvmInstructionError::IfgeMissingOrInvalidLabel =>
-                    "ifge : missing or invalid label".into(),
-                JvmInstructionError::IfgtMissingOrInvalidLabel =>
-                    "ifgt : missing or invalid label".into(),
-                JvmInstructionError::IficmpeqMissingOrInvalidLabel =>
-                    "if_icmpeq : missing or invalid label".into(),
-                JvmInstructionError::IficmpgeMissingOrInvalidLabel =>
-                    "if_icmpge : missing or invalid label".into(),
-                JvmInstructionError::IfacmpneMissingOrInvalidLabel =>
-                    "if_acmpne : missing or invalid label".into(),
-                JvmInstructionError::IfacmpeqMissingOrInvalidLabel =>
-                    "if_acmpeq : missing or invalid label".into(),
-                JvmInstructionError::GetfieldMissingOrInvalidClassName =>
+                IfeqMissingOrInvalidLabel => "ifeq : missing or invalid label".into(),
+                IfcmpneMissingOrInvalidLabel => "if_cmpne : missing or invalid label".into(),
+                IfnonnullMissingOrInvalidLabel => "if_nonnull : missing or invalid label".into(),
+                IfnullMissingOrInvalidLabel => "if_null : missing or invalid label".into(),
+                IfleMissingOrInvalidLabel => "ifle : missing or invalid label".into(),
+                IfltMissingOrInvalidLabel => "iflt : missing or invalid label".into(),
+                IfgeMissingOrInvalidLabel => "ifge : missing or invalid label".into(),
+                IfgtMissingOrInvalidLabel => "ifgt : missing or invalid label".into(),
+                IficmpeqMissingOrInvalidLabel => "if_icmpeq : missing or invalid label".into(),
+                IficmpgeMissingOrInvalidLabel => "if_icmpge : missing or invalid label".into(),
+                IfacmpneMissingOrInvalidLabel => "if_acmpne : missing or invalid label".into(),
+                IfacmpeqMissingOrInvalidLabel => "if_acmpeq : missing or invalid label".into(),
+                GetfieldMissingOrInvalidClassName =>
                     "getfield : missing or invalid class name".into(),
-                JvmInstructionError::GetfieldMissingOrInvalidFieldName =>
+                GetfieldMissingOrInvalidFieldName =>
                     "getfield : missing or invalid field name".into(),
-                JvmInstructionError::GetfieldMissingOrInvalidFieldDescriptor =>
+                GetfieldMissingOrInvalidFieldDescriptor =>
                     "getfield : missing or invalid field descriptor".into(),
-                JvmInstructionError::FstoreMissingOrInvalidVarnum =>
-                    "fstore : missing or invalid var num".into(),
-                JvmInstructionError::FloadMissingOrInvalidVarnum =>
-                    "fload : missing or invalid var num".into(),
-                JvmInstructionError::DstoreMissingOrInvalidVarnum =>
-                    "dstore : missing or invalod var num".into(),
-                JvmInstructionError::DloadMissingOrInvalidVarnum =>
-                    "dload : missing or invalid var num".into(),
-                JvmInstructionError::AnewarrayMissingOrInvalidComponentType =>
+                FstoreMissingOrInvalidVarnum => "fstore : missing or invalid var num".into(),
+                FloadMissingOrInvalidVarnum => "fload : missing or invalid var num".into(),
+                DstoreMissingOrInvalidVarnum => "dstore : missing or invalod var num".into(),
+                DloadMissingOrInvalidVarnum => "dload : missing or invalid var num".into(),
+                AnewarrayMissingOrInvalidComponentType =>
                     "anewarray : missing or invalid component type".into(),
-                JvmInstructionError::AloadMissingVarnum => "aload - missing varn num".into(),
-                JvmInstructionError::TableswitchMissingLow => "tableswitch : missing low".into(),
-                JvmInstructionError::TableswitchMissingHigh => "tableswitch : missing high".into(),
-                JvmInstructionError::TableswitchMissingDefault =>
-                    "tableswitch : missing default".into(),
-                JvmInstructionError::LookupswitchInvalidDefault =>
-                    "lookupswitch : invalid default".into(),
-                JvmInstructionError::LookupswitchInvalidSwitchEntry =>
-                    "lookupswitch : invalid entry".into(),
-                JvmInstructionError::LookupswitchMissingDefault =>
-                    "lookupswitch : missing default".into(),
-                JvmInstructionError::LookupswitchMissingLabelforSwitchEntry =>
+                AloadMissingVarnum => "aload - missing varn num".into(),
+                TableswitchMissingLow => "tableswitch : missing low".into(),
+                TableswitchMissingHigh => "tableswitch : missing high".into(),
+                TableswitchMissingDefault => "tableswitch : missing default".into(),
+                LookupswitchInvalidDefault => "lookupswitch : invalid default".into(),
+                LookupswitchInvalidSwitchEntry => "lookupswitch : invalid entry".into(),
+                LookupswitchMissingDefault => "lookupswitch : missing default".into(),
+                LookupswitchMissingLabelforSwitchEntry =>
                     "lookupswitch : missing label for switch entry".into(),
-                JvmInstructionError::CheckcastInvalidOrMissingType =>
-                    "checkcast :  invalid or missing type".into(),
-                JvmInstructionError::RetMissingVarnum => "ret : missing var num".into(),
-                JvmInstructionError::JsrMissingLabel => "jsr : missing label".into(),
-                JvmInstructionError::JsrwMissingLabel => "jsrw : missing label".into(),
-                JvmInstructionError::GotoMissingLabel => "goto : missing label".into(),
-                JvmInstructionError::GotowMissingLabel => "gotow : missing label".into(),
-                JvmInstructionError::SipushMissingConstant =>
-                    "sipush : missing constant value".into(),
-                JvmInstructionError::IficmpgtMissingLabel => "if_icmpgt : missing label".into(),
-                JvmInstructionError::IficmpltMissingLabel => "if_icmplt : missing label".into(),
-                JvmInstructionError::IficmpleMissingLabel => "if_icmple : missing label".into(),
-                JvmInstructionError::IloadMissingVarnum => "iload : missing var number".into(),
-                JvmInstructionError::IfneMissingLabel => "ifne : missing label".into(),
-                JvmInstructionError::IincMissingOrInvalidVarnum =>
-                    "iinc : missing or invalid var num".into(),
-                JvmInstructionError::IincMissingOrInvalidDelta =>
-                    "iinc : missing or invalid delta".into(),
-                JvmInstructionError::AnewarrayInvalidTypeDescriptor(ref err_type) =>
+                CheckcastInvalidOrMissingType => "checkcast :  invalid or missing type".into(),
+                RetMissingVarnum => "ret : missing var num".into(),
+                JsrMissingLabel => "jsr : missing label".into(),
+                JsrwMissingLabel => "jsrw : missing label".into(),
+                GotoMissingLabel => "goto : missing label".into(),
+                GotowMissingLabel => "gotow : missing label".into(),
+                SipushMissingConstant => "sipush : missing constant value".into(),
+                IficmpgtMissingLabel => "if_icmpgt : missing label".into(),
+                IficmpltMissingLabel => "if_icmplt : missing label".into(),
+                IficmpleMissingLabel => "if_icmple : missing label".into(),
+                IloadMissingVarnum => "iload : missing var number".into(),
+                IfneMissingLabel => "ifne : missing label".into(),
+                IincMissingOrInvalidVarnum => "iinc : missing or invalid var num".into(),
+                IincMissingOrInvalidDelta => "iinc : missing or invalid delta".into(),
+                AnewarrayInvalidTypeDescriptor(ref err_type) =>
                     format!("anewarray : incorrect type - {err_type}"),
-                JvmInstructionError::InvokespecialInvalid =>
-                    "invokespecial: badly-formed or invalid".into(),
-                JvmInstructionError::InvokespecialMissingMethodName =>
-                    "invokespecial : missing method name".into(),
-                JvmInstructionError::InvokespecialInvalidOrMissingMethodDescriptor =>
+                InvokespecialInvalid => "invokespecial: badly-formed or invalid".into(),
+                InvokespecialMissingMethodName => "invokespecial : missing method name".into(),
+                InvokespecialInvalidOrMissingMethodDescriptor =>
                     "invokespecial : missing or invalid method descriptor".into(),
-                JvmInstructionError::InvokevirtualInvalid =>
-                    "invokevirtual: badly-formed or invalid".into(),
-                JvmInstructionError::InvokevirtualMissingMethodName =>
-                    "invokevirtual : missing method name".into(),
-                JvmInstructionError::InvokevirtualInvalidOrMissingMethodDescriptor =>
+                InvokevirtualInvalid => "invokevirtual: badly-formed or invalid".into(),
+                InvokevirtualMissingMethodName => "invokevirtual : missing method name".into(),
+                InvokevirtualInvalidOrMissingMethodDescriptor =>
                     "invokevirtual : missing or invalid method descriptor".into(),
-                JvmInstructionError::InvokestaticInvalid =>
-                    "invokestatic: badly-formed or invalid".into(),
-                JvmInstructionError::InvokestaticMissingMethodName =>
-                    "invokestatic : missing method name".into(),
-                JvmInstructionError::InvokestaticInvalidOrMissingMethodDescriptor =>
+                InvokestaticInvalid => "invokestatic: badly-formed or invalid".into(),
+                InvokestaticMissingMethodName => "invokestatic : missing method name".into(),
+                InvokestaticInvalidOrMissingMethodDescriptor =>
                     "invokestatic : missing or invalid method descriptor".into(),
-                JvmInstructionError::BipushMissingByte => "Bipush : missing byte".into(),
-                JvmInstructionError::GetfieldInvalid => "getfield : badly-formed or invalid".into(),
-                JvmInstructionError::GetfieldInvalidOrMissingFieldDescriptor =>
+                BipushMissingByte => "Bipush : missing byte".into(),
+                GetfieldInvalid => "getfield : badly-formed or invalid".into(),
+                GetfieldInvalidOrMissingFieldDescriptor =>
                     "getfield : missing or invalid field descriptor".into(),
-                JvmInstructionError::GetfieldMissingFieldName =>
-                    "getfield : missing field name".into(),
-                JvmInstructionError::GetstaticMissingOrInvalidClassName =>
+                GetfieldMissingFieldName => "getfield : missing field name".into(),
+                GetstaticMissingOrInvalidClassName =>
                     "getstatic : missing or invalid class name".into(),
-                JvmInstructionError::GetstaticInvalidOrMissingFieldDescriptor =>
+                GetstaticInvalidOrMissingFieldDescriptor =>
                     "getstatic : missing or invalid field descriptor".into(),
-                JvmInstructionError::GetstaticMissingOrInvalidFieldName =>
+                GetstaticMissingOrInvalidFieldName =>
                     "getstatic : missing or invalid field name".into(),
-                JvmInstructionError::LdcIncorrectValue => "ldc : incorrect value".into(),
-                JvmInstructionError::LdcwIncorrectValue => "ldcw : incorrect value".into(),
-                JvmInstructionError::Ldc2wIncorrectValue => "ldc2_w : incorrect value".into(),
-                JvmInstructionError::MultianewarrayMissingDimensions =>
-                    "multianewarray : missing dimensions".into(),
-                JvmInstructionError::NewMissingClassName => "newa : missing class name".into(),
-                JvmInstructionError::NewarrayInvalidType => "newarray : invalid type".into(),
-
-                JvmInstructionError::IstoreMissingVarnum => "istore : missing var num".into(),
-                JvmInstructionError::AstoreMissingVarnum => "astore : missing var num".into(),
+                LdcIncorrectValue => "ldc : incorrect value".into(),
+                LdcwIncorrectValue => "ldcw : incorrect value".into(),
+                Ldc2wIncorrectValue => "ldc2_w : incorrect value".into(),
+                MultianewarrayMissingDimensions => "multianewarray : missing dimensions".into(),
+                NewMissingClassName => "newa : missing class name".into(),
+                NewarrayInvalidType => "newarray : invalid type".into(),
+                IstoreMissingVarnum => "istore : missing var num".into(),
+                AstoreMissingVarnum => "astore : missing var num".into(),
             }
         )
     }
@@ -295,45 +261,41 @@ impl std::error::Error for ParserError {}
 use std::fmt;
 impl fmt::Display for ParserError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use ParserError::{DirectiveError, JvmInstructionError, *};
+
         write!(
             f,
             "{}",
             match *self {
-                ParserError::FailedToParsePrimitive => "failed to parse primitive value".into(),
-                ParserError::MissingDefaultKeyword => "missing default keyword".into(),
-                ParserError::IncorrectToken(ref expected, ref actual) =>
+                FailedToParsePrimitive => "failed to parse primitive value".into(),
+                MissingDefaultKeyword => "missing default keyword".into(),
+                IncorrectToken(ref expected, ref actual) =>
                     format!("token mismatch while parsing: expected {expected} but found {actual}"),
-                ParserError::LexerError(ref err) => err.to_string(),
-                ParserError::IllegalLabelError => "malformed label - missing semicolon".into(),
-                ParserError::InvalidToken(ref tokstr) =>
-                    format!("Invalid token at position: {:#?}", tokstr),
-                ParserError::InvalidFieldDescriptor => "invalid field descriptor".into(),
-                ParserError::InvalidDirective(ref dir) => format!("invalid directive: {dir}"),
-                ParserError::EmptyFieldDescriptor => "empty field descriptor".into(),
-                ParserError::InvalidFieldInitValue(ref tokstr) =>
+                LexerError(ref err) => err.to_string(),
+                IllegalLabelError => "malformed label - missing semicolon".into(),
+                InvalidToken(ref tokstr) => format!("Invalid token at position: {:#?}", tokstr),
+                InvalidFieldDescriptor => "invalid field descriptor".into(),
+                InvalidDirective(ref dir) => format!("invalid directive: {dir}"),
+                EmptyFieldDescriptor => "empty field descriptor".into(),
+                InvalidFieldInitValue(ref tokstr) =>
                     format!("invalid field initialisation value: {:#?}", tokstr),
-                ParserError::InvalidMethodDescriptor => "invalid method descriptor".into(),
-                ParserError::InvalidInstruction(ref instr) =>
-                    format!("invalid phpron instuction: {instr}"),
-                ParserError::InvalidJvmInstruction(ref instr) =>
-                    format!("invalid JVM instruction {instr}"),
-                ParserError::MissingSourceFileName => "missing source file name".into(),
-                ParserError::MissingClassName => "missing class name".into(),
-                ParserError::MissingLabel => "missing label".into(),
-                ParserError::MissingInterfaceName => "missing interface name".into(),
-                ParserError::MissingSuperclassName => "missing super class name".into(),
-                ParserError::MissingFieldName => "field name missing in definition".into(),
-                ParserError::MissingMethodName => "method name missing in definition".into(),
-                ParserError::MissingEndMethodMarker =>
-                    "malformed end method - missing method keyword".into(),
-                ParserError::UnknownClassOrInterfaceAccessFlag(ref flag) =>
+                InvalidMethodDescriptor => "invalid method descriptor".into(),
+                InvalidInstruction(ref instr) => format!("invalid phpron instuction: {instr}"),
+                InvalidJvmInstruction(ref instr) => format!("invalid JVM instruction {instr}"),
+                MissingSourceFileName => "missing source file name".into(),
+                MissingClassName => "missing class name".into(),
+                MissingLabel => "missing label".into(),
+                MissingInterfaceName => "missing interface name".into(),
+                MissingSuperclassName => "missing super class name".into(),
+                MissingFieldName => "field name missing in definition".into(),
+                MissingMethodName => "method name missing in definition".into(),
+                MissingEndMethodMarker => "malformed end method - missing method keyword".into(),
+                UnknownClassOrInterfaceAccessFlag(ref flag) =>
                     format!("Invalid flag for class/interface: {flag}"),
-                ParserError::UnknownFieldAccessFlag(ref flag) =>
-                    format!("Invalid flag for field: {flag}"),
-                ParserError::UnknownMethodAccessFlag(ref flag) =>
-                    format!("Invalid flag for method: {flag}"),
-                ParserError::JvmInstructionError(ref jvm_err) => jvm_err.to_string(),
-                ParserError::DirectiveError(ref dir_err) => dir_err.to_string(),
+                UnknownFieldAccessFlag(ref flag) => format!("Invalid flag for field: {flag}"),
+                UnknownMethodAccessFlag(ref flag) => format!("Invalid flag for method: {flag}"),
+                JvmInstructionError(ref jvm_err) => jvm_err.to_string(),
+                DirectiveError(ref dir_err) => dir_err.to_string(),
             }
         )
     }
@@ -344,6 +306,8 @@ impl From<LexerError> for ParserError {
         ParserError::LexerError(lex_err)
     }
 }
+
+use Token::*;
 
 /// The Phoron parser
 pub struct Parser<'a> {
@@ -382,48 +346,24 @@ impl<'a> Parser<'a> {
 
     fn is_class_or_interface_access_flag(&self, tok: &Token) -> bool {
         match tok {
-            Token::TPublic
-            | Token::TFinal
-            | Token::TSuper
-            | Token::TInterface
-            | Token::TAbstract
-            | Token::TSynthetic
-            | Token::TAnnotation
-            | Token::TEnum
-            | Token::TModule => true,
+            TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
+            | TEnum | TModule => true,
             _ => false,
         }
     }
 
     fn is_field_access_flag(&self, tok: &Token) -> bool {
         match tok {
-            Token::TPublic
-            | Token::TPrivate
-            | Token::TProtected
-            | Token::TStatic
-            | Token::TFinal
-            | Token::TVolatile
-            | Token::TTransient
-            | Token::TSynthetic
-            | Token::TEnum => true,
+            TPublic | TPrivate | TProtected | TStatic | TFinal | TVolatile | TTransient
+            | TSynthetic | TEnum => true,
             _ => false,
         }
     }
 
     fn is_method_access_flag(&self, tok: &Token) -> bool {
         match tok {
-            Token::TPublic
-            | Token::TPrivate
-            | Token::TProtected
-            | Token::TStatic
-            | Token::TFinal
-            | Token::TSynthetic
-            | Token::TSynchronized
-            | Token::TBridge
-            | Token::TVarargs
-            | Token::TNative
-            | Token::TAbstract
-            | Token::TStrict => true,
+            TPublic | TPrivate | TProtected | TStatic | TFinal | TSynthetic | TSynchronized
+            | TBridge | TVarargs | TNative | TAbstract | TStrict => true,
             _ => false,
         }
     }
@@ -433,15 +373,15 @@ impl<'a> Parser<'a> {
         tok: &Token,
     ) -> ParserResult<PhoronClassOrInterfaceAccessFlag> {
         Ok(match tok {
-            Token::TPublic => PhoronClassOrInterfaceAccessFlag::AccPublic,
-            Token::TFinal => PhoronClassOrInterfaceAccessFlag::AccFinal,
-            Token::TSuper => PhoronClassOrInterfaceAccessFlag::AccSuper,
-            Token::TInterface => PhoronClassOrInterfaceAccessFlag::AccInterface,
-            Token::TAbstract => PhoronClassOrInterfaceAccessFlag::AccAbstract,
-            Token::TSynthetic => PhoronClassOrInterfaceAccessFlag::AccSynthetic,
-            Token::TAnnotation => PhoronClassOrInterfaceAccessFlag::AccAnnotation,
-            Token::TEnum => PhoronClassOrInterfaceAccessFlag::AccEnum,
-            Token::TModule => PhoronClassOrInterfaceAccessFlag::AccModule,
+            TPublic => PhoronClassOrInterfaceAccessFlag::AccPublic,
+            TFinal => PhoronClassOrInterfaceAccessFlag::AccFinal,
+            TSuper => PhoronClassOrInterfaceAccessFlag::AccSuper,
+            TInterface => PhoronClassOrInterfaceAccessFlag::AccInterface,
+            TAbstract => PhoronClassOrInterfaceAccessFlag::AccAbstract,
+            TSynthetic => PhoronClassOrInterfaceAccessFlag::AccSynthetic,
+            TAnnotation => PhoronClassOrInterfaceAccessFlag::AccAnnotation,
+            TEnum => PhoronClassOrInterfaceAccessFlag::AccEnum,
+            TModule => PhoronClassOrInterfaceAccessFlag::AccModule,
             _ => {
                 return Err(ParserError::UnknownClassOrInterfaceAccessFlag(format!(
                     "{:#?}",
@@ -453,33 +393,33 @@ impl<'a> Parser<'a> {
 
     fn get_field_access_flags(&self, tok: &Token) -> ParserResult<PhoronFieldAccessFlag> {
         Ok(match tok {
-            Token::TPublic => PhoronFieldAccessFlag::AccPublic,
-            Token::TPrivate => PhoronFieldAccessFlag::AccPrivate,
-            Token::TProtected => PhoronFieldAccessFlag::AccProtected,
-            Token::TStatic => PhoronFieldAccessFlag::AccStatic,
-            Token::TFinal => PhoronFieldAccessFlag::AccFinal,
-            Token::TVolatile => PhoronFieldAccessFlag::AccVolatile,
-            Token::TTransient => PhoronFieldAccessFlag::AccTransient,
-            Token::TSynthetic => PhoronFieldAccessFlag::AccSynthetic,
-            Token::TEnum => PhoronFieldAccessFlag::AccEnum,
+            TPublic => PhoronFieldAccessFlag::AccPublic,
+            TPrivate => PhoronFieldAccessFlag::AccPrivate,
+            TProtected => PhoronFieldAccessFlag::AccProtected,
+            TStatic => PhoronFieldAccessFlag::AccStatic,
+            TFinal => PhoronFieldAccessFlag::AccFinal,
+            TVolatile => PhoronFieldAccessFlag::AccVolatile,
+            TTransient => PhoronFieldAccessFlag::AccTransient,
+            TSynthetic => PhoronFieldAccessFlag::AccSynthetic,
+            TEnum => PhoronFieldAccessFlag::AccEnum,
             _ => return Err(ParserError::UnknownFieldAccessFlag(format!("{:#?}", tok))),
         })
     }
 
     fn get_method_acess_flags(&self, tok: &Token) -> ParserResult<PhoronMethodAccessFlag> {
         Ok(match tok {
-            Token::TPublic => PhoronMethodAccessFlag::AccPublic,
-            Token::TPrivate => PhoronMethodAccessFlag::AccPrivate,
-            Token::TProtected => PhoronMethodAccessFlag::AccProtected,
-            Token::TStatic => PhoronMethodAccessFlag::AccStatic,
-            Token::TSynchronized => PhoronMethodAccessFlag::AccSynchronized,
-            Token::TFinal => PhoronMethodAccessFlag::AccFinal,
-            Token::TBridge => PhoronMethodAccessFlag::AccBridge,
-            Token::TVarargs => PhoronMethodAccessFlag::AccVarargs,
-            Token::TNative => PhoronMethodAccessFlag::AccNative,
-            Token::TAbstract => PhoronMethodAccessFlag::AccAbstract,
-            Token::TStrict => PhoronMethodAccessFlag::AccStrict,
-            Token::TSynthetic => PhoronMethodAccessFlag::AccSynthetic,
+            TPublic => PhoronMethodAccessFlag::AccPublic,
+            TPrivate => PhoronMethodAccessFlag::AccPrivate,
+            TProtected => PhoronMethodAccessFlag::AccProtected,
+            TStatic => PhoronMethodAccessFlag::AccStatic,
+            TSynchronized => PhoronMethodAccessFlag::AccSynchronized,
+            TFinal => PhoronMethodAccessFlag::AccFinal,
+            TBridge => PhoronMethodAccessFlag::AccBridge,
+            TVarargs => PhoronMethodAccessFlag::AccVarargs,
+            TNative => PhoronMethodAccessFlag::AccNative,
+            TAbstract => PhoronMethodAccessFlag::AccAbstract,
+            TStrict => PhoronMethodAccessFlag::AccStrict,
+            TSynthetic => PhoronMethodAccessFlag::AccSynthetic,
             _ => return Err(ParserError::UnknownMethodAccessFlag(format!("{:#?}", tok))),
         })
     }
@@ -489,17 +429,9 @@ impl<'a> Parser<'a> {
         self.advance()?;
 
         let mut access_flags = Vec::new();
-
         Ok(match self.see() {
-            Token::TPublic
-            | Token::TFinal
-            | Token::TSuper
-            | Token::TInterface
-            | Token::TAbstract
-            | Token::TSynthetic
-            | Token::TAnnotation
-            | Token::TEnum
-            | Token::TModule => {
+            TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
+            | TEnum | TModule => {
                 while self.is_class_or_interface_access_flag(self.see()) {
                     access_flags.push(self.get_class_or_interface_access_flag(&self.see())?);
                     self.advance()?;
@@ -531,15 +463,8 @@ impl<'a> Parser<'a> {
         let mut access_flags = Vec::new();
 
         Ok(match self.see() {
-            Token::TPublic
-            | Token::TFinal
-            | Token::TSuper
-            | Token::TInterface
-            | Token::TAbstract
-            | Token::TSynthetic
-            | Token::TAnnotation
-            | Token::TEnum
-            | Token::TModule => {
+            TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
+            | TEnum | TModule => {
                 while self.is_class_or_interface_access_flag(self.see()) {
                     access_flags.push(self.get_class_or_interface_access_flag(&self.see())?);
                     self.advance()?;
@@ -2756,219 +2681,36 @@ impl<'a> Parser<'a> {
     /// Instruction <- line_comment* (Directive / JvmInstruction / Label) line_comment?  newline
     fn parse_instruction(&mut self) -> ParserResult<PhoronInstruction> {
         Ok(match self.see() {
-            Token::TThrows | Token::TCatch | Token::TLimit | Token::TVar | Token::TLine => {
+            TThrows | TCatch | TLimit | TVar | TLine => {
                 PhoronInstruction::PhoronDirective(self.parse_directive()?)
             }
 
-            Token::TAaload
-            | Token::TAastore
-            | Token::TAconstnull
-            | Token::TAload
-            | Token::TAload0
-            | Token::TAload1
-            | Token::TAload2
-            | Token::TAload3
-            | Token::TAnewarray
-            | Token::TAreturn
-            | Token::TArraylength
-            | Token::TAssign
-            | Token::TAstore
-            | Token::TAstore0
-            | Token::TAstore1
-            | Token::TAstore2
-            | Token::TAstore3
-            | Token::TAthrow
-            | Token::TBaload
-            | Token::TBastore
-            | Token::TBipush
-            | Token::TBridge
-            | Token::TCaload
-            | Token::TCastore
-            | Token::TCheckcast
-            | Token::TD2f
-            | Token::TD2i
-            | Token::TD2l
-            | Token::TDadd
-            | Token::TDaload
-            | Token::TDastore
-            | Token::TDcmpg
-            | Token::TDcmpl
-            | Token::TDconst0
-            | Token::TDconst1
-            | Token::TDdiv
-            | Token::TDefault
-            | Token::TDload
-            | Token::TDload0
-            | Token::TDload1
-            | Token::TDload2
-            | Token::TDload3
-            | Token::TDmul
-            | Token::TDneg
-            | Token::TDot
-            | Token::TDrem
-            | Token::TDreturn
-            | Token::TDstore
-            | Token::TDstore0
-            | Token::TDstore1
-            | Token::TDstore2
-            | Token::TDstore3
-            | Token::TDsub
-            | Token::TDup
-            | Token::TDup2
-            | Token::TDup2x1
-            | Token::TDup2x2
-            | Token::TDupx1
-            | Token::TDupx2
-            | Token::TEnum
-            | Token::TF2d
-            | Token::TF2i
-            | Token::TF2l
-            | Token::TFadd
-            | Token::TFaload
-            | Token::TFastore
-            | Token::TFcmpg
-            | Token::TFcmpl
-            | Token::TFconst0
-            | Token::TFconst1
-            | Token::TFconst2
-            | Token::TFdiv
-            | Token::TField
-            | Token::TFinal
-            | Token::TFload
-            | Token::TFload0
-            | Token::TFload1
-            | Token::TFload2
-            | Token::TFload3
-            | Token::TFmul
-            | Token::TFneg
-            | Token::TFrem
-            | Token::TFreturn
-            | Token::TFrom
-            | Token::TFstore
-            | Token::TFstore0
-            | Token::TFstore1
-            | Token::TFstore2
-            | Token::TFstore3
-            | Token::TFsub
-            | Token::TGetfield
-            | Token::TGetstatic
-            | Token::TGoto
-            | Token::TGotow
-            | Token::TI2b
-            | Token::TI2c
-            | Token::TI2d
-            | Token::TI2f
-            | Token::TI2l
-            | Token::TI2s
-            | Token::TIadd
-            | Token::TIaload
-            | Token::TIand
-            | Token::TIastore
-            | Token::TIconst0
-            | Token::TIconst1
-            | Token::TIconst2
-            | Token::TIconst3
-            | Token::TIconst4
-            | Token::TIconst5
-            | Token::TIconstm1
-            | Token::TIdiv
-            | Token::TIfacmpeq
-            | Token::TIfacmpne
-            | Token::TIfeq
-            | Token::TIfge
-            | Token::TIfgt
-            | Token::TIficmpeq
-            | Token::TIficmpge
-            | Token::TIficmpgt
-            | Token::TIficmple
-            | Token::TIficmplt
-            | Token::TIficmpne
-            | Token::TIfle
-            | Token::TIflt
-            | Token::TIfne
-            | Token::TIfnonnull
-            | Token::TIfnull
-            | Token::TIinc
-            | Token::TIload
-            | Token::TIload0
-            | Token::TIload1
-            | Token::TIload2
-            | Token::TIload3
-            | Token::TImul
-            | Token::TIneg
-            | Token::TInstanceof
-            | Token::TInvokeinterface
-            | Token::TInvokespecial
-            | Token::TInvokestatic
-            | Token::TInvokevirtual
-            | Token::TIor
-            | Token::TIrem
-            | Token::TIreturn
-            | Token::TIshl
-            | Token::TIshr
-            | Token::TIstore
-            | Token::TIstore0
-            | Token::TIstore1
-            | Token::TIstore2
-            | Token::TIstore3
-            | Token::TIsub
-            | Token::TIushr
-            | Token::TIxor
-            | Token::TJsr
-            | Token::TJsrw
-            | Token::TL2d
-            | Token::TL2f
-            | Token::TL2i
-            | Token::TLadd
-            | Token::TLand
-            | Token::TLastore
-            | Token::TLcmp
-            | Token::TLconst0
-            | Token::TLconst1
-            | Token::TLdc
-            | Token::TLdc2w
-            | Token::TLdcw
-            | Token::TLdiv
-            | Token::TLload
-            | Token::TLload0
-            | Token::TLload1
-            | Token::TLload2
-            | Token::TLload3
-            | Token::TLmul
-            | Token::TLneg
-            | Token::TLoaload
-            | Token::TLookupswitch
-            | Token::TLor
-            | Token::TLrem
-            | Token::TLreturn
-            | Token::TLshl
-            | Token::TLshr
-            | Token::TLstore
-            | Token::TLstore0
-            | Token::TLstore1
-            | Token::TLstore2
-            | Token::TLstore3
-            | Token::TLsub
-            | Token::TLushr
-            | Token::TLxor
-            | Token::TMonitorenter
-            | Token::TMonitorexit
-            | Token::TMultianewarray
-            | Token::TNew
-            | Token::TNewarray
-            | Token::TNop
-            | Token::TPop
-            | Token::TPop2
-            | Token::TPutfield
-            | Token::TPutstatic
-            | Token::TRet
-            | Token::TReturn
-            | Token::TSaload
-            | Token::TSastore
-            | Token::TSipush
-            | Token::TSuper
-            | Token::TSwap
-            | Token::TTableswitch => {
+            TAaload | TAastore | TAconstnull | TAload | TAload0 | TAload1 | TAload2 | TAload3
+            | TAnewarray | TAreturn | TArraylength | TAssign | TAstore | TAstore0 | TAstore1
+            | TAstore2 | TAstore3 | TAthrow | TBaload | TBastore | TBipush | TBridge | TCaload
+            | TCastore | TCheckcast | TD2f | TD2i | TD2l | TDadd | TDaload | TDastore | TDcmpg
+            | TDcmpl | TDconst0 | TDconst1 | TDdiv | TDefault | TDload | TDload0 | TDload1
+            | TDload2 | TDload3 | TDmul | TDneg | TDot | TDrem | TDreturn | TDstore | TDstore0
+            | TDstore1 | TDstore2 | TDstore3 | TDsub | TDup | TDup2 | TDup2x1 | TDup2x2
+            | TDupx1 | TDupx2 | TEnum | TF2d | TF2i | TF2l | TFadd | TFaload | TFastore
+            | TFcmpg | TFcmpl | TFconst0 | TFconst1 | TFconst2 | TFdiv | TField | TFinal
+            | TFload | TFload0 | TFload1 | TFload2 | TFload3 | TFmul | TFneg | TFrem | TFreturn
+            | TFrom | TFstore | TFstore0 | TFstore1 | TFstore2 | TFstore3 | TFsub | TGetfield
+            | TGetstatic | TGoto | TGotow | TI2b | TI2c | TI2d | TI2f | TI2l | TI2s | TIadd
+            | TIaload | TIand | TIastore | TIconst0 | TIconst1 | TIconst2 | TIconst3 | TIconst4
+            | TIconst5 | TIconstm1 | TIdiv | TIfacmpeq | TIfacmpne | TIfeq | TIfge | TIfgt
+            | TIficmpeq | TIficmpge | TIficmpgt | TIficmple | TIficmplt | TIficmpne | TIfle
+            | TIflt | TIfne | TIfnonnull | TIfnull | TIinc | TIload | TIload0 | TIload1
+            | TIload2 | TIload3 | TImul | TIneg | TInstanceof | TInvokeinterface
+            | TInvokespecial | TInvokestatic | TInvokevirtual | TIor | TIrem | TIreturn | TIshl
+            | TIshr | TIstore | TIstore0 | TIstore1 | TIstore2 | TIstore3 | TIsub | TIushr
+            | TIxor | TJsr | TJsrw | TL2d | TL2f | TL2i | TLadd | TLand | TLastore | TLcmp
+            | TLconst0 | TLconst1 | TLdc | TLdc2w | TLdcw | TLdiv | TLload | TLload0 | TLload1
+            | TLload2 | TLload3 | TLmul | TLneg | TLoaload | TLookupswitch | TLor | TLrem
+            | TLreturn | TLshl | TLshr | TLstore | TLstore0 | TLstore1 | TLstore2 | TLstore3
+            | TLsub | TLushr | TLxor | TMonitorenter | TMonitorexit | TMultianewarray | TNew
+            | TNewarray | TNop | TPop | TPop2 | TPutfield | TPutstatic | TRet | TReturn
+            | TSaload | TSastore | TSipush | TSuper | TSwap | TTableswitch => {
                 PhoronInstruction::JvmInstruction(self.parse_jvm_instruction()?)
             }
 
