@@ -166,15 +166,20 @@ pub enum PhoronDirective {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum PrimitiveType {
-    Boolean,
-    Byte,
-    Char,
-    Double,
-    Float,
-    Int,
-    Long,
-    Short,
+pub enum ClassOrArrayTypeDescriptor {
+    ClassType {
+        class_name: String,
+    },
+
+    ArrayType {
+        component_type: Box<ClassOrArrayTypeDescriptor>,
+    },
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Ldc2wValue {
+    Long(i64),
+    Double(f64),
 }
 
 #[derive(Debug, PartialEq)]
@@ -188,7 +193,9 @@ pub enum LdcValue {
 #[derive(PartialEq, Debug)]
 pub enum JvmInstruction {
     Aaload,
-    Anewarray,
+    Anewarray {
+        component_type: ClassOrArrayTypeDescriptor,
+    },
     Areturn,
     Aastore,
     Aconstnull,
@@ -279,7 +286,9 @@ pub enum JvmInstruction {
         field_name: String,
         descriptor: PhoronFieldDescriptor,
     },
-    Goto,
+    Goto {
+        label: String,
+    },
     Gotow,
     I2b,
     I2c,
@@ -303,27 +312,40 @@ pub enum JvmInstruction {
     Ifacmpne,
     Ificmpeq,
     Ificmpge,
-    Ificmpgt,
+    Ificmpgt {
+        label: String,
+    },
     Ificmple,
-    Ificmplt,
+    Ificmplt {
+        label: String,
+    },
     Ificmpne,
     Ifeq,
     Ifge,
     Ifgt,
     Ifle,
     Iflt,
-    Ifne,
+    Ifne {
+        label: String,
+    },
     Ifnonnull,
     Ifnull,
-    Iinc,
+    Iinc {
+        varnum: u16,
+        delta: i16,
+    },
     Iload0,
     Iload1,
     Iload2,
     Iload3,
-    Iload,
+    Iload {
+        varnum: u16,
+    },
     Imul,
     Ineg,
-    Instanceof,
+    Instanceof {
+        check_type: ClassOrArrayTypeDescriptor,
+    },
     Invokeinterface,
     Invokespecial {
         class_name: String,
@@ -365,8 +387,8 @@ pub enum JvmInstruction {
     Lcmp,
     Lconst0,
     Lconst1,
-    Ldc2w,
-    Ldcw,
+    Ldc2w(Ldc2wValue),
+    Ldcw(LdcValue),
     Ldc(LdcValue),
     Ldiv,
     Lload,
@@ -392,9 +414,12 @@ pub enum JvmInstruction {
     Lxor,
     Monitorenter,
     Monitorexit,
-    Multianewarray,
+    Multianewarray {
+        component_type: PhoronFieldDescriptor,
+        dimensions: u8,
+    },
     Newarray {
-        component_type: PrimitiveType,
+        component_type: PhoronBaseType,
     },
     New {
         class_name: String,
@@ -408,7 +433,7 @@ pub enum JvmInstruction {
     Ret,
     Saload,
     Sastore,
-    Sipush,
+    Sipush(i16),
     Swap,
     Tableswitch,
 }

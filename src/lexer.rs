@@ -212,7 +212,6 @@ pub enum Token {
     TLushr,
     TLxor,
     TMethod,
-    TMinus,
     TModule,
     TMonitorenter,
     TMonitorexit,
@@ -221,7 +220,6 @@ pub enum Token {
     TNew,
     TNewarray,
     TNop,
-    TPlus,
     TPop,
     TPop2,
     TPrivate,
@@ -407,7 +405,7 @@ impl<'a> Lexer<'a> {
 
         Some(match ident {
             "aaload" => TAaload,
-            "aastor" => TAastore,
+            "aastore" => TAastore,
             "abstract" => TAbstract,
             "aconst_null" => TAconstnull,
             "aload" => TAload,
@@ -691,14 +689,26 @@ impl<'a> Lexer<'a> {
                 TAssign
             }
 
-            '+' => {
+            c if c == '+' || c == '-' => {
                 self.next()?;
-                TPlus
-            }
+                let number = self.extract_float_or_int()?;
 
-            '-' => {
-                self.next()?;
-                TMinus
+                match number {
+                    Number::Float(float) => {
+                        if c == '+' {
+                            TFloat(float)
+                        } else {
+                            TFloat(-float)
+                        }
+                    }
+                    Number::Int(int) => {
+                        if c == '+' {
+                            TInt(int)
+                        } else {
+                            TInt(-int)
+                        }
+                    }
+                }
             }
 
             '"' => {
@@ -753,5 +763,19 @@ impl<'a> Lexer<'a> {
             let c = *self.src.peek().unwrap();
             self.lex_char(c)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lex_numbers() -> Result<(), Box<dyn std::error::Error>> {
+        let mut lexer = Lexer::new("-1");
+        assert_eq!(lexer.lex()?, Token::TInt(-1));
+        assert_eq!(lexer.lex()?, Token::TEof);
+
+        Ok(())
     }
 }

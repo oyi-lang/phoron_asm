@@ -1,7 +1,4 @@
-use phoron_asm::{
-    lexer::{Lexer, Token},
-    parser::Parser,
-};
+use phoron_asm::{lexer::Lexer, parser::Parser};
 use std::fs;
 
 fn usage() {
