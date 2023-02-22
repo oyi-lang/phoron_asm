@@ -216,7 +216,9 @@ pub enum JvmInstruction {
     Astore1,
     Astore2,
     Astore3,
-    Astore,
+    Astore {
+        varnum: u16,
+    },
     Athrow,
     Baload,
     Bastore,
@@ -382,7 +384,9 @@ pub enum JvmInstruction {
     Istore1,
     Istore2,
     Istore3,
-    Istore,
+    Istore {
+        varnum: u16,
+    },
     Isub,
     Iushr,
     Ixor,

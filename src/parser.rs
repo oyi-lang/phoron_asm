@@ -55,13 +55,18 @@ impl fmt::Display for DirectiveError {
 
 #[derive(Debug)]
 pub enum JvmInstructionError {
+    AstoreMissingVarnum,
+    IstoreMissingVarnum,
+
     TableswitchMissingLow,
     TableswitchMissingHigh,
     TableswitchMissingDefault,
+
     LookupswitchInvalidDefault,
     LookupswitchMissingDefault,
     LookupswitchInvalidSwitchEntry,
     LookupswitchMissingLabelforSwitchEntry,
+
     CheckcastInvalidOrMissingType,
     RetMissingVarnum,
     JsrMissingLabel,
@@ -170,6 +175,9 @@ impl fmt::Display for JvmInstructionError {
                     "multianewarray : missing dimensions".into(),
                 JvmInstructionError::NewMissingClassName => "newa : missing class name".into(),
                 JvmInstructionError::NewarrayInvalidType => "newarray : invalid type".into(),
+
+                JvmInstructionError::IstoreMissingVarnum => "istore : missing var num".into(),
+                JvmInstructionError::AstoreMissingVarnum => "astore : missing var num".into(),
             }
         )
     }
@@ -962,8 +970,15 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // astore <varnum>
             Token::TAstore => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::AstoreMissingVarnum)
+                })?;
+
+                JvmInstruction::Astore { varnum }
             }
 
             // astore_0
@@ -1439,16 +1454,20 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Iadd
             }
 
+            // iaload
             Token::TIaload => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iaload
             }
 
             Token::TIand => {
                 todo!()
             }
 
+            // iastore
             Token::TIastore => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Iastore
             }
 
             // iconst_0
@@ -1799,8 +1818,15 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // istore <varnum>
             Token::TIstore => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self.parse_u16().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IstoreMissingVarnum)
+                })?;
+
+                JvmInstruction::Istore { varnum }
             }
 
             // istore_0

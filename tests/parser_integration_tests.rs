@@ -1849,31 +1849,918 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "CheckArrayType".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(2)),
+                        PhoronDirective(LimitLocals(3)),
+                        JvmInstruction(Bipush(5)),
+                        JvmInstruction(Newarray {
+                            component_type: Integer,
+                        }),
+                        JvmInstruction(Astore1),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Instanceof {
+                            check_type: ClassOrArrayTypeDescriptor::ArrayType {
+                                component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
+                                    class_name: "I".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Bipush(10)),
+                        JvmInstruction(Newarray {
+                            component_type: Character,
+                        }),
+                        JvmInstruction(Astore2),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload2),
+                        JvmInstruction(Instanceof {
+                            check_type: ClassOrArrayTypeDescriptor::ArrayType {
+                                component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
+                                    class_name: "I".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/CheckArrayType.pho")?;
+    assert_eq!(expected_ast, actual_ast);
+
     Ok(())
 }
 
 #[test]
 fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "PrintHello10Times".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(3)),
+                        PhoronDirective(LimitLocals(3)),
+                        JvmInstruction(Iconst1),
+                        JvmInstruction(Istore1),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Astore2),
+                        PhoronLabel("loop".to_string()),
+                        JvmInstruction(Aload2),
+                        JvmInstruction(Iload1),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "print".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Aload2),
+                        JvmInstruction(Ldc(LdcValue::QuotedString(" - ".to_string()))),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "print".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Aload2),
+                        JvmInstruction(Ldc(LdcValue::QuotedString("Hello".to_string()))),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Iinc {
+                            varnum: 1,
+                            delta: 1,
+                        }),
+                        JvmInstruction(Iload1),
+                        JvmInstruction(Bipush(10)),
+                        JvmInstruction(Ificmple {
+                            label: "loop".to_string(),
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/PrintHello10Times.pho")?;
+    assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
 
 #[test]
 fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "AddNums".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(5)),
+                        PhoronDirective(LimitLocals(8)),
+                        JvmInstruction(New {
+                            class_name: "java/util/Scanner".to_string(),
+                        }),
+                        JvmInstruction(Dup),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "in".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/InputStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/util/Scanner".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/io/InputStream".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Astore1),
+                        JvmInstruction(Jsr {
+                            label: "ReadNum".to_string(),
+                        }),
+                        JvmInstruction(Istore3),
+                        JvmInstruction(Jsr {
+                            label: "ReadNum".to_string(),
+                        }),
+                        JvmInstruction(Istore { varnum: 4 }),
+                        JvmInstruction(Iload3),
+                        JvmInstruction(Iload { varnum: 4 }),
+                        JvmInstruction(Jsr {
+                            label: "AddNum".to_string(),
+                        }),
+                        JvmInstruction(Istore { varnum: 5 }),
+                        JvmInstruction(Iload { varnum: 5 }),
+                        JvmInstruction(Jsr {
+                            label: "PrintSum".to_string(),
+                        }),
+                        JvmInstruction(Return),
+                        PhoronLabel("PrintSum".to_string()),
+                        JvmInstruction(Astore { varnum: 7 }),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Swap),
+                        JvmInstruction(Invokestatic {
+                            class_name: "java/lang/String".to_string(),
+                            method_name: "valueOf".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: FieldDescriptor(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Ret { varnum: 7 }),
+                        PhoronLabel("AddNum".to_string()),
+                        JvmInstruction(Astore { varnum: 6 }),
+                        JvmInstruction(Iadd),
+                        JvmInstruction(Ret { varnum: 6 }),
+                        PhoronLabel("ReadNum".to_string()),
+                        JvmInstruction(Astore2),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/util/Scanner".to_string(),
+                            method_name: "nextInt".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: FieldDescriptor(BaseType(Integer)),
+                            },
+                        }),
+                        JvmInstruction(Ret { varnum: 2 }),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/AddNums.pho")?;
+    assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
 
 #[test]
 fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "CountJasmin".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(3)),
+                        PhoronDirective(LimitLocals(4)),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Astore1),
+                        JvmInstruction(Bipush(10)),
+                        JvmInstruction(Istore2),
+                        PhoronLabel("loop".to_string()),
+                        JvmInstruction(Bipush(10)),
+                        JvmInstruction(Iload2),
+                        JvmInstruction(Isub),
+                        JvmInstruction(Invokestatic {
+                            class_name: "java/lang/String".to_string(),
+                            method_name: "valueOf".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: FieldDescriptor(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Astore3),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Aload3),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Iinc {
+                            varnum: 2,
+                            delta: -1,
+                        }),
+                        JvmInstruction(Iload2),
+                        JvmInstruction(Ifne {
+                            label: "loop".to_string(),
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/CountJasmin.pho")?;
+    assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
 
 #[test]
 fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "StringBufferDemo".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "sbDemo".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPrivate,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ObjectType {
+                            class_name: "java/lang/Object".to_string(),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(2)),
+                        PhoronDirective(LimitLocals(2)),
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Checkcast {
+                            cast_type: ClassOrArrayTypeDescriptor::ClassType {
+                                class_name: "java/lang/StringBuffer".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Ldc(LdcValue::QuotedString("Hello, mundo!".to_string()))),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/lang/StringBuffer".to_string(),
+                            method_name: "append".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: FieldDescriptor(ObjectType {
+                                    class_name: "java/lang/StringBuffer".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(3)),
+                        PhoronDirective(LimitLocals(2)),
+                        JvmInstruction(New {
+                            class_name: "java/lang/StringBuffer".to_string(),
+                        }),
+                        JvmInstruction(Dup),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/StringBuffer".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Astore1),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Invokestatic {
+                            class_name: "StringBufferDemo".to_string(),
+                            method_name: "sbDemo".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/Object".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/lang/StringBuffer".to_string(),
+                            method_name: "toString".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: FieldDescriptor(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                            },
+                        }),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ObjectType {
+                                    class_name: "java/lang/String".to_string(),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/StringBufferDemo.pho")?;
+    assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
 
 #[test]
 fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
+    let expected_ast = PhoronProgram {
+        header: PhoronHeader {
+            sourcefile_def: None,
+            class_or_interface_def: Class(PhoronClassDef {
+                name: "ArrayDemo".to_string(),
+                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+            }),
+            super_def: PhoronSuperDef {
+                super_class_name: "java/lang/Object".to_string(),
+            },
+        },
+        body: PhoronBody {
+            field_defs: vec![],
+            method_defs: vec![
+                PhoronMethodDef {
+                    name: "<init>".to_string(),
+                    access_flags: vec![PhoronMethodAccessFlag::AccPublic],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: None,
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Invokespecial {
+                            class_name: "java/lang/Object".to_string(),
+                            method_name: "<init>".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: None,
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "setArr".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPrivate,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(BaseType(Integer)),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(4)),
+                        PhoronDirective(LimitLocals(4)),
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Iload1),
+                        JvmInstruction(Iload2),
+                        JvmInstruction(Iastore),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "printArr".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPrivate,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(BaseType(Integer)),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(4)),
+                        PhoronDirective(LimitLocals(2)),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload0),
+                        JvmInstruction(Iload1),
+                        JvmInstruction(Iaload),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+                PhoronMethodDef {
+                    name: "main".to_string(),
+                    access_flags: vec![
+                        PhoronMethodAccessFlag::AccPublic,
+                        PhoronMethodAccessFlag::AccStatic,
+                    ],
+                    descriptor: PhoronMethodDescriptor {
+                        param_descriptor: Some(ArrayType {
+                            component_type: Box::new(ObjectType {
+                                class_name: "java/lang/String".to_string(),
+                            }),
+                        }),
+                        return_descriptor: VoidDescriptor,
+                    },
+                    instructions: vec![
+                        PhoronDirective(LimitStack(3)),
+                        PhoronDirective(LimitLocals(2)),
+                        JvmInstruction(Bipush(5)),
+                        JvmInstruction(Newarray {
+                            component_type: Integer,
+                        }),
+                        JvmInstruction(Astore1),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(4)),
+                        JvmInstruction(Iaload),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(0)),
+                        JvmInstruction(Bipush(1)),
+                        JvmInstruction(Invokestatic {
+                            class_name: "ArrayDemo".to_string(),
+                            method_name: "setArr".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ArrayType {
+                                    component_type: Box::new(BaseType(Integer)),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(1)),
+                        JvmInstruction(Bipush(2)),
+                        JvmInstruction(Iastore),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(2)),
+                        JvmInstruction(Bipush(3)),
+                        JvmInstruction(Iastore),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(3)),
+                        JvmInstruction(Bipush(4)),
+                        JvmInstruction(Iastore),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(4)),
+                        JvmInstruction(Bipush(5)),
+                        JvmInstruction(Iastore),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(0)),
+                        JvmInstruction(Invokestatic {
+                            class_name: "ArrayDemo".to_string(),
+                            method_name: "printArr".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(ArrayType {
+                                    component_type: Box::new(BaseType(Integer)),
+                                }),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(1)),
+                        JvmInstruction(Iaload),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(2)),
+                        JvmInstruction(Iaload),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(3)),
+                        JvmInstruction(Iaload),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Getstatic {
+                            class_name: "java/lang/System".to_string(),
+                            field_name: "out".to_string(),
+                            descriptor: ObjectType {
+                                class_name: "java/io/PrintStream".to_string(),
+                            },
+                        }),
+                        JvmInstruction(Aload1),
+                        JvmInstruction(Bipush(4)),
+                        JvmInstruction(Iaload),
+                        JvmInstruction(Invokevirtual {
+                            class_name: "java/io/PrintStream".to_string(),
+                            method_name: "println".to_string(),
+                            descriptor: PhoronMethodDescriptor {
+                                param_descriptor: Some(BaseType(Integer)),
+                                return_descriptor: VoidDescriptor,
+                            },
+                        }),
+                        JvmInstruction(Return),
+                    ],
+                },
+            ],
+        },
+    };
+
+    let actual_ast = parse("doc/grammar/ArrayDemo.pho")?;
+    assert_eq!(expected_ast, actual_ast);
+
     Ok(())
 }
 
