@@ -7,6 +7,17 @@ pub type ParserResult<T> = Result<T, ParserError>;
 
 #[derive(Debug)]
 pub enum DirectiveError {
+    ThrowsMissingClassName,
+
+    VarMissingVarnum,
+    VarMissingIsKeyword,
+    VarMissingName,
+    VarMissingFieldDescriptor,
+    VarMissingFromKeyword,
+    VarMissingFromLabel,
+    VarMissingToKeyword,
+    VarMissingToLabel,
+
     InvalidDirective(String),
     LocalsDirectiveMissingCount,
     MissingStackOrLocal,
@@ -19,6 +30,17 @@ impl fmt::Display for DirectiveError {
             f,
             "{}",
             match *self {
+                DirectiveError::ThrowsMissingClassName => ".throws - missing class name".into(),
+                DirectiveError::VarMissingVarnum => ".var - missing var num".into(),
+                DirectiveError::VarMissingIsKeyword => ".var - missing is keyword".into(),
+                DirectiveError::VarMissingName => ".var - missing name".into(),
+                DirectiveError::VarMissingFieldDescriptor =>
+                    ".var - missing field descriptor".into(),
+                DirectiveError::VarMissingFromKeyword => ".var - missing from keyword".into(),
+                DirectiveError::VarMissingFromLabel => ".var - missing from label".into(),
+                DirectiveError::VarMissingToKeyword => ".var - missing to keyword".into(),
+                DirectiveError::VarMissingToLabel => ".var - missing to label".into(),
+
                 DirectiveError::StackDirectiveMissingCount =>
                     ".limit stack : missing count value for .limit stack directive".into(),
                 DirectiveError::InvalidDirective(ref tok) => format!("invalid directive {tok}"),
@@ -33,10 +55,21 @@ impl fmt::Display for DirectiveError {
 
 #[derive(Debug)]
 pub enum JvmInstructionError {
+    TableswitchMissingLow,
+    TableswitchMissingHigh,
+    TableswitchMissingDefault,
+    LookupswitchInvalidDefault,
+    LookupswitchMissingDefault,
+    LookupswitchInvalidSwitchEntry,
+    LookupswitchMissingLabelforSwitchEntry,
+    CheckcastInvalidOrMissingType,
+    RetMissingVarnum,
+    JsrMissingLabel,
     GotoMissingLabel,
     SipushMissingConstant,
     IficmpgtMissingLabel,
     IficmpltMissingLabel,
+    IficmpleMissingLabel,
     IloadMissingVarnum,
     IfneMissingLabel,
     AnewarrayInvalidTypeDescriptor(String),
@@ -72,11 +105,28 @@ impl fmt::Display for JvmInstructionError {
             f,
             "{}",
             match *self {
+                JvmInstructionError::TableswitchMissingLow => "tableswitch : missing low".into(),
+                JvmInstructionError::TableswitchMissingHigh => "tableswitch : missing high".into(),
+                JvmInstructionError::TableswitchMissingDefault =>
+                    "tableswitch : missing default".into(),
+                JvmInstructionError::LookupswitchInvalidDefault =>
+                    "lookupswitch : invalid default".into(),
+                JvmInstructionError::LookupswitchInvalidSwitchEntry =>
+                    "lookupswitch : invalid entry".into(),
+                JvmInstructionError::LookupswitchMissingDefault =>
+                    "lookupswitch : missing default".into(),
+                JvmInstructionError::LookupswitchMissingLabelforSwitchEntry =>
+                    "lookupswitch : missing label for switch entry".into(),
+                JvmInstructionError::CheckcastInvalidOrMissingType =>
+                    "checkcast :  invalid or missing type".into(),
+                JvmInstructionError::RetMissingVarnum => "ret : missing var num".into(),
+                JvmInstructionError::JsrMissingLabel => "jsr : missing label".into(),
                 JvmInstructionError::GotoMissingLabel => "goto : missing label".into(),
                 JvmInstructionError::SipushMissingConstant =>
                     "sipush : missing constant value".into(),
                 JvmInstructionError::IficmpgtMissingLabel => "if_icmpgt : missing label".into(),
                 JvmInstructionError::IficmpltMissingLabel => "if_icmplt : missing label".into(),
+                JvmInstructionError::IficmpleMissingLabel => "if_icmple : missing label".into(),
                 JvmInstructionError::IloadMissingVarnum => "iload : missing var number".into(),
                 JvmInstructionError::IfneMissingLabel => "ifne : missing label".into(),
                 JvmInstructionError::IincMissingVarnum => "iinc : missing var num".into(),
@@ -127,6 +177,8 @@ impl fmt::Display for JvmInstructionError {
 
 #[derive(Debug)]
 pub enum ParserError {
+    FailedToParsePrimitive,
+    MissingDefaultKeyword,
     DirectiveError(DirectiveError),
     IncorrectToken(String, String),
     EmptyFieldDescriptor,
@@ -162,6 +214,8 @@ impl fmt::Display for ParserError {
             f,
             "{}",
             match *self {
+                ParserError::FailedToParsePrimitive => "failed to parse primitive value".into(),
+                ParserError::MissingDefaultKeyword => "missing default keyword".into(),
                 ParserError::IncorrectToken(ref expected, ref actual) =>
                     format!("token mismatch while parsing: expected {expected} but found {actual}"),
                 ParserError::LexerError(ref err) => err.to_string(),
@@ -674,14 +728,62 @@ impl<'a> Parser<'a> {
             }
 
             Token::TThrows => {
-                todo!()
+                self.advance()?;
+
+                let class_name = self.parse_class_name().map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::ThrowsMissingClassName)
+                })?;
+
+                PhoronDirective::Throws { class_name }
             }
             Token::TLine => {
                 todo!()
             }
+
             Token::TVar => {
-                todo!()
+                self.advance()?;
+
+                let varnum = self
+                    .parse_u16()
+                    .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingVarnum))?;
+
+                self.advance_if(&Token::TIs).map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::VarMissingIsKeyword)
+                })?;
+
+                let name = self
+                    .parse_label()
+                    .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingName))?;
+
+                let field_descriptor = self.parse_field_descriptor().map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::VarMissingFieldDescriptor)
+                })?;
+
+                self.advance_if(&Token::TFrom).map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::VarMissingFromKeyword)
+                })?;
+
+                let from_label = self.parse_label().map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::VarMissingFromLabel)
+                })?;
+
+                self.advance_if(&Token::TTo).map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::VarMissingToKeyword)
+                })?;
+
+                let to_label = self
+                    .parse_label()
+                    .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingToLabel))?;
+
+                PhoronDirective::Var {
+                    varnum,
+                    name,
+                    field_descriptor,
+                    from_label,
+                    to_label,
+                }
             }
+
             Token::TCatch => {
                 self.advance()?;
 
@@ -706,6 +808,86 @@ impl<'a> Parser<'a> {
                 ))
             }
         })
+    }
+
+    fn parse_u16(&mut self) -> ParserResult<u16> {
+        if let Token::TInt(n) = self.see() {
+            let n = *n as u16;
+            self.advance()?;
+
+            Ok(n)
+        } else {
+            Err(ParserError::FailedToParsePrimitive)
+        }
+    }
+
+    fn parse_i32(&mut self) -> ParserResult<i32> {
+        if let Token::TInt(n) = self.see() {
+            let n = *n as i32;
+            self.advance()?;
+
+            Ok(n)
+        } else {
+            Err(ParserError::FailedToParsePrimitive)
+        }
+    }
+
+    fn parse_table_switches(&mut self) -> ParserResult<Vec<String>> {
+        let mut switches = Vec::new();
+
+        while let Token::TIdent(label) = self.see() {
+            let label = label.to_string();
+            self.advance()?;
+
+            switches.push(label);
+        }
+
+        Ok(switches)
+    }
+
+    fn parse_lookup_switches(&mut self) -> ParserResult<Vec<LookupSwitchPair>> {
+        let mut switches = Vec::new();
+
+        while let Token::TInt(key) = self.see() {
+            let key = *key as i32;
+            self.advance()?;
+
+            if let Token::TColon = self.see() {
+                self.advance()?;
+
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::LookupswitchMissingLabelforSwitchEntry,
+                    )
+                })?;
+                switches.push(LookupSwitchPair { key, label })
+            } else {
+                return Err(ParserError::JvmInstructionError(
+                    JvmInstructionError::LookupswitchInvalidSwitchEntry,
+                ));
+            }
+        }
+
+        Ok(switches)
+    }
+
+    fn parse_default_switch_pair(&mut self) -> ParserResult<String> {
+        if let Token::TDefault = self.see() {
+            self.advance()?;
+
+            if let Token::TColon = self.see() {
+                self.advance()?;
+
+                let label = self.parse_label()?;
+                Ok(label)
+            } else {
+                Err(ParserError::JvmInstructionError(
+                    JvmInstructionError::LookupswitchInvalidDefault,
+                ))
+            }
+        } else {
+            Err(ParserError::MissingDefaultKeyword)
+        }
     }
 
     fn parse_jvm_instruction(&mut self) -> ParserResult<JvmInstruction> {
@@ -849,8 +1031,15 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // checkcast <type>
             Token::TCheckcast => {
-                todo!()
+                self.advance()?;
+                let cast_type = self.parse_class_or_array_type().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::CheckcastInvalidOrMissingType,
+                    )
+                })?;
+                JvmInstruction::Checkcast { cast_type }
             }
 
             Token::TClass => {
@@ -1117,10 +1306,6 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
-            Token::TFrom => {
-                todo!()
-            }
-
             Token::TFstore => {
                 todo!()
             }
@@ -1349,8 +1534,13 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Ificmpgt { label }
             }
 
+            // if_icmple <label>
             Token::TIficmple => {
-                todo!()
+                self.advance()?;
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::IficmpleMissingLabel)
+                })?;
+                JvmInstruction::Ificmple { label }
             }
 
             // if_icmplt <label>
@@ -1601,10 +1791,6 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Ireturn
             }
 
-            Token::TIs => {
-                todo!()
-            }
-
             Token::TIshl => {
                 todo!()
             }
@@ -1655,8 +1841,13 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // jsr <label>
             Token::TJsr => {
-                todo!()
+                self.advance()?;
+                let label = self.parse_label().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::JsrMissingLabel)
+                })?;
+                JvmInstruction::Jsr { label }
             }
 
             Token::TJsrw => {
@@ -1842,8 +2033,20 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // lookupswitch          <-  'lookupswitch'   LookupSwitchPair*  DefaultSwitchPair
+            // LookupSwitchPair      <-  Integer          COLON_symbol       Label
+            // DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label
             Token::TLookupswitch => {
-                todo!()
+                self.advance()?;
+
+                let switches = self.parse_lookup_switches()?;
+                let default = self.parse_default_switch_pair().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::LookupswitchMissingDefault,
+                    )
+                })?;
+
+                JvmInstruction::Lookupswitch { switches, default }
             }
 
             Token::TLor => {
@@ -1906,12 +2109,16 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // monitorenter
             Token::TMonitorenter => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Monitorenter
             }
 
+            // monitorexit
             Token::TMonitorexit => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Monitorexit
             }
 
             Token::TMultianewarray => {
@@ -2053,8 +2260,20 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // ret <varnum>
             Token::TRet => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TInt(varnum) = self.see() {
+                    let varnum = *varnum as u16;
+                    self.advance()?;
+
+                    JvmInstruction::Ret { varnum }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::RetMissingVarnum,
+                    ));
+                }
             }
 
             Token::TReturn => {
@@ -2123,27 +2342,33 @@ impl<'a> Parser<'a> {
                 todo!()
             }
 
+            // tableswitch    <-  'tableswitch'   Low   High  TableSwitchSingleton*  DefaultSwitchPair
+            // TableSwitchSingleton  <-  Label
             Token::TTableswitch => {
-                todo!()
-            }
+                self.advance()?;
 
-            Token::TThrows => {
-                todo!()
-            }
+                let low = self.parse_i32().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingLow)
+                })?;
 
-            Token::TTo => {
-                todo!()
+                let high = self.parse_i32().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingHigh)
+                })?;
+
+                let switches = self.parse_table_switches()?;
+                let default = self.parse_default_switch_pair().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingDefault)
+                })?;
+
+                JvmInstruction::Tableswitch {
+                    low,
+                    high,
+                    switches,
+                    default,
+                }
             }
 
             Token::TTransient => {
-                todo!()
-            }
-
-            Token::TUsing => {
-                todo!()
-            }
-
-            Token::TVar => {
                 todo!()
             }
 
@@ -2167,7 +2392,7 @@ impl<'a> Parser<'a> {
     /// Instruction <- line_comment* (Directive / JvmInstruction / Label) line_comment?  newline
     fn parse_instruction(&mut self) -> ParserResult<PhoronInstruction> {
         Ok(match self.see() {
-            Token::TCatch | Token::TLimit => {
+            Token::TThrows | Token::TCatch | Token::TLimit | Token::TVar | Token::TLine => {
                 PhoronInstruction::PhoronDirective(self.parse_directive()?)
             }
 
@@ -2321,7 +2546,6 @@ impl<'a> Parser<'a> {
             | Token::TIor
             | Token::TIrem
             | Token::TIreturn
-            | Token::TIs
             | Token::TIshl
             | Token::TIshr
             | Token::TIstore
@@ -2348,7 +2572,6 @@ impl<'a> Parser<'a> {
             | Token::TLdcw
             | Token::TLdiv
             | Token::TLeftParen
-            | Token::TLine
             | Token::TLload
             | Token::TLload0
             | Token::TLload1
@@ -2403,11 +2626,7 @@ impl<'a> Parser<'a> {
             | Token::TSynchronized
             | Token::TSynthetic
             | Token::TTableswitch
-            | Token::TThrows
-            | Token::TTo
             | Token::TTransient
-            | Token::TUsing
-            | Token::TVar
             | Token::TVarargs
             | Token::TVolatile => PhoronInstruction::JvmInstruction(self.parse_jvm_instruction()?),
 

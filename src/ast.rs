@@ -152,8 +152,9 @@ pub enum PhoronDirective {
     },
     LineNumber(u16),
     Var {
+        varnum: u16,
         name: String,
-        field_descriptor: String,
+        field_descriptor: PhoronFieldDescriptor,
         from_label: String,
         to_label: String,
     },
@@ -189,6 +190,12 @@ pub enum LdcValue {
     QuotedString(String),
 }
 
+#[derive(Debug, PartialEq)]
+pub struct LookupSwitchPair {
+    pub key: i32,
+    pub label: String,
+}
+
 // todo - fill in the exact parameters for each instruction
 #[derive(PartialEq, Debug)]
 pub enum JvmInstruction {
@@ -216,7 +223,9 @@ pub enum JvmInstruction {
     Bipush(i8),
     Caload,
     Castore,
-    Checkcast,
+    Checkcast {
+        cast_type: ClassOrArrayTypeDescriptor,
+    },
     Dadd,
     Daload,
     Dastore,
@@ -315,7 +324,9 @@ pub enum JvmInstruction {
     Ificmpgt {
         label: String,
     },
-    Ificmple,
+    Ificmple {
+        label: String,
+    },
     Ificmplt {
         label: String,
     },
@@ -376,7 +387,9 @@ pub enum JvmInstruction {
     Iushr,
     Ixor,
     Jsrw,
-    Jsr,
+    Jsr {
+        label: String,
+    },
     L2d,
     L2f,
     L2i,
@@ -398,7 +411,10 @@ pub enum JvmInstruction {
     Lload3,
     Lmul,
     Lneg,
-    Lookupswitch,
+    Lookupswitch {
+        switches: Vec<LookupSwitchPair>,
+        default: String,
+    },
     Lor,
     Lrem,
     Lreturn,
@@ -430,12 +446,19 @@ pub enum JvmInstruction {
     Putfield,
     Putstatic,
     Return,
-    Ret,
+    Ret {
+        varnum: u16,
+    },
     Saload,
     Sastore,
     Sipush(i16),
     Swap,
-    Tableswitch,
+    Tableswitch {
+        low: i32,
+        high: i32,
+        switches: Vec<String>,
+        default: String,
+    },
 }
 
 #[derive(PartialEq, Debug)]
