@@ -196,7 +196,6 @@ pub struct LookupSwitchPair {
     pub label: String,
 }
 
-// todo - fill in the exact parameters for each instruction
 #[derive(PartialEq, Debug)]
 pub enum JvmInstruction {
     Aaload,
@@ -395,7 +394,12 @@ pub enum JvmInstruction {
     Instanceof {
         check_type: ClassOrArrayTypeDescriptor,
     },
-    Invokeinterface,
+    Invokeinterface {
+        interface_name: String,
+        method_name: String,
+        method_descriptor: PhoronMethodDescriptor,
+        ub: u8,
+    },
     Invokespecial {
         class_name: String,
         method_name: String,
@@ -489,8 +493,16 @@ pub enum JvmInstruction {
     Nop,
     Pop2,
     Pop,
-    Putfield,
-    Putstatic,
+    Putfield {
+        class_name: String,
+        field_name: String,
+        field_descriptor: PhoronFieldDescriptor,
+    },
+    Putstatic {
+        class_name: String,
+        field_name: String,
+        field_descriptor: PhoronFieldDescriptor,
+    },
     Return,
     Ret {
         varnum: u16,

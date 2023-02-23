@@ -7,8 +7,8 @@ pub type ParserResult<T> = Result<T, ParserError>;
 
 #[derive(Debug)]
 pub enum DirectiveError {
+    LineMissingLineNumber,
     ThrowsMissingClassName,
-
     VarMissingVarnum,
     VarMissingIsKeyword,
     VarMissingName,
@@ -17,7 +17,6 @@ pub enum DirectiveError {
     VarMissingFromLabel,
     VarMissingToKeyword,
     VarMissingToLabel,
-
     InvalidDirective(String),
     LocalsDirectiveMissingCount,
     MissingStackOrLocal,
@@ -32,6 +31,7 @@ impl fmt::Display for DirectiveError {
             f,
             "{}",
             match *self {
+                LineMissingLineNumber => ".line - missing line number".into(),
                 ThrowsMissingClassName => ".throws - missing class name".into(),
                 VarMissingVarnum => ".var - missing var num".into(),
                 VarMissingIsKeyword => ".var - missing is keyword".into(),
@@ -54,6 +54,7 @@ impl fmt::Display for DirectiveError {
 
 #[derive(Debug)]
 pub enum JvmInstructionError {
+    LookupswitchMissingDefault,
     LstoreMissingOrInvalidVarnum,
     LloadMissingOrInvalidVarnum,
     InstanceofMissingOrInvalidCheckType,
@@ -90,8 +91,6 @@ pub enum JvmInstructionError {
     TableswitchMissingHigh,
     TableswitchMissingDefault,
 
-    LookupswitchInvalidDefault,
-    LookupswitchMissingDefault,
     LookupswitchInvalidSwitchEntry,
     LookupswitchMissingLabelforSwitchEntry,
 
@@ -107,11 +106,21 @@ pub enum JvmInstructionError {
     GetfieldInvalid,
     GetfieldInvalidOrMissingFieldDescriptor,
     GetfieldMissingFieldName,
+    PutfieldMissingOrInvalidClassName,
+    PutfieldMissingOrInvalidFieldDescriptor,
+    PutfieldMissingOrInvalidFieldName,
     GetstaticMissingOrInvalidClassName,
     GetstaticInvalidOrMissingFieldDescriptor,
     GetstaticMissingOrInvalidFieldName,
+    PutstaticMissingOrInvalidClassName,
+    PutstaticMissingOrInvalidFieldDescriptor,
+    PutstaticMissingOrInvalidFieldName,
     IincMissingOrInvalidVarnum,
     IincMissingOrInvalidDelta,
+    InvokeinterfaceMissingNumericConstant,
+    InvokeinterfaceMissingMethodName,
+    InvokeinterfaceInvalidOrMissingMethodDescriptor,
+    InvokeinterfaceInvalid,
     InvokespecialInvalid,
     InvokespecialInvalidOrMissingMethodDescriptor,
     InvokespecialMissingMethodName,
@@ -124,6 +133,7 @@ pub enum JvmInstructionError {
     LdcIncorrectValue,
     LdcwIncorrectValue,
     Ldc2wIncorrectValue,
+    MultianewarrayMissingOrInvalidComponentType,
     MultianewarrayMissingDimensions,
     NewMissingClassName,
     NewarrayInvalidType,
@@ -137,6 +147,28 @@ impl fmt::Display for JvmInstructionError {
             f,
             "{}",
             match *self {
+                JvmInstructionError::PutfieldMissingOrInvalidClassName =>
+                    "putfield : invalid or missing class name".into(),
+                JvmInstructionError::PutfieldMissingOrInvalidFieldDescriptor =>
+                    "putfield : missing or invalid field descriptor".into(),
+                JvmInstructionError::PutfieldMissingOrInvalidFieldName =>
+                    "putfield :missing or invalid field name".into(),
+                JvmInstructionError::PutstaticMissingOrInvalidClassName =>
+                    "putstatic : missing or invalid class name".into(),
+                JvmInstructionError::PutstaticMissingOrInvalidFieldDescriptor =>
+                    "putstatic : missing or invalid field descriptor".into(),
+                JvmInstructionError::PutstaticMissingOrInvalidFieldName =>
+                    "putstatic : missing or invalid field name".into(),
+
+                MultianewarrayMissingOrInvalidComponentType =>
+                    "multianewarray - missing or invalid component type".into(),
+                InvokeinterfaceMissingMethodName => "invokeinterface : missing method name".into(),
+                InvokeinterfaceInvalidOrMissingMethodDescriptor =>
+                    "invokeinterface : missing or invalid method descriptor".into(),
+                InvokeinterfaceInvalid =>
+                    "invokeinterface : missing or invalid interface name".into(),
+                InvokeinterfaceMissingNumericConstant =>
+                    "invokeinterface: missing numeric constant".into(),
                 LstoreMissingOrInvalidVarnum => "lstore : missing or invalid var num".into(),
                 LloadMissingOrInvalidVarnum => "lload : missing or invalid var num".into(),
                 InstanceofMissingOrInvalidCheckType =>
@@ -169,9 +201,8 @@ impl fmt::Display for JvmInstructionError {
                 TableswitchMissingLow => "tableswitch : missing low".into(),
                 TableswitchMissingHigh => "tableswitch : missing high".into(),
                 TableswitchMissingDefault => "tableswitch : missing default".into(),
-                LookupswitchInvalidDefault => "lookupswitch : invalid default".into(),
+                LookupswitchMissingDefault => "lookupswitch : invalid default".into(),
                 LookupswitchInvalidSwitchEntry => "lookupswitch : invalid entry".into(),
-                LookupswitchMissingDefault => "lookupswitch : missing default".into(),
                 LookupswitchMissingLabelforSwitchEntry =>
                     "lookupswitch : missing label for switch entry".into(),
                 CheckcastInvalidOrMissingType => "checkcast :  invalid or missing type".into(),
@@ -437,8 +468,8 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                 }
 
-                if let Token::TIdent(ident) = self.see() {
-                    let name = ident.to_string();
+                if let Token::TIdent(name) = self.see() {
+                    let name = name.to_string();
                     self.advance()?;
 
                     PhoronClassDef { name, access_flags }
@@ -447,8 +478,10 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TIdent(ident) => {
-                let name = ident.to_string();
+            Token::TIdent(name) => {
+                let name = name.to_string();
+                self.advance()?;
+
                 PhoronClassDef { name, access_flags }
             }
 
@@ -746,15 +779,22 @@ impl<'a> Parser<'a> {
 
                 PhoronDirective::Throws { class_name }
             }
+
             Token::TLine => {
-                todo!()
+                self.advance()?;
+
+                let line_number = self.parse_us().map_err(|_| {
+                    ParserError::DirectiveError(DirectiveError::LineMissingLineNumber)
+                })?;
+
+                PhoronDirective::LineNumber(line_number)
             }
 
             Token::TVar => {
                 self.advance()?;
 
                 let varnum = self
-                    .parse_u16()
+                    .parse_us()
                     .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingVarnum))?;
 
                 self.advance_if(&Token::TIs).map_err(|_| {
@@ -820,7 +860,18 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_i8(&mut self) -> ParserResult<i8> {
+    fn parse_ub(&mut self) -> ParserResult<u8> {
+        if let Token::TInt(n) = self.see() {
+            let n = *n as u8;
+            self.advance()?;
+
+            Ok(n)
+        } else {
+            Err(ParserError::FailedToParsePrimitive)
+        }
+    }
+
+    fn parse_sb(&mut self) -> ParserResult<i8> {
         if let Token::TInt(n) = self.see() {
             let n = *n as i8;
             self.advance()?;
@@ -831,7 +882,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_i16(&mut self) -> ParserResult<i16> {
+    fn parse_ss(&mut self) -> ParserResult<i16> {
         if let Token::TInt(n) = self.see() {
             let n = *n as i16;
             self.advance()?;
@@ -842,7 +893,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_u16(&mut self) -> ParserResult<u16> {
+    fn parse_us(&mut self) -> ParserResult<u16> {
         if let Token::TInt(n) = self.see() {
             let n = *n as u16;
             self.advance()?;
@@ -853,7 +904,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_i32(&mut self) -> ParserResult<i32> {
+    fn parse_si(&mut self) -> ParserResult<i32> {
         if let Token::TInt(n) = self.see() {
             let n = *n as i32;
             self.advance()?;
@@ -914,7 +965,7 @@ impl<'a> Parser<'a> {
                 Ok(label)
             } else {
                 Err(ParserError::JvmInstructionError(
-                    JvmInstructionError::LookupswitchInvalidDefault,
+                    JvmInstructionError::LookupswitchMissingDefault,
                 ))
             }
         } else {
@@ -945,7 +996,8 @@ impl<'a> Parser<'a> {
             // aload <varnum>
             Token::TAload => {
                 self.advance()?;
-                let varnum = self.parse_u16().map_err(|_| {
+
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::AloadMissingVarnum)
                 })?;
                 JvmInstruction::Aload { varnum }
@@ -1003,7 +1055,7 @@ impl<'a> Parser<'a> {
             Token::TAstore => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::AstoreMissingVarnum)
                 })?;
                 JvmInstruction::Astore { varnum }
@@ -1054,11 +1106,12 @@ impl<'a> Parser<'a> {
             // bipush i8
             Token::TBipush => {
                 self.advance()?;
-                let ub = self.parse_i8().map_err(|_| {
+
+                let sb = self.parse_sb().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::BipushMissingByte)
                 })?;
 
-                JvmInstruction::Bipush(ub)
+                JvmInstruction::Bipush(sb)
             }
 
             // caload
@@ -1076,6 +1129,7 @@ impl<'a> Parser<'a> {
             // checkcast <type>
             Token::TCheckcast => {
                 self.advance()?;
+
                 let cast_type = self.parse_class_or_array_type().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::CheckcastInvalidOrMissingType,
@@ -1154,7 +1208,7 @@ impl<'a> Parser<'a> {
             Token::TDload => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::DloadMissingOrInvalidVarnum,
                     )
@@ -1215,7 +1269,7 @@ impl<'a> Parser<'a> {
             Token::TDstore => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::DstoreMissingOrInvalidVarnum,
                     )
@@ -1366,7 +1420,7 @@ impl<'a> Parser<'a> {
             Token::TFload => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::FloadMissingOrInvalidVarnum,
                     )
@@ -1426,7 +1480,7 @@ impl<'a> Parser<'a> {
             Token::TFstore => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::FstoreMissingOrInvalidVarnum,
                     )
@@ -1472,6 +1526,7 @@ impl<'a> Parser<'a> {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
+
                         self.advance()?;
 
                         let field_descriptor = self.parse_field_descriptor().map_err(|_| {
@@ -1505,6 +1560,7 @@ impl<'a> Parser<'a> {
                     if let Some(pos) = gs_str.rfind('/') {
                         let class_name = gs_str[..pos].to_owned();
                         let field_name = gs_str[pos + 1..].to_owned();
+
                         self.advance()?;
 
                         let field_descriptor = self.parse_field_descriptor().map_err(|_| {
@@ -1733,6 +1789,7 @@ impl<'a> Parser<'a> {
             // if_icmplt <label>
             Token::TIficmplt => {
                 self.advance()?;
+
                 let label = self.parse_label().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::IficmpltMissingLabel)
                 })?;
@@ -1853,13 +1910,13 @@ impl<'a> Parser<'a> {
             Token::TIinc => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::IincMissingOrInvalidVarnum,
                     )
                 })?;
 
-                let delta = self.parse_i16().map_err(|_| {
+                let delta = self.parse_ss().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::IincMissingOrInvalidDelta)
                 })?;
 
@@ -1870,7 +1927,7 @@ impl<'a> Parser<'a> {
             Token::TIload => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::IloadMissingVarnum)
                 })?;
 
@@ -1925,12 +1982,47 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Instanceof { check_type }
             }
 
-            // TODO
+            // invokeinterface <method-spec> <n>
             Token::TInvokeinterface => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(is_str) = self.see() {
+                    if let Some(pos) = is_str.rfind('/') {
+                        let interface_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance()?;
+
+                        let ub = self.parse_ub().map_err(|_| {
+                            ParserError::JvmInstructionError(
+                                JvmInstructionError::InvokeinterfaceMissingNumericConstant,
+                            )
+                        })?;
+
+                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
+                            JvmInstruction::Invokeinterface {
+                                interface_name,
+                                method_name,
+                                method_descriptor,
+                                ub,
+                            }
+                        } else {
+                            return Err(ParserError::JvmInstructionError(
+                                JvmInstructionError::InvokeinterfaceInvalidOrMissingMethodDescriptor,
+                            ));
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::InvokeinterfaceMissingMethodName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::InvokeinterfaceInvalid,
+                    ));
+                }
             }
 
-            // TODO
             // invokespecial <method-spec>
             Token::TInvokespecial => {
                 self.advance()?;
@@ -1939,6 +2031,7 @@ impl<'a> Parser<'a> {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
+
                         self.advance()?;
 
                         if let Ok(method_descriptor) = self.parse_method_descriptor() {
@@ -1964,7 +2057,6 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // TODO
             // invokestatic <method-spec>
             Token::TInvokestatic => {
                 self.advance()?;
@@ -1973,6 +2065,7 @@ impl<'a> Parser<'a> {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
+
                         self.advance()?;
 
                         if let Ok(method_descriptor) = self.parse_method_descriptor() {
@@ -1998,7 +2091,6 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // TODO
             // invokevirtual <method-spec>
             Token::TInvokevirtual => {
                 self.advance()?;
@@ -2007,6 +2099,7 @@ impl<'a> Parser<'a> {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
+
                         self.advance()?;
 
                         if let Ok(method_descriptor) = self.parse_method_descriptor() {
@@ -2064,7 +2157,7 @@ impl<'a> Parser<'a> {
             Token::TIstore => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::IstoreMissingVarnum)
                 })?;
 
@@ -2290,7 +2383,7 @@ impl<'a> Parser<'a> {
             Token::TLload => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::LloadMissingOrInvalidVarnum,
                     )
@@ -2335,7 +2428,6 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Lneg
             }
 
-            // TODO
             // lookupswitch          <-  'lookupswitch'   LookupSwitchPair*  DefaultSwitchPair
             // LookupSwitchPair      <-  Integer          COLON_symbol       Label
             // DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label
@@ -2343,11 +2435,7 @@ impl<'a> Parser<'a> {
                 self.advance()?;
 
                 let switches = self.parse_lookup_switches()?;
-                let default = self.parse_default_switch_pair().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::LookupswitchMissingDefault,
-                    )
-                })?;
+                let default = self.parse_default_switch_pair()?;
 
                 JvmInstruction::Lookupswitch { switches, default }
             }
@@ -2386,7 +2474,7 @@ impl<'a> Parser<'a> {
             Token::TLstore => {
                 self.advance()?;
 
-                let varnum = self.parse_u16().map_err(|_| {
+                let varnum = self.parse_us().map_err(|_| {
                     ParserError::JvmInstructionError(
                         JvmInstructionError::LstoreMissingOrInvalidVarnum,
                     )
@@ -2449,42 +2537,38 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Monitorexit
             }
 
-            // TODO
             Token::TMultianewarray => {
                 self.advance()?;
 
-                let component_type = self.parse_field_descriptor()?;
-                if let Token::TInt(n) = self.see() {
-                    let dimensions = *n as u8;
-                    self.advance()?;
-                    JvmInstruction::Multianewarray {
-                        component_type,
-                        dimensions,
-                    }
-                } else {
-                    return Err(ParserError::JvmInstructionError(
+                let component_type = self.parse_field_descriptor().map_err(|_| {
+                    ParserError::JvmInstructionError(
+                        JvmInstructionError::MultianewarrayMissingOrInvalidComponentType,
+                    )
+                })?;
+
+                let dimensions = self.parse_ub().map_err(|_| {
+                    ParserError::JvmInstructionError(
                         JvmInstructionError::MultianewarrayMissingDimensions,
-                    ));
+                    )
+                })?;
+
+                JvmInstruction::Multianewarray {
+                    component_type,
+                    dimensions,
                 }
             }
 
-            // TODO
             // new <class>
             Token::TNew => {
                 self.advance()?;
 
-                if let Token::TIdent(class_name) = self.see() {
-                    let class_name = class_name.to_string();
-                    self.advance()?;
-                    JvmInstruction::New { class_name }
-                } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::NewMissingClassName,
-                    ));
-                }
+                let class_name = self.parse_class_name().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::NewMissingClassName)
+                })?;
+
+                JvmInstruction::New { class_name }
             }
 
-            // TODO
             // newarray <primitive_type>
             Token::TNewarray => {
                 self.advance()?;
@@ -2571,14 +2655,72 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Pop2
             }
 
-            // TODO
+            // putfield <field-sepc> <descriptor>
             Token::TPutfield => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(gf_str) = self.see() {
+                    if let Some(pos) = gf_str.rfind('/') {
+                        let class_name = gf_str[..pos].to_owned();
+                        let field_name = gf_str[pos + 1..].to_owned();
+
+                        self.advance()?;
+
+                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
+                            ParserError::JvmInstructionError(
+                                JvmInstructionError::PutfieldMissingOrInvalidFieldDescriptor,
+                            )
+                        })?;
+
+                        JvmInstruction::Putfield {
+                            class_name,
+                            field_name,
+                            field_descriptor,
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::PutfieldMissingOrInvalidFieldName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::PutfieldMissingOrInvalidClassName,
+                    ));
+                }
             }
 
-            // TODO
+            // putstatic <field-spec> <descriptor>
             Token::TPutstatic => {
-                todo!()
+                self.advance()?;
+
+                if let Token::TIdent(gf_str) = self.see() {
+                    if let Some(pos) = gf_str.rfind('/') {
+                        let class_name = gf_str[..pos].to_owned();
+                        let field_name = gf_str[pos + 1..].to_owned();
+
+                        self.advance()?;
+
+                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
+                            ParserError::JvmInstructionError(
+                                JvmInstructionError::PutstaticMissingOrInvalidFieldDescriptor,
+                            )
+                        })?;
+
+                        JvmInstruction::Putstatic {
+                            class_name,
+                            field_name,
+                            field_descriptor,
+                        }
+                    } else {
+                        return Err(ParserError::JvmInstructionError(
+                            JvmInstructionError::PutstaticMissingOrInvalidFieldName,
+                        ));
+                    }
+                } else {
+                    return Err(ParserError::JvmInstructionError(
+                        JvmInstructionError::PutstaticMissingOrInvalidClassName,
+                    ));
+                }
             }
 
             // ret <varnum>
@@ -2619,16 +2761,11 @@ impl<'a> Parser<'a> {
             Token::TSipush => {
                 self.advance()?;
 
-                if let Token::TInt(s) = self.see() {
-                    let s = *s as i16;
-                    self.advance()?;
+                let ss = self.parse_ss().map_err(|_| {
+                    ParserError::JvmInstructionError(JvmInstructionError::SipushMissingConstant)
+                })?;
 
-                    JvmInstruction::Sipush(s)
-                } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::SipushMissingConstant,
-                    ));
-                }
+                JvmInstruction::Sipush(ss)
             }
 
             // swap
@@ -2642,11 +2779,11 @@ impl<'a> Parser<'a> {
             Token::TTableswitch => {
                 self.advance()?;
 
-                let low = self.parse_i32().map_err(|_| {
+                let low = self.parse_si().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingLow)
                 })?;
 
-                let high = self.parse_i32().map_err(|_| {
+                let high = self.parse_si().map_err(|_| {
                     ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingHigh)
                 })?;
 
