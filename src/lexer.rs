@@ -634,7 +634,7 @@ impl<'a> Lexer<'a> {
         use Token::*;
 
         Ok(match c {
-            ' ' | '\t' | '\n' => {
+            c if c.is_whitespace() => {
                 self.next()?;
                 self.lex()?
             }
