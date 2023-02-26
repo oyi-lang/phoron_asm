@@ -4,285 +4,26 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub enum DirectiveError {
-    LineMissingLineNumber,
-    ThrowsMissingClassName,
-    VarMissingVarnum,
-    VarMissingIsKeyword,
-    VarMissingName,
-    VarMissingFieldDescriptor,
-    VarMissingFromKeyword,
-    VarMissingFromLabel,
-    VarMissingToKeyword,
-    VarMissingToLabel,
-    InvalidDirective(String),
-    LocalsDirectiveMissingCount,
-    MissingStackOrLocal,
-    StackDirectiveMissingCount,
-}
-
-impl fmt::Display for DirectiveError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use DirectiveError::*;
-
-        write!(
-            f,
-            "{}",
-            match *self {
-                LineMissingLineNumber => ".line - missing line number".into(),
-                ThrowsMissingClassName => ".throws - missing class name".into(),
-                VarMissingVarnum => ".var - missing var num".into(),
-                VarMissingIsKeyword => ".var - missing is keyword".into(),
-                VarMissingName => ".var - missing name".into(),
-                VarMissingFieldDescriptor => ".var - missing field descriptor".into(),
-                VarMissingFromKeyword => ".var - missing from keyword".into(),
-                VarMissingFromLabel => ".var - missing from label".into(),
-                VarMissingToKeyword => ".var - missing to keyword".into(),
-                VarMissingToLabel => ".var - missing to label".into(),
-                StackDirectiveMissingCount =>
-                    ".limit stack : missing count value for .limit stack directive".into(),
-                InvalidDirective(ref tok) => format!("invalid directive {tok}"),
-                LocalsDirectiveMissingCount =>
-                    "missing count value for .limit locals directive".into(),
-                MissingStackOrLocal => "directive limit : missing `stack` or `locals`".into(),
-            }
-        )
-    }
-}
-
-#[derive(Debug)]
-pub enum JvmInstructionError {
-    LookupswitchMissingDefault,
-    LstoreMissingOrInvalidVarnum,
-    LloadMissingOrInvalidVarnum,
-    InstanceofMissingOrInvalidCheckType,
-    IfnonnullMissingOrInvalidLabel,
-    IfnullMissingOrInvalidLabel,
-    IfleMissingOrInvalidLabel,
-    IfltMissingOrInvalidLabel,
-    IfgeMissingOrInvalidLabel,
-    IfgtMissingOrInvalidLabel,
-    IfcmpneMissingOrInvalidLabel,
-    IfeqMissingOrInvalidLabel,
-    IficmpgtMissingLabel,
-    IficmpltMissingLabel,
-    IficmpleMissingLabel,
-    IloadMissingVarnum,
-    IfneMissingLabel,
-    IficmpeqMissingOrInvalidLabel,
-    IficmpgeMissingOrInvalidLabel,
-    IfacmpneMissingOrInvalidLabel,
-    IfacmpeqMissingOrInvalidLabel,
-    GetfieldMissingOrInvalidClassName,
-    GetfieldMissingOrInvalidFieldName,
-    GetfieldMissingOrInvalidFieldDescriptor,
-    FstoreMissingOrInvalidVarnum,
-    FloadMissingOrInvalidVarnum,
-    DstoreMissingOrInvalidVarnum,
-    DloadMissingOrInvalidVarnum,
-    AnewarrayMissingOrInvalidComponentType,
-    AloadMissingVarnum,
-    AstoreMissingVarnum,
-    IstoreMissingVarnum,
-
-    TableswitchMissingLow,
-    TableswitchMissingHigh,
-    TableswitchMissingDefault,
-
-    LookupswitchInvalidSwitchEntry,
-    LookupswitchMissingLabelforSwitchEntry,
-
-    CheckcastInvalidOrMissingType,
-    RetMissingVarnum,
-    JsrMissingLabel,
-    JsrwMissingLabel,
-    GotoMissingLabel,
-    GotowMissingLabel,
-    SipushMissingConstant,
-    AnewarrayInvalidTypeDescriptor(String),
-    BipushMissingByte,
-    GetfieldInvalid,
-    GetfieldInvalidOrMissingFieldDescriptor,
-    GetfieldMissingFieldName,
-    PutfieldMissingOrInvalidClassName,
-    PutfieldMissingOrInvalidFieldDescriptor,
-    PutfieldMissingOrInvalidFieldName,
-    GetstaticMissingOrInvalidClassName,
-    GetstaticInvalidOrMissingFieldDescriptor,
-    GetstaticMissingOrInvalidFieldName,
-    PutstaticMissingOrInvalidClassName,
-    PutstaticMissingOrInvalidFieldDescriptor,
-    PutstaticMissingOrInvalidFieldName,
-    IincMissingOrInvalidVarnum,
-    IincMissingOrInvalidDelta,
-    InvokeinterfaceMissingNumericConstant,
-    InvokeinterfaceMissingMethodName,
-    InvokeinterfaceInvalidOrMissingMethodDescriptor,
-    InvokeinterfaceInvalid,
-    InvokespecialInvalid,
-    InvokespecialInvalidOrMissingMethodDescriptor,
-    InvokespecialMissingMethodName,
-    InvokestaticInvalid,
-    InvokestaticInvalidOrMissingMethodDescriptor,
-    InvokestaticMissingMethodName,
-    InvokevirtualInvalid,
-    InvokevirtualInvalidOrMissingMethodDescriptor,
-    InvokevirtualMissingMethodName,
-    LdcIncorrectValue,
-    LdcwIncorrectValue,
-    Ldc2wIncorrectValue,
-    MultianewarrayMissingOrInvalidComponentType,
-    MultianewarrayMissingDimensions,
-    NewMissingClassName,
-    NewarrayInvalidType,
-}
-
-impl fmt::Display for JvmInstructionError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use JvmInstructionError::*;
-
-        write!(
-            f,
-            "{}",
-            match *self {
-                JvmInstructionError::PutfieldMissingOrInvalidClassName =>
-                    "putfield : invalid or missing class name".into(),
-                JvmInstructionError::PutfieldMissingOrInvalidFieldDescriptor =>
-                    "putfield : missing or invalid field descriptor".into(),
-                JvmInstructionError::PutfieldMissingOrInvalidFieldName =>
-                    "putfield :missing or invalid field name".into(),
-                JvmInstructionError::PutstaticMissingOrInvalidClassName =>
-                    "putstatic : missing or invalid class name".into(),
-                JvmInstructionError::PutstaticMissingOrInvalidFieldDescriptor =>
-                    "putstatic : missing or invalid field descriptor".into(),
-                JvmInstructionError::PutstaticMissingOrInvalidFieldName =>
-                    "putstatic : missing or invalid field name".into(),
-
-                MultianewarrayMissingOrInvalidComponentType =>
-                    "multianewarray - missing or invalid component type".into(),
-                InvokeinterfaceMissingMethodName => "invokeinterface : missing method name".into(),
-                InvokeinterfaceInvalidOrMissingMethodDescriptor =>
-                    "invokeinterface : missing or invalid method descriptor".into(),
-                InvokeinterfaceInvalid =>
-                    "invokeinterface : missing or invalid interface name".into(),
-                InvokeinterfaceMissingNumericConstant =>
-                    "invokeinterface: missing numeric constant".into(),
-                LstoreMissingOrInvalidVarnum => "lstore : missing or invalid var num".into(),
-                LloadMissingOrInvalidVarnum => "lload : missing or invalid var num".into(),
-                InstanceofMissingOrInvalidCheckType =>
-                    "instanceof : missing or invalid check type".into(),
-                IfeqMissingOrInvalidLabel => "ifeq : missing or invalid label".into(),
-                IfcmpneMissingOrInvalidLabel => "if_cmpne : missing or invalid label".into(),
-                IfnonnullMissingOrInvalidLabel => "if_nonnull : missing or invalid label".into(),
-                IfnullMissingOrInvalidLabel => "if_null : missing or invalid label".into(),
-                IfleMissingOrInvalidLabel => "ifle : missing or invalid label".into(),
-                IfltMissingOrInvalidLabel => "iflt : missing or invalid label".into(),
-                IfgeMissingOrInvalidLabel => "ifge : missing or invalid label".into(),
-                IfgtMissingOrInvalidLabel => "ifgt : missing or invalid label".into(),
-                IficmpeqMissingOrInvalidLabel => "if_icmpeq : missing or invalid label".into(),
-                IficmpgeMissingOrInvalidLabel => "if_icmpge : missing or invalid label".into(),
-                IfacmpneMissingOrInvalidLabel => "if_acmpne : missing or invalid label".into(),
-                IfacmpeqMissingOrInvalidLabel => "if_acmpeq : missing or invalid label".into(),
-                GetfieldMissingOrInvalidClassName =>
-                    "getfield : missing or invalid class name".into(),
-                GetfieldMissingOrInvalidFieldName =>
-                    "getfield : missing or invalid field name".into(),
-                GetfieldMissingOrInvalidFieldDescriptor =>
-                    "getfield : missing or invalid field descriptor".into(),
-                FstoreMissingOrInvalidVarnum => "fstore : missing or invalid var num".into(),
-                FloadMissingOrInvalidVarnum => "fload : missing or invalid var num".into(),
-                DstoreMissingOrInvalidVarnum => "dstore : missing or invalod var num".into(),
-                DloadMissingOrInvalidVarnum => "dload : missing or invalid var num".into(),
-                AnewarrayMissingOrInvalidComponentType =>
-                    "anewarray : missing or invalid component type".into(),
-                AloadMissingVarnum => "aload - missing varn num".into(),
-                TableswitchMissingLow => "tableswitch : missing low".into(),
-                TableswitchMissingHigh => "tableswitch : missing high".into(),
-                TableswitchMissingDefault => "tableswitch : missing default".into(),
-                LookupswitchMissingDefault => "lookupswitch : invalid default".into(),
-                LookupswitchInvalidSwitchEntry => "lookupswitch : invalid entry".into(),
-                LookupswitchMissingLabelforSwitchEntry =>
-                    "lookupswitch : missing label for switch entry".into(),
-                CheckcastInvalidOrMissingType => "checkcast :  invalid or missing type".into(),
-                RetMissingVarnum => "ret : missing var num".into(),
-                JsrMissingLabel => "jsr : missing label".into(),
-                JsrwMissingLabel => "jsrw : missing label".into(),
-                GotoMissingLabel => "goto : missing label".into(),
-                GotowMissingLabel => "gotow : missing label".into(),
-                SipushMissingConstant => "sipush : missing constant value".into(),
-                IficmpgtMissingLabel => "if_icmpgt : missing label".into(),
-                IficmpltMissingLabel => "if_icmplt : missing label".into(),
-                IficmpleMissingLabel => "if_icmple : missing label".into(),
-                IloadMissingVarnum => "iload : missing var number".into(),
-                IfneMissingLabel => "ifne : missing label".into(),
-                IincMissingOrInvalidVarnum => "iinc : missing or invalid var num".into(),
-                IincMissingOrInvalidDelta => "iinc : missing or invalid delta".into(),
-                AnewarrayInvalidTypeDescriptor(ref err_type) =>
-                    format!("anewarray : incorrect type - {err_type}"),
-                InvokespecialInvalid => "invokespecial: badly-formed or invalid".into(),
-                InvokespecialMissingMethodName => "invokespecial : missing method name".into(),
-                InvokespecialInvalidOrMissingMethodDescriptor =>
-                    "invokespecial : missing or invalid method descriptor".into(),
-                InvokevirtualInvalid => "invokevirtual: badly-formed or invalid".into(),
-                InvokevirtualMissingMethodName => "invokevirtual : missing method name".into(),
-                InvokevirtualInvalidOrMissingMethodDescriptor =>
-                    "invokevirtual : missing or invalid method descriptor".into(),
-                InvokestaticInvalid => "invokestatic: badly-formed or invalid".into(),
-                InvokestaticMissingMethodName => "invokestatic : missing method name".into(),
-                InvokestaticInvalidOrMissingMethodDescriptor =>
-                    "invokestatic : missing or invalid method descriptor".into(),
-                BipushMissingByte => "Bipush : missing byte".into(),
-                GetfieldInvalid => "getfield : badly-formed or invalid".into(),
-                GetfieldInvalidOrMissingFieldDescriptor =>
-                    "getfield : missing or invalid field descriptor".into(),
-                GetfieldMissingFieldName => "getfield : missing field name".into(),
-                GetstaticMissingOrInvalidClassName =>
-                    "getstatic : missing or invalid class name".into(),
-                GetstaticInvalidOrMissingFieldDescriptor =>
-                    "getstatic : missing or invalid field descriptor".into(),
-                GetstaticMissingOrInvalidFieldName =>
-                    "getstatic : missing or invalid field name".into(),
-                LdcIncorrectValue => "ldc : incorrect value".into(),
-                LdcwIncorrectValue => "ldcw : incorrect value".into(),
-                Ldc2wIncorrectValue => "ldc2_w : incorrect value".into(),
-                MultianewarrayMissingDimensions => "multianewarray : missing dimensions".into(),
-                NewMissingClassName => "newa : missing class name".into(),
-                NewarrayInvalidType => "newarray : invalid type".into(),
-                IstoreMissingVarnum => "istore : missing var num".into(),
-                AstoreMissingVarnum => "astore : missing var num".into(),
-            }
-        )
-    }
-}
-
-#[derive(Debug)]
 pub enum ParserError {
-    FailedToParsePrimitive,
-    MissingDefaultKeyword,
-    DirectiveError(DirectiveError),
-    IncorrectToken(String, String),
-    EmptyFieldDescriptor,
-    IllegalLabelError,
-    InvalidDirective(String),
-    InvalidFieldDescriptor,
-    InvalidFieldInitValue(String),
-    InvalidInstruction(String),
-    InvalidJvmInstruction(String),
-    InvalidMethodDescriptor,
-    InvalidToken(String),
-    JvmInstructionError(JvmInstructionError),
+    Missing {
+        instr: &'static str,
+        component: &'static str,
+    },
+
+    IncorrectTypeOrValue {
+        instr: &'static str,
+        type_or_val: &'static str,
+    },
+
+    Malformed {
+        component: &'static str,
+    },
+
+    Unknown {
+        component: &'static str,
+    },
+
     LexerError(LexerError),
-    MissingSourceFileName,
-    MissingClassName,
-    MissingLabel,
-    MissingEndMethodMarker,
-    MissingFieldName,
-    MissingInterfaceName,
-    MissingMethodName,
-    MissingSuperclassName,
-    UnknownClassOrInterfaceAccessFlag(String),
-    UnknownFieldAccessFlag(String),
-    UnknownMethodAccessFlag(String),
 }
 
 impl std::error::Error for ParserError {}
@@ -290,41 +31,29 @@ impl std::error::Error for ParserError {}
 use std::fmt;
 impl fmt::Display for ParserError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use ParserError::{DirectiveError, JvmInstructionError, *};
+        use ParserError::*;
 
         write!(
             f,
             "{}",
             match *self {
-                FailedToParsePrimitive => "failed to parse primitive value".into(),
-                MissingDefaultKeyword => "missing default keyword".into(),
-                IncorrectToken(ref expected, ref actual) =>
-                    format!("token mismatch while parsing: expected {expected} but found {actual}"),
+                Missing {
+                    ref instr,
+                    ref component,
+                } => format!("{} : {} {}", instr, "missing or invalid ", component),
+
+                IncorrectTypeOrValue {
+                    ref instr,
+                    ref type_or_val,
+                } => format!(
+                    "{} : {} {}",
+                    instr, "incorrect type or value of ", type_or_val
+                ),
+
+                Malformed { ref component } => format!("Malformed {}", component),
+                Unknown { ref component } => format!("Unknown {component}"),
+
                 LexerError(ref err) => err.to_string(),
-                IllegalLabelError => "malformed label - missing semicolon".into(),
-                InvalidToken(ref tokstr) => format!("Invalid token at position: {:#?}", tokstr),
-                InvalidFieldDescriptor => "invalid field descriptor".into(),
-                InvalidDirective(ref dir) => format!("invalid directive: {dir}"),
-                EmptyFieldDescriptor => "empty field descriptor".into(),
-                InvalidFieldInitValue(ref tokstr) =>
-                    format!("invalid field initialisation value: {:#?}", tokstr),
-                InvalidMethodDescriptor => "invalid method descriptor".into(),
-                InvalidInstruction(ref instr) => format!("invalid phpron instuction: {instr}"),
-                InvalidJvmInstruction(ref instr) => format!("invalid JVM instruction {instr}"),
-                MissingSourceFileName => "missing source file name".into(),
-                MissingClassName => "missing class name".into(),
-                MissingLabel => "missing label".into(),
-                MissingInterfaceName => "missing interface name".into(),
-                MissingSuperclassName => "missing super class name".into(),
-                MissingFieldName => "field name missing in definition".into(),
-                MissingMethodName => "method name missing in definition".into(),
-                MissingEndMethodMarker => "malformed end method - missing method keyword".into(),
-                UnknownClassOrInterfaceAccessFlag(ref flag) =>
-                    format!("Invalid flag for class/interface: {flag}"),
-                UnknownFieldAccessFlag(ref flag) => format!("Invalid flag for field: {flag}"),
-                UnknownMethodAccessFlag(ref flag) => format!("Invalid flag for method: {flag}"),
-                JvmInstructionError(ref jvm_err) => jvm_err.to_string(),
-                DirectiveError(ref dir_err) => dir_err.to_string(),
             }
         )
     }
@@ -361,10 +90,10 @@ impl<'a> Parser<'a> {
 
     fn advance_if(&mut self, expected_token: &Token) -> ParserResult<()> {
         if self.see() != expected_token {
-            Err(ParserError::IncorrectToken(
-                format!("{:#?}", expected_token),
-                format!("{:#?}", self.see()),
-            ))
+            Err(ParserError::IncorrectTypeOrValue {
+                instr: "parsing tokens",
+                type_or_val: "token",
+            })
         } else {
             self.advance()?;
             Ok(())
@@ -414,10 +143,9 @@ impl<'a> Parser<'a> {
             TEnum => PhoronClassOrInterfaceAccessFlag::AccEnum,
             TModule => PhoronClassOrInterfaceAccessFlag::AccModule,
             _ => {
-                return Err(ParserError::UnknownClassOrInterfaceAccessFlag(format!(
-                    "{:#?}",
-                    tok
-                )))
+                return Err(ParserError::Unknown {
+                    component: "class or interface flag",
+                })
             }
         })
     }
@@ -433,7 +161,11 @@ impl<'a> Parser<'a> {
             TTransient => PhoronFieldAccessFlag::AccTransient,
             TSynthetic => PhoronFieldAccessFlag::AccSynthetic,
             TEnum => PhoronFieldAccessFlag::AccEnum,
-            _ => return Err(ParserError::UnknownFieldAccessFlag(format!("{:#?}", tok))),
+            _ => {
+                return Err(ParserError::Unknown {
+                    component: "field access flag",
+                })
+            }
         })
     }
 
@@ -451,7 +183,11 @@ impl<'a> Parser<'a> {
             TAbstract => PhoronMethodAccessFlag::AccAbstract,
             TStrict => PhoronMethodAccessFlag::AccStrict,
             TSynthetic => PhoronMethodAccessFlag::AccSynthetic,
-            _ => return Err(ParserError::UnknownMethodAccessFlag(format!("{:#?}", tok))),
+            _ => {
+                return Err(ParserError::Unknown {
+                    component: "method access flag",
+                })
+            }
         })
     }
 
@@ -474,7 +210,10 @@ impl<'a> Parser<'a> {
 
                     PhoronClassDef { name, access_flags }
                 } else {
-                    return Err(ParserError::MissingClassName);
+                    return Err(ParserError::Missing {
+                        instr: "parsing class definition",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -485,7 +224,12 @@ impl<'a> Parser<'a> {
                 PhoronClassDef { name, access_flags }
             }
 
-            tok => return Err(ParserError::InvalidToken(format!("{tok:#?}"))),
+            _ => {
+                return Err(ParserError::IncorrectTypeOrValue {
+                    instr: "parsing class defiition",
+                    type_or_val: "token",
+                })
+            }
         })
     }
 
@@ -509,7 +253,10 @@ impl<'a> Parser<'a> {
 
                     PhoronInterfaceDef { name, access_flags }
                 } else {
-                    return Err(ParserError::MissingInterfaceName);
+                    return Err(ParserError::Missing {
+                        instr: "parsing interface definition",
+                        component: "interface name",
+                    });
                 }
             }
 
@@ -518,7 +265,12 @@ impl<'a> Parser<'a> {
                 PhoronInterfaceDef { name, access_flags }
             }
 
-            tok => return Err(ParserError::InvalidToken(format!("{tok:#?}"))),
+            tok => {
+                return Err(ParserError::IncorrectTypeOrValue {
+                    instr: "parsing interface definition",
+                    type_or_val: "token",
+                })
+            }
         })
     }
 
@@ -532,7 +284,10 @@ impl<'a> Parser<'a> {
 
             Ok(PhoronSuperDef { super_class_name })
         } else {
-            Err(ParserError::MissingSuperclassName)
+            Err(ParserError::Missing {
+                instr: "parsing superclass definition",
+                component: "super class name",
+            })
         }
     }
 
@@ -554,17 +309,16 @@ impl<'a> Parser<'a> {
                 self.advance()?;
                 Some(PhoronFieldInitValue::QuotedString(sval))
             } else {
-                return Err(ParserError::InvalidFieldInitValue(format!(
-                    "{:#?}",
-                    self.see()
-                )));
+                return Err(ParserError::IncorrectTypeOrValue {
+                    instr: "parsing field initialisation value",
+                    type_or_val: "init value",
+                });
             })
         } else {
             Ok(None)
         }
     }
 
-    /// AnewarrayTypeDescriptor <- ClassType / ArrayType
     /// ClassType <- ClassName
     /// ArrayType <- '[' AnewarrayTypeDescriptor ';'
     fn parse_class_or_array_type(&mut self) -> ParserResult<ClassOrArrayTypeDescriptor> {
@@ -585,12 +339,9 @@ impl<'a> Parser<'a> {
             }
 
             _ => {
-                return Err(ParserError::JvmInstructionError(
-                    JvmInstructionError::AnewarrayInvalidTypeDescriptor(format!(
-                        "{:#?}",
-                        self.see()
-                    )),
-                ))
+                return Err(ParserError::Malformed {
+                    component: "class or array tupe descriptor",
+                })
             }
         })
     }
@@ -645,10 +396,16 @@ impl<'a> Parser<'a> {
                         self.advance()?;
                         PhoronFieldDescriptor::ObjectType { class_name }
                     } else {
-                        return Err(ParserError::InvalidFieldDescriptor);
+                        return Err(ParserError::Malformed {
+                            component: "field descriptor",
+                        });
                     }
                 }
-                _ => return Err(ParserError::InvalidFieldDescriptor),
+                _ => {
+                    return Err(ParserError::Malformed {
+                        component: "field descriptor",
+                    })
+                }
             })
         } else if let Token::TLeftSquareBracket = self.see() {
             self.advance()?;
@@ -657,9 +414,14 @@ impl<'a> Parser<'a> {
                 component_type: Box::new(component_type),
             })
         } else if let Token::TRightParen = self.see() {
-            Err(ParserError::EmptyFieldDescriptor)
+            Err(ParserError::Missing {
+                instr: "parsing field descriptor",
+                component: "empty",
+            })
         } else {
-            Err(ParserError::InvalidFieldDescriptor)
+            Err(ParserError::Malformed {
+                component: "field descriptor",
+            })
         }
     }
 
@@ -687,7 +449,9 @@ impl<'a> Parser<'a> {
                 init_val,
             })
         } else {
-            Err(ParserError::MissingFieldName)
+            Err(ParserError::Malformed {
+                component: "field definition",
+            })
         }
     }
 
@@ -707,7 +471,9 @@ impl<'a> Parser<'a> {
 
             Ok(classname)
         } else {
-            Err(ParserError::MissingClassName)
+            Err(ParserError::Malformed {
+                component: "class name",
+            })
         }
     }
 
@@ -718,7 +484,7 @@ impl<'a> Parser<'a> {
 
             Ok(label)
         } else {
-            Err(ParserError::MissingLabel)
+            Err(ParserError::Malformed { component: "label" })
         }
     }
 
@@ -743,9 +509,10 @@ impl<'a> Parser<'a> {
                             self.advance()?;
                             PhoronDirective::LimitStack(max_stack)
                         } else {
-                            return Err(ParserError::DirectiveError(
-                                DirectiveError::StackDirectiveMissingCount,
-                            ));
+                            return Err(ParserError::Missing {
+                                instr: ".limit stack",
+                                component: "count",
+                            });
                         }
                     }
 
@@ -757,15 +524,17 @@ impl<'a> Parser<'a> {
                             self.advance()?;
                             PhoronDirective::LimitLocals(max_locals)
                         } else {
-                            return Err(ParserError::DirectiveError(
-                                DirectiveError::LocalsDirectiveMissingCount,
-                            ));
+                            return Err(ParserError::Missing {
+                                instr: ".limit locals",
+                                component: "count",
+                            });
                         }
                     }
                     _ => {
-                        return Err(ParserError::DirectiveError(
-                            DirectiveError::MissingStackOrLocal,
-                        ))
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: ".limit",
+                            type_or_val: "stack and/or locals",
+                        })
                     }
                 }
             }
@@ -773,8 +542,9 @@ impl<'a> Parser<'a> {
             Token::TThrows => {
                 self.advance()?;
 
-                let class_name = self.parse_class_name().map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::ThrowsMissingClassName)
+                let class_name = self.parse_class_name().map_err(|_| ParserError::Missing {
+                    instr: ".throws",
+                    component: "class name",
                 })?;
 
                 PhoronDirective::Throws { class_name }
@@ -783,8 +553,9 @@ impl<'a> Parser<'a> {
             Token::TLine => {
                 self.advance()?;
 
-                let line_number = self.parse_us().map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::LineMissingLineNumber)
+                let line_number = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: ".line",
+                    component: "line number",
                 })?;
 
                 PhoronDirective::LineNumber(line_number)
@@ -793,37 +564,50 @@ impl<'a> Parser<'a> {
             Token::TVar => {
                 self.advance()?;
 
-                let varnum = self
-                    .parse_us()
-                    .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingVarnum))?;
-
-                self.advance_if(&Token::TIs).map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::VarMissingIsKeyword)
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: ".var",
+                    component: "var num",
                 })?;
 
-                let name = self
-                    .parse_label()
-                    .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingName))?;
+                self.advance_if(&Token::TIs)
+                    .map_err(|_| ParserError::Missing {
+                        instr: ".var",
+                        component: "`is` keyword",
+                    })?;
 
-                let field_descriptor = self.parse_field_descriptor().map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::VarMissingFieldDescriptor)
+                let name = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: ".var",
+                    component: "name",
                 })?;
 
-                self.advance_if(&Token::TFrom).map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::VarMissingFromKeyword)
+                let field_descriptor =
+                    self.parse_field_descriptor()
+                        .map_err(|_| ParserError::Missing {
+                            instr: ".var",
+                            component: "field descriptor",
+                        })?;
+
+                self.advance_if(&Token::TFrom)
+                    .map_err(|_| ParserError::Missing {
+                        instr: ".var",
+                        component: "`from` keyword",
+                    })?;
+
+                let from_label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: ".var",
+                    component: "from label",
                 })?;
 
-                let from_label = self.parse_label().map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::VarMissingFromLabel)
-                })?;
+                self.advance_if(&Token::TTo)
+                    .map_err(|_| ParserError::Missing {
+                        instr: ".var",
+                        component: "`to` keyword",
+                    })?;
 
-                self.advance_if(&Token::TTo).map_err(|_| {
-                    ParserError::DirectiveError(DirectiveError::VarMissingToKeyword)
+                let to_label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: ".var",
+                    component: "to label",
                 })?;
-
-                let to_label = self
-                    .parse_label()
-                    .map_err(|_| ParserError::DirectiveError(DirectiveError::VarMissingToLabel))?;
 
                 PhoronDirective::Var {
                     varnum,
@@ -853,9 +637,9 @@ impl<'a> Parser<'a> {
                 }
             }
             _ => {
-                return Err(ParserError::DirectiveError(
-                    DirectiveError::InvalidDirective(format!("{:#?}", self.see())),
-                ))
+                return Err(ParserError::Malformed {
+                    component: "Phoron directive",
+                })
             }
         })
     }
@@ -867,7 +651,9 @@ impl<'a> Parser<'a> {
 
             Ok(n)
         } else {
-            Err(ParserError::FailedToParsePrimitive)
+            Err(ParserError::Malformed {
+                component: "unsigned byte",
+            })
         }
     }
 
@@ -878,7 +664,9 @@ impl<'a> Parser<'a> {
 
             Ok(n)
         } else {
-            Err(ParserError::FailedToParsePrimitive)
+            Err(ParserError::Malformed {
+                component: "signed byte",
+            })
         }
     }
 
@@ -889,7 +677,9 @@ impl<'a> Parser<'a> {
 
             Ok(n)
         } else {
-            Err(ParserError::FailedToParsePrimitive)
+            Err(ParserError::Malformed {
+                component: "signed integer",
+            })
         }
     }
 
@@ -900,7 +690,9 @@ impl<'a> Parser<'a> {
 
             Ok(n)
         } else {
-            Err(ParserError::FailedToParsePrimitive)
+            Err(ParserError::Malformed {
+                component: "unsigned integer",
+            })
         }
     }
 
@@ -911,7 +703,9 @@ impl<'a> Parser<'a> {
 
             Ok(n)
         } else {
-            Err(ParserError::FailedToParsePrimitive)
+            Err(ParserError::Malformed {
+                component: "signed integer",
+            })
         }
     }
 
@@ -938,16 +732,15 @@ impl<'a> Parser<'a> {
             if let Token::TColon = self.see() {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::LookupswitchMissingLabelforSwitchEntry,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "lookupswitch",
+                    component: "label for switch entry",
                 })?;
                 switches.push(LookupSwitchPair { key, label })
             } else {
-                return Err(ParserError::JvmInstructionError(
-                    JvmInstructionError::LookupswitchInvalidSwitchEntry,
-                ));
+                return Err(ParserError::Malformed {
+                    component: "lookupswitch",
+                });
             }
         }
 
@@ -964,12 +757,15 @@ impl<'a> Parser<'a> {
                 let label = self.parse_label()?;
                 Ok(label)
             } else {
-                Err(ParserError::JvmInstructionError(
-                    JvmInstructionError::LookupswitchMissingDefault,
-                ))
+                Err(ParserError::Malformed {
+                    component: "default switch pair",
+                })
             }
         } else {
-            Err(ParserError::MissingDefaultKeyword)
+            Err(ParserError::Missing {
+                instr: "parsing default switch pair",
+                component: "`default` keyword",
+            })
         }
     }
 
@@ -997,8 +793,9 @@ impl<'a> Parser<'a> {
             Token::TAload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::AloadMissingVarnum)
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "aload",
+                    component: "var num",
                 })?;
                 JvmInstruction::Aload { varnum }
             }
@@ -1028,14 +825,16 @@ impl<'a> Parser<'a> {
             }
 
             // anewarray <type>
+            // AnewarrayTypeDescriptor <- ClassType / ArrayType
             Token::TAnewarray => {
                 self.advance()?;
 
-                let component_type = self.parse_class_or_array_type().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::AnewarrayMissingOrInvalidComponentType,
-                    )
-                })?;
+                let component_type =
+                    self.parse_class_or_array_type()
+                        .map_err(|_| ParserError::Missing {
+                            instr: "anewarray",
+                            component: "compoenent type",
+                        })?;
                 JvmInstruction::Anewarray { component_type }
             }
 
@@ -1055,8 +854,9 @@ impl<'a> Parser<'a> {
             Token::TAstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::AstoreMissingVarnum)
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "astore",
+                    component: "var num",
                 })?;
                 JvmInstruction::Astore { varnum }
             }
@@ -1107,8 +907,9 @@ impl<'a> Parser<'a> {
             Token::TBipush => {
                 self.advance()?;
 
-                let sb = self.parse_sb().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::BipushMissingByte)
+                let sb = self.parse_sb().map_err(|_| ParserError::Missing {
+                    instr: "bipush",
+                    component: "numeric signed byte constant",
                 })?;
 
                 JvmInstruction::Bipush(sb)
@@ -1130,11 +931,12 @@ impl<'a> Parser<'a> {
             Token::TCheckcast => {
                 self.advance()?;
 
-                let cast_type = self.parse_class_or_array_type().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::CheckcastInvalidOrMissingType,
-                    )
-                })?;
+                let cast_type =
+                    self.parse_class_or_array_type()
+                        .map_err(|_| ParserError::Missing {
+                            instr: "checkcast",
+                            component: "cast type",
+                        })?;
                 JvmInstruction::Checkcast { cast_type }
             }
 
@@ -1208,10 +1010,9 @@ impl<'a> Parser<'a> {
             Token::TDload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::DloadMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "doad",
+                    component: "var num",
                 })?;
 
                 JvmInstruction::Dload { varnum }
@@ -1269,10 +1070,9 @@ impl<'a> Parser<'a> {
             Token::TDstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::DstoreMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "dstor",
+                    component: "var num",
                 })?;
 
                 JvmInstruction::Dstore { varnum }
@@ -1420,10 +1220,9 @@ impl<'a> Parser<'a> {
             Token::TFload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::FloadMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "fload",
+                    component: "var num",
                 })?;
                 JvmInstruction::Fload { varnum }
             }
@@ -1480,10 +1279,9 @@ impl<'a> Parser<'a> {
             Token::TFstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::FstoreMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "fstore",
+                    component: "var num",
                 })?;
                 JvmInstruction::Fstore { varnum }
             }
@@ -1529,11 +1327,12 @@ impl<'a> Parser<'a> {
 
                         self.advance()?;
 
-                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
-                            ParserError::JvmInstructionError(
-                                JvmInstructionError::GetfieldInvalidOrMissingFieldDescriptor,
-                            )
-                        })?;
+                        let field_descriptor =
+                            self.parse_field_descriptor()
+                                .map_err(|_| ParserError::Missing {
+                                    instr: "getfield",
+                                    component: "field descriptor",
+                                })?;
 
                         JvmInstruction::Getfield {
                             class_name,
@@ -1541,14 +1340,16 @@ impl<'a> Parser<'a> {
                             field_descriptor,
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::GetfieldMissingOrInvalidFieldName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "getfield",
+                            component: "field name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::GetfieldMissingOrInvalidClassName,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "getfield",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -1563,11 +1364,12 @@ impl<'a> Parser<'a> {
 
                         self.advance()?;
 
-                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
-                            ParserError::JvmInstructionError(
-                                JvmInstructionError::GetstaticInvalidOrMissingFieldDescriptor,
-                            )
-                        })?;
+                        let field_descriptor =
+                            self.parse_field_descriptor()
+                                .map_err(|_| ParserError::Missing {
+                                    instr: "getstatic",
+                                    component: "field descriptor",
+                                })?;
 
                         JvmInstruction::Getstatic {
                             class_name,
@@ -1575,14 +1377,16 @@ impl<'a> Parser<'a> {
                             field_descriptor,
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::GetstaticMissingOrInvalidFieldName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "getstatic",
+                            component: "field name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::GetstaticMissingOrInvalidClassName,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "getstatic",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -1590,8 +1394,9 @@ impl<'a> Parser<'a> {
             Token::TGoto => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::GotoMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "goto",
+                    component: "label",
                 })?;
                 JvmInstruction::Goto { label }
             }
@@ -1600,8 +1405,9 @@ impl<'a> Parser<'a> {
             Token::TGotow => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::GotowMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "gotow",
+                    component: "label",
                 })?;
                 JvmInstruction::Gotow { label }
             }
@@ -1718,10 +1524,9 @@ impl<'a> Parser<'a> {
             Token::TIfacmpeq => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IfacmpeqMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifacmpeq",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifacmpeq { label }
@@ -1731,10 +1536,9 @@ impl<'a> Parser<'a> {
             Token::TIfacmpne => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IfacmpneMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifacmpne",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifacmpne { label }
@@ -1744,10 +1548,9 @@ impl<'a> Parser<'a> {
             Token::TIficmpeq => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IficmpeqMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ificmpeq",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ificmpeq { label }
@@ -1757,10 +1560,9 @@ impl<'a> Parser<'a> {
             Token::TIficmpge => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IficmpgeMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ificmpge",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ificmpge { label }
@@ -1770,8 +1572,9 @@ impl<'a> Parser<'a> {
             Token::TIficmpgt => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IficmpgtMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifcimpgt",
+                    component: "label",
                 })?;
                 JvmInstruction::Ificmpgt { label }
             }
@@ -1780,8 +1583,9 @@ impl<'a> Parser<'a> {
             Token::TIficmple => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IficmpleMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ificmple",
+                    component: "label",
                 })?;
                 JvmInstruction::Ificmple { label }
             }
@@ -1790,8 +1594,9 @@ impl<'a> Parser<'a> {
             Token::TIficmplt => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IficmpltMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ificmplt",
+                    component: "label",
                 })?;
                 JvmInstruction::Ificmplt { label }
             }
@@ -1806,9 +1611,10 @@ impl<'a> Parser<'a> {
 
                     JvmInstruction::Ifne { label }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::IfneMissingLabel,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "ifne",
+                        component: "label",
+                    });
                 }
             }
 
@@ -1816,10 +1622,9 @@ impl<'a> Parser<'a> {
             Token::TIficmpne => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IfcmpneMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ificmpne",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ificmpne { label }
@@ -1829,8 +1634,9 @@ impl<'a> Parser<'a> {
             Token::TIfeq => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IfeqMissingOrInvalidLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "iceq",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifeq { label }
@@ -1840,8 +1646,9 @@ impl<'a> Parser<'a> {
             Token::TIfge => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IfgeMissingOrInvalidLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifge",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifge { label }
@@ -1851,8 +1658,9 @@ impl<'a> Parser<'a> {
             Token::TIfgt => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IfgtMissingOrInvalidLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifgt",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifgt { label }
@@ -1862,8 +1670,9 @@ impl<'a> Parser<'a> {
             Token::TIfle => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IfleMissingOrInvalidLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifle",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifle { label }
@@ -1873,8 +1682,9 @@ impl<'a> Parser<'a> {
             Token::TIflt => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IfltMissingOrInvalidLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "iflt",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Iflt { label }
@@ -1884,10 +1694,9 @@ impl<'a> Parser<'a> {
             Token::TIfnonnull => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IfnonnullMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifnonnull",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifnonnull { label }
@@ -1897,10 +1706,9 @@ impl<'a> Parser<'a> {
             Token::TIfnull => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IfnullMissingOrInvalidLabel,
-                    )
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "ifnull",
+                    component: "label",
                 })?;
 
                 JvmInstruction::Ifnull { label }
@@ -1910,14 +1718,14 @@ impl<'a> Parser<'a> {
             Token::TIinc => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::IincMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "iinc",
+                    component: "var num",
                 })?;
 
-                let delta = self.parse_ss().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IincMissingOrInvalidDelta)
+                let delta = self.parse_ss().map_err(|_| ParserError::Missing {
+                    instr: "iinc",
+                    component: "delta",
                 })?;
 
                 JvmInstruction::Iinc { varnum, delta }
@@ -1927,8 +1735,9 @@ impl<'a> Parser<'a> {
             Token::TIload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IloadMissingVarnum)
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "iload",
+                    component: "var num",
                 })?;
 
                 JvmInstruction::Iload { varnum }
@@ -1974,11 +1783,12 @@ impl<'a> Parser<'a> {
             Token::TInstanceof => {
                 self.advance()?;
 
-                let check_type = self.parse_class_or_array_type().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::InstanceofMissingOrInvalidCheckType,
-                    )
-                })?;
+                let check_type =
+                    self.parse_class_or_array_type()
+                        .map_err(|_| ParserError::Missing {
+                            instr: "instanceof",
+                            component: "check type",
+                        })?;
                 JvmInstruction::Instanceof { check_type }
             }
 
@@ -1993,10 +1803,9 @@ impl<'a> Parser<'a> {
 
                         self.advance()?;
 
-                        let ub = self.parse_ub().map_err(|_| {
-                            ParserError::JvmInstructionError(
-                                JvmInstructionError::InvokeinterfaceMissingNumericConstant,
-                            )
+                        let ub = self.parse_ub().map_err(|_| ParserError::Missing {
+                            instr: "invokeinterface",
+                            component: "numeric unsigned byte constant",
                         })?;
 
                         if let Ok(method_descriptor) = self.parse_method_descriptor() {
@@ -2007,19 +1816,22 @@ impl<'a> Parser<'a> {
                                 ub,
                             }
                         } else {
-                            return Err(ParserError::JvmInstructionError(
-                                JvmInstructionError::InvokeinterfaceInvalidOrMissingMethodDescriptor,
-                            ));
+                            return Err(ParserError::Missing {
+                                instr: "invokeinterface",
+                                component: "method descriptor",
+                            });
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::InvokeinterfaceMissingMethodName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "invokeinterface",
+                            component: "method name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::InvokeinterfaceInvalid,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "invokeinterface",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -2041,19 +1853,22 @@ impl<'a> Parser<'a> {
                                 method_descriptor,
                             }
                         } else {
-                            return Err(ParserError::JvmInstructionError(
-                                JvmInstructionError::InvokespecialInvalidOrMissingMethodDescriptor,
-                            ));
+                            return Err(ParserError::Missing {
+                                instr: "invokespecial",
+                                component: "method descriptor",
+                            });
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::InvokespecialMissingMethodName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "invokespecial",
+                            component: "method name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::InvokespecialInvalid,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "invokespecial",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -2075,19 +1890,22 @@ impl<'a> Parser<'a> {
                                 method_descriptor,
                             }
                         } else {
-                            return Err(ParserError::JvmInstructionError(
-                                JvmInstructionError::InvokestaticInvalidOrMissingMethodDescriptor,
-                            ));
+                            return Err(ParserError::Missing {
+                                instr: "invokestatic",
+                                component: "method descriptor",
+                            });
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::InvokestaticMissingMethodName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "invokestatic",
+                            component: "method name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::InvokestaticInvalid,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "invokestatic",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -2109,19 +1927,22 @@ impl<'a> Parser<'a> {
                                 method_descriptor,
                             }
                         } else {
-                            return Err(ParserError::JvmInstructionError(
-                                JvmInstructionError::InvokevirtualInvalidOrMissingMethodDescriptor,
-                            ));
+                            return Err(ParserError::Missing {
+                                instr: "invokevirtual",
+                                component: "method descriptor",
+                            });
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::InvokevirtualMissingMethodName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "invokevirtual",
+                            component: "method name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::InvokevirtualInvalid,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "invokevirtual",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -2157,8 +1978,9 @@ impl<'a> Parser<'a> {
             Token::TIstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::IstoreMissingVarnum)
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "istore",
+                    component: "var num",
                 })?;
 
                 JvmInstruction::Istore { varnum }
@@ -2210,8 +2032,9 @@ impl<'a> Parser<'a> {
             Token::TJsr => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::JsrMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "jsr",
+                    component: "label",
                 })?;
                 JvmInstruction::Jsr { label }
             }
@@ -2220,8 +2043,9 @@ impl<'a> Parser<'a> {
             Token::TJsrw => {
                 self.advance()?;
 
-                let label = self.parse_label().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::JsrwMissingLabel)
+                let label = self.parse_label().map_err(|_| ParserError::Missing {
+                    instr: "jsrw",
+                    component: "label",
                 })?;
                 JvmInstruction::Jsrw { label }
             }
@@ -2310,9 +2134,10 @@ impl<'a> Parser<'a> {
                     }
 
                     _ => {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::LdcIncorrectValue,
-                        ))
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: "lcd",
+                            type_or_val: "integer, double, or quoted string",
+                        })
                     }
                 }
             }
@@ -2335,9 +2160,10 @@ impl<'a> Parser<'a> {
                     }
 
                     _ => {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::Ldc2wIncorrectValue,
-                        ))
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: "lcd2w",
+                            type_or_val: "long or double constant",
+                        })
                     }
                 }
             }
@@ -2366,9 +2192,10 @@ impl<'a> Parser<'a> {
                     }
 
                     _ => {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::LdcwIncorrectValue,
-                        ))
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: "ldcw",
+                            type_or_val: "integer, double, or quoted string",
+                        })
                     }
                 }
             }
@@ -2383,10 +2210,9 @@ impl<'a> Parser<'a> {
             Token::TLload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::LloadMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "iload",
+                    component: "var num",
                 })?;
 
                 JvmInstruction::Lload { varnum }
@@ -2474,10 +2300,9 @@ impl<'a> Parser<'a> {
             Token::TLstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::LstoreMissingOrInvalidVarnum,
-                    )
+                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                    instr: "lstore",
+                    component: "var num",
                 })?;
 
                 JvmInstruction::Lstore { varnum }
@@ -2540,16 +2365,16 @@ impl<'a> Parser<'a> {
             Token::TMultianewarray => {
                 self.advance()?;
 
-                let component_type = self.parse_field_descriptor().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::MultianewarrayMissingOrInvalidComponentType,
-                    )
-                })?;
+                let component_type =
+                    self.parse_field_descriptor()
+                        .map_err(|_| ParserError::Missing {
+                            instr: "multianewarray",
+                            component: "component type",
+                        })?;
 
-                let dimensions = self.parse_ub().map_err(|_| {
-                    ParserError::JvmInstructionError(
-                        JvmInstructionError::MultianewarrayMissingDimensions,
-                    )
+                let dimensions = self.parse_ub().map_err(|_| ParserError::Missing {
+                    instr: "multianewarray",
+                    component: "dimensions",
                 })?;
 
                 JvmInstruction::Multianewarray {
@@ -2562,8 +2387,9 @@ impl<'a> Parser<'a> {
             Token::TNew => {
                 self.advance()?;
 
-                let class_name = self.parse_class_name().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::NewMissingClassName)
+                let class_name = self.parse_class_name().map_err(|_| ParserError::Missing {
+                    instr: "new",
+                    component: "class name",
                 })?;
 
                 JvmInstruction::New { class_name }
@@ -2625,15 +2451,16 @@ impl<'a> Parser<'a> {
                         }
 
                         _ => {
-                            return Err(ParserError::JvmInstructionError(
-                                JvmInstructionError::NewarrayInvalidType,
-                            ))
+                            return Err(ParserError::IncorrectTypeOrValue {
+                                instr: "newarray",
+                                type_or_val: "primitive type",
+                            })
                         }
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::NewarrayInvalidType,
-                    ));
+                    return Err(ParserError::Malformed {
+                        component: "newarray",
+                    });
                 }
             }
 
@@ -2666,11 +2493,12 @@ impl<'a> Parser<'a> {
 
                         self.advance()?;
 
-                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
-                            ParserError::JvmInstructionError(
-                                JvmInstructionError::PutfieldMissingOrInvalidFieldDescriptor,
-                            )
-                        })?;
+                        let field_descriptor =
+                            self.parse_field_descriptor()
+                                .map_err(|_| ParserError::Missing {
+                                    instr: "putfield",
+                                    component: "field descriptor",
+                                })?;
 
                         JvmInstruction::Putfield {
                             class_name,
@@ -2678,14 +2506,16 @@ impl<'a> Parser<'a> {
                             field_descriptor,
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::PutfieldMissingOrInvalidFieldName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "putfield",
+                            component: "field name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::PutfieldMissingOrInvalidClassName,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "putfield",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -2700,11 +2530,12 @@ impl<'a> Parser<'a> {
 
                         self.advance()?;
 
-                        let field_descriptor = self.parse_field_descriptor().map_err(|_| {
-                            ParserError::JvmInstructionError(
-                                JvmInstructionError::PutstaticMissingOrInvalidFieldDescriptor,
-                            )
-                        })?;
+                        let field_descriptor =
+                            self.parse_field_descriptor()
+                                .map_err(|_| ParserError::Missing {
+                                    instr: "putstatic",
+                                    component: "field descriptor",
+                                })?;
 
                         JvmInstruction::Putstatic {
                             class_name,
@@ -2712,14 +2543,16 @@ impl<'a> Parser<'a> {
                             field_descriptor,
                         }
                     } else {
-                        return Err(ParserError::JvmInstructionError(
-                            JvmInstructionError::PutstaticMissingOrInvalidFieldName,
-                        ));
+                        return Err(ParserError::Missing {
+                            instr: "putstatic",
+                            component: "field name",
+                        });
                     }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::PutstaticMissingOrInvalidClassName,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "putfield",
+                        component: "class name",
+                    });
                 }
             }
 
@@ -2733,9 +2566,10 @@ impl<'a> Parser<'a> {
 
                     JvmInstruction::Ret { varnum }
                 } else {
-                    return Err(ParserError::JvmInstructionError(
-                        JvmInstructionError::RetMissingVarnum,
-                    ));
+                    return Err(ParserError::Missing {
+                        instr: "ret",
+                        component: "var num",
+                    });
                 }
             }
 
@@ -2761,8 +2595,9 @@ impl<'a> Parser<'a> {
             Token::TSipush => {
                 self.advance()?;
 
-                let ss = self.parse_ss().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::SipushMissingConstant)
+                let ss = self.parse_ss().map_err(|_| ParserError::Missing {
+                    instr: "sipush",
+                    component: "numeric signed short constant",
                 })?;
 
                 JvmInstruction::Sipush(ss)
@@ -2779,18 +2614,23 @@ impl<'a> Parser<'a> {
             Token::TTableswitch => {
                 self.advance()?;
 
-                let low = self.parse_si().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingLow)
+                let low = self.parse_si().map_err(|_| ParserError::Missing {
+                    instr: "tableswitch",
+                    component: "low",
                 })?;
 
-                let high = self.parse_si().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingHigh)
+                let high = self.parse_si().map_err(|_| ParserError::Missing {
+                    instr: "tableswitch",
+                    component: "high",
                 })?;
 
                 let switches = self.parse_table_switches()?;
-                let default = self.parse_default_switch_pair().map_err(|_| {
-                    ParserError::JvmInstructionError(JvmInstructionError::TableswitchMissingDefault)
-                })?;
+                let default =
+                    self.parse_default_switch_pair()
+                        .map_err(|_| ParserError::Missing {
+                            instr: "tableswitch",
+                            component: "default",
+                        })?;
 
                 JvmInstruction::Tableswitch {
                     low,
@@ -2807,10 +2647,9 @@ impl<'a> Parser<'a> {
             }
 
             _ => {
-                return Err(ParserError::InvalidJvmInstruction(format!(
-                    "{:#?}",
-                    self.see()
-                )))
+                return Err(ParserError::Unknown {
+                    component: "jvm instruction",
+                })
             }
         })
     }
@@ -2859,14 +2698,13 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                     PhoronInstruction::PhoronLabel(label)
                 } else {
-                    return Err(ParserError::IllegalLabelError);
+                    return Err(ParserError::Malformed { component: "label" });
                 }
             }
             _ => {
-                return Err(ParserError::InvalidInstruction(format!(
-                    "{:#?}",
-                    self.see()
-                )))
+                return Err(ParserError::Malformed {
+                    component: "Phoron instruction",
+                })
             }
         })
     }
@@ -2881,7 +2719,10 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                     break;
                 } else {
-                    return Err(ParserError::MissingEndMethodMarker);
+                    return Err(ParserError::Missing {
+                        instr: "parsing instructions",
+                        component: "end method marker",
+                    });
                 }
             } else {
                 instructions.push(self.parse_instruction()?);
@@ -2901,9 +2742,13 @@ impl<'a> Parser<'a> {
 
             let mut param_descriptor = Vec::new();
             loop {
+                // todo
                 let field_descriptor = match self.parse_field_descriptor() {
                     Err(err) => match err {
-                        ParserError::EmptyFieldDescriptor => break,
+                        ParserError::Missing {
+                            instr: "parsing field descriptor",
+                            component: "empty",
+                        } => break,
                         _ => return Err(err),
                     },
                     Ok(desc) => {
@@ -2925,7 +2770,9 @@ impl<'a> Parser<'a> {
                 } else if let Token::TLeftSquareBracket = self.see() {
                     PhoronReturnDescriptor::FieldDescriptor(self.parse_field_descriptor()?)
                 } else {
-                    return Err(ParserError::InvalidMethodDescriptor);
+                    return Err(ParserError::Malformed {
+                        component: "method descriptor",
+                    });
                 };
 
                 Ok(PhoronMethodDescriptor {
@@ -2933,10 +2780,14 @@ impl<'a> Parser<'a> {
                     return_descriptor,
                 })
             } else {
-                Err(ParserError::InvalidMethodDescriptor)
+                Err(ParserError::Malformed {
+                    component: "method descriptor",
+                })
             }
         } else {
-            Err(ParserError::InvalidMethodDescriptor)
+            Err(ParserError::Malformed {
+                component: "method descriptor",
+            })
         }
     }
 
@@ -2967,7 +2818,10 @@ impl<'a> Parser<'a> {
                 instructions,
             })
         } else {
-            Err(ParserError::MissingMethodName)
+            Err(ParserError::Missing {
+                instr: "parsing method definition",
+                component: "method name",
+            })
         }
     }
 
@@ -3000,7 +2854,10 @@ impl<'a> Parser<'a> {
 
             Ok(PhoronSourceFileDef { source_file })
         } else {
-            Err(ParserError::MissingSourceFileName)
+            Err(ParserError::Missing {
+                instr: "parsing source file definition",
+                component: "source file name",
+            })
         }
     }
 
@@ -3018,7 +2875,12 @@ impl<'a> Parser<'a> {
                     Token::TInterface => {
                         PhoronClassOrInterface::Interface(self.parse_interface_def()?)
                     }
-                    err_tok => return Err(ParserError::InvalidToken(format!("{:#?}", err_tok))),
+                    _ => {
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: "parsing header",
+                            type_or_val: "class or interface definition token",
+                        })
+                    }
                 };
 
                 let super_def = self.parse_super_def()?;
@@ -3053,7 +2915,12 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            tok => return Err(ParserError::InvalidToken(format!("{:#?}", tok))),
+            tok => {
+                return Err(ParserError::IncorrectTypeOrValue {
+                    instr: "parsing header",
+                    type_or_val: "token",
+                })
+            }
         })
     }
 
