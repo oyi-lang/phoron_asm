@@ -1,3 +1,39 @@
+pub trait PhoronAstVisitor<'a> {
+    type Input;
+    type Result;
+
+    fn visit_program(&mut self, program: &PhoronProgram, input: Self::Input) -> Self::Result;
+    fn visit_header(&mut self, header: &PhoronHeader, input: Self::Input) -> Self::Result;
+
+    fn visit_sourcefile_def(
+        &mut self,
+        sourcefile_def: &PhoronSourceFileDef,
+        input: Self::Input,
+    ) -> Self::Result;
+
+    fn visit_class_def(&mut self, class_def: &PhoronClassDef, input: Self::Input) -> Self::Result;
+    fn visit_interface_def(
+        &mut self,
+        class_def: &PhoronInterfaceDef,
+        input: Self::Input,
+    ) -> Self::Result;
+
+    fn visit_super_def(&mut self, super_def: &PhoronSuperDef, input: Self::Input) -> Self::Result;
+
+    fn visit_body(&mut self, body: &PhoronBody, input: Self::Input) -> Self::Result;
+    fn visit_field_def(&mut self, field_def: &PhoronFieldDef, input: Self::Input) -> Self::Result;
+
+    fn visit_method_def(
+        &mut self,
+        method_def: &PhoronMethodDef,
+        input: Self::Input,
+    ) -> Self::Result;
+
+    fn visit_directive(&mut self, directive: &PhoronDirective, input: Self::Input) -> Self::Result;
+    fn visit_jvm_instruction(&mut self, instr: &JvmInstruction, input: Self::Input)
+        -> Self::Result;
+}
+
 #[derive(Debug, PartialEq)]
 pub struct PhoronProgram {
     pub header: PhoronHeader,
@@ -58,6 +94,8 @@ pub struct PhoronHeader {
 
 // Descriptors
 
+use std::fmt;
+
 #[derive(PartialEq, Debug)]
 pub enum PhoronFieldDescriptor {
     BaseType(PhoronBaseType),
@@ -67,6 +105,22 @@ pub enum PhoronFieldDescriptor {
     ArrayType {
         component_type: Box<PhoronFieldDescriptor>,
     },
+}
+
+impl fmt::Display for PhoronFieldDescriptor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use PhoronFieldDescriptor::*;
+
+        write!(
+            f,
+            "{}",
+            match *self {
+                BaseType(ref base_type) => base_type.to_string(),
+                ObjectType { ref class_name } => format!("L{};", class_name),
+                ArrayType { ref component_type } => format!("[{}", component_type.to_string()),
+            }
+        )
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -81,16 +135,70 @@ pub enum PhoronBaseType {
     Boolean,
 }
 
+impl fmt::Display for PhoronBaseType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use PhoronBaseType::*;
+
+        write!(
+            f,
+            "{}",
+            match *self {
+                Byte => "B",
+                Character => "C",
+                Double => "D",
+                Float => "F",
+                Integer => "I",
+                Long => "J",
+                Short => "S",
+                Boolean => "Z",
+            }
+        )
+    }
+}
+
 #[derive(PartialEq, Debug)]
 pub struct PhoronMethodDescriptor {
-    pub param_descriptor: Option<PhoronFieldDescriptor>,
+    pub param_descriptor: Vec<PhoronFieldDescriptor>,
     pub return_descriptor: PhoronReturnDescriptor,
+}
+
+impl fmt::Display for PhoronMethodDescriptor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut param_descriptor = String::new();
+        param_descriptor.push('(');
+
+        self.param_descriptor
+            .iter()
+            .for_each(|field_desc| param_descriptor.push_str(&field_desc.to_string()));
+        param_descriptor.push(')');
+
+        write!(
+            f,
+            "{}",
+            format!("{}{}", param_descriptor, self.return_descriptor.to_string())
+        )
+    }
 }
 
 #[derive(PartialEq, Debug)]
 pub enum PhoronReturnDescriptor {
     FieldDescriptor(PhoronFieldDescriptor),
     VoidDescriptor,
+}
+
+impl fmt::Display for PhoronReturnDescriptor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use PhoronReturnDescriptor::*;
+
+        write!(
+            f,
+            "{}",
+            match *self {
+                FieldDescriptor(ref field_desc) => field_desc.to_string(),
+                VoidDescriptor => "V".into(),
+            }
+        )
+    }
 }
 
 // body
@@ -539,4 +647,59 @@ pub struct PhoronMethodDef {
 pub struct PhoronBody {
     pub field_defs: Vec<PhoronFieldDef>,
     pub method_defs: Vec<PhoronMethodDef>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PhoronBaseType::*, PhoronFieldDescriptor::*, PhoronReturnDescriptor::*, *};
+
+    #[test]
+    fn test_base_type_to_string() {
+        assert_eq!(&Byte.to_string(), "B");
+        assert_eq!(&Character.to_string(), "C");
+        assert_eq!(&Double.to_string(), "D");
+        assert_eq!(&Float.to_string(), "F");
+        assert_eq!(&Integer.to_string(), "I");
+        assert_eq!(&Long.to_string(), "J");
+        assert_eq!(&Short.to_string(), "S");
+        assert_eq!(&Boolean.to_string(), "Z");
+    }
+
+    #[test]
+    fn test_field_descriptor() {
+        let field_desc = PhoronFieldDescriptor::ArrayType {
+            component_type: Box::new(PhoronFieldDescriptor::ArrayType {
+                component_type: Box::new(PhoronFieldDescriptor::ArrayType {
+                    component_type: Box::new(BaseType(Double)),
+                }),
+            }),
+        };
+        assert_eq!("[[[D", &field_desc.to_string());
+    }
+
+    #[test]
+    fn test_method_decriptor() {
+        let method_desc = PhoronMethodDescriptor {
+            param_descriptor: vec![],
+            return_descriptor: VoidDescriptor,
+        };
+        assert_eq!("()V", &method_desc.to_string());
+
+        let method_desc = PhoronMethodDescriptor {
+            param_descriptor: vec![
+                BaseType(Integer),
+                BaseType(Double),
+                ObjectType {
+                    class_name: "java/lang/Thread".to_string(),
+                },
+            ],
+            return_descriptor: FieldDescriptor(ObjectType {
+                class_name: "java/lang/Object".to_string(),
+            }),
+        };
+        assert_eq!(
+            "(IDLjava/lang/Thread;)Ljava/lang/Object;",
+            &method_desc.to_string()
+        );
+    }
 }

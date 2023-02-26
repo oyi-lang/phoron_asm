@@ -3,8 +3,6 @@ use crate::{
     lexer::{Lexer, LexerError, Token},
 };
 
-pub type ParserResult<T> = Result<T, ParserError>;
-
 #[derive(Debug)]
 pub enum DirectiveError {
     LineMissingLineNumber,
@@ -337,6 +335,8 @@ impl From<LexerError> for ParserError {
         ParserError::LexerError(lex_err)
     }
 }
+
+pub type ParserResult<T> = Result<T, ParserError>;
 
 use Token::*;
 
@@ -2898,13 +2898,19 @@ impl<'a> Parser<'a> {
     fn parse_method_descriptor(&mut self) -> ParserResult<PhoronMethodDescriptor> {
         if let Token::TLeftParen = self.see() {
             self.advance()?;
-            let param_descriptor = match self.parse_field_descriptor() {
-                Err(err) => match err {
-                    ParserError::EmptyFieldDescriptor => None,
-                    _ => return Err(err),
-                },
-                Ok(desc) => Some(desc),
-            };
+
+            let mut param_descriptor = Vec::new();
+            loop {
+                let field_descriptor = match self.parse_field_descriptor() {
+                    Err(err) => match err {
+                        ParserError::EmptyFieldDescriptor => break,
+                        _ => return Err(err),
+                    },
+                    Ok(desc) => {
+                        param_descriptor.push(desc);
+                    }
+                };
+            }
 
             if let Token::TRightParen = self.see() {
                 self.advance()?;

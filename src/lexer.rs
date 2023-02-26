@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::{fmt, iter::Peekable, str::Chars};
 
 #[derive(Debug, PartialEq)]
@@ -254,8 +255,6 @@ pub enum Token {
     Twide,
 }
 
-pub type LexerResult<T> = Result<T, LexerError>;
-
 #[derive(Debug)]
 pub enum LexerError {
     Custom(String),
@@ -267,7 +266,7 @@ pub enum LexerError {
     ParseIntError(std::num::ParseIntError),
 }
 
-impl std::error::Error for LexerError {}
+impl Error for LexerError {}
 
 impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -302,6 +301,8 @@ impl From<std::num::ParseFloatError> for LexerError {
         LexerError::ParseFloatError(pfe)
     }
 }
+
+pub type LexerResult<T> = Result<T, LexerError>;
 
 enum Number {
     Float(f64),
