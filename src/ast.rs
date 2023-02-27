@@ -1,3 +1,7 @@
+/// Trait to visit the nodes of the AST.
+///
+/// `Input` is the expected input to the visitor methods.
+/// `Result` is the result type of the operations themselves.
 pub trait PhoronAstVisitor<'a> {
     type Input;
     type Result;

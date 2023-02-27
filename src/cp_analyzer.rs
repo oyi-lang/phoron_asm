@@ -6,13 +6,13 @@ use crate::{
 use std::{collections::HashMap, fmt};
 
 #[derive(Debug, PartialEq, Hash, Eq)]
-pub enum ConstantPoolKind {
+pub enum PhoronConstantPoolKind {
     Class {
         name_idx: u16,
     },
     Double([u8; 8]),
     Fieldref {
-        name_idx: u16,
+        class_idx: u16,
         name_and_type_idx: u16,
     },
     Float([u8; 4]),
@@ -37,24 +37,35 @@ pub enum ConstantPoolKind {
 }
 
 // Map from Constant Pool entries to indices
-pub type ConstantPool = HashMap<ConstantPoolKind, usize>;
+pub type PhoronConstantPool = HashMap<PhoronConstantPoolKind, u16>;
 
 #[derive(Debug)]
-pub enum ConstantPoolAnalyzerError {}
+pub enum ConstantPoolAnalyzerError {
+    IndexNotAvailable { component: &'static str },
+}
 
 impl std::error::Error for ConstantPoolAnalyzerError {}
 
 impl fmt::Display for ConstantPoolAnalyzerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use ConstantPoolAnalyzerError::*;
-        todo!()
+
+        write!(
+            f,
+            "{}",
+            match *self {
+                IndexNotAvailable { ref component } => {
+                    format!("Constant Pool index not available for {component}")
+                }
+            },
+        )
     }
 }
 
 pub type ConstantPoolAnalyzerResult<T> = Result<T, ConstantPoolAnalyzerError>;
 
 pub struct ConstantPoolAnalyzer {
-    cp_idx: usize,
+    cp_idx: u16,
 }
 
 impl ConstantPoolAnalyzer {
@@ -62,8 +73,186 @@ impl ConstantPoolAnalyzer {
         ConstantPoolAnalyzer { cp_idx: 1 } // idx 0 is not allowed
     }
 
-    pub fn analyze(&mut self, program: &PhoronProgram) -> ConstantPoolAnalyzerResult<ConstantPool> {
-        let mut cp = ConstantPool::new();
+    /// check if the name (Utf8) is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_name(
+        &mut self,
+        name: &str,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Utf8(name.to_owned()))
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the int (i32) is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_int(
+        &mut self,
+        int: i32,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Integer(int.to_be_bytes()))
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the long (i64) is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_long(
+        &mut self,
+        long: i64,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Long(long.to_be_bytes()))
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the float (f32) is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_float(
+        &mut self,
+        float: f32,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Float(float.to_be_bytes()))
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+    /// check if the double (f64) is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_double(
+        &mut self,
+        double: f64,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Double(double.to_be_bytes()))
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the NameAndType is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_name_and_type(
+        &mut self,
+        name_idx: u16,
+        descriptor_idx: u16,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::NameAndType {
+                name_idx,
+                descriptor_idx,
+            })
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the Fieldref is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_field_ref(
+        &mut self,
+        class_idx: u16,
+        name_and_type_idx: u16,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Fieldref {
+                class_idx,
+                name_and_type_idx,
+            })
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the Methodref is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_method_ref(
+        &mut self,
+        class_idx: u16,
+        name_and_type_idx: u16,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Methodref {
+                class_idx,
+                name_and_type_idx,
+            })
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the InterfaceMethodref is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_interface_method_ref(
+        &mut self,
+        class_idx: u16,
+        name_and_type_idx: u16,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::InterfaceMethodref {
+                class_idx,
+                name_and_type_idx,
+            })
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    /// check if the Class is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    pub fn analyze_class(
+        &mut self,
+        name_idx: u16,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .entry(PhoronConstantPoolKind::Class { name_idx })
+            .or_insert_with(|| {
+                let curr_cp_idx = self.cp_idx;
+                self.cp_idx += 1;
+                curr_cp_idx
+            }))
+    }
+
+    pub fn analyze(
+        &mut self,
+        program: &PhoronProgram,
+    ) -> ConstantPoolAnalyzerResult<PhoronConstantPool> {
+        let mut cp = PhoronConstantPool::new();
         self.visit_program(program, &mut cp)?;
 
         Ok(cp)
@@ -71,7 +260,7 @@ impl ConstantPoolAnalyzer {
 }
 
 impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
-    type Input = &'a mut ConstantPool;
+    type Input = &'a mut PhoronConstantPool;
     type Result = ConstantPoolAnalyzerResult<()>;
 
     fn visit_program(&mut self, program: &PhoronProgram, cp: Self::Input) -> Self::Result {
@@ -102,19 +291,12 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         sourcefile_def: &PhoronSourceFileDef,
         cp: Self::Input,
     ) -> Self::Result {
-        cp.insert(
-            ConstantPoolKind::Utf8(sourcefile_def.source_file.clone()),
-            self.cp_idx,
-        );
-        self.cp_idx += 1;
-
+        self.analyze_name(&sourcefile_def.source_file, cp)?;
         Ok(())
     }
 
     fn visit_class_def(&mut self, class_def: &PhoronClassDef, cp: Self::Input) -> Self::Result {
-        cp.insert(ConstantPoolKind::Utf8(class_def.name.clone()), self.cp_idx);
-        self.cp_idx += 1;
-
+        self.analyze_name(&class_def.name, cp)?;
         Ok(())
     }
 
@@ -123,22 +305,12 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         interface_def: &PhoronInterfaceDef,
         cp: Self::Input,
     ) -> Self::Result {
-        cp.insert(
-            ConstantPoolKind::Utf8(interface_def.name.clone()),
-            self.cp_idx,
-        );
-        self.cp_idx += 1;
-
+        self.analyze_name(&interface_def.name, cp)?;
         Ok(())
     }
 
     fn visit_super_def(&mut self, super_def: &PhoronSuperDef, cp: Self::Input) -> Self::Result {
-        cp.insert(
-            ConstantPoolKind::Utf8(super_def.super_class_name.clone()),
-            self.cp_idx,
-        );
-        self.cp_idx += 1;
-
+        self.analyze_name(&super_def.super_class_name, cp)?;
         Ok(())
     }
 
@@ -168,22 +340,8 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
     //pub instructions: Vec<PhoronInstruction>,
 
     fn visit_method_def(&mut self, method_def: &PhoronMethodDef, cp: Self::Input) -> Self::Result {
-        // need to check presence in map
-        cp.insert(ConstantPoolKind::Utf8(method_def.name.clone()), self.cp_idx);
-        self.cp_idx += 1;
-
-        // need to check presence in map
-        cp.entry(ConstantPoolKind::Utf8(
-            method_def.method_descriptor.to_string(),
-        ))
-        .or_insert_with(|| {
-            let val = self.cp_idx;
-            self.cp_idx += 1;
-            val
-        });
-
-        // test
-        println!("cp = {cp:#?}");
+        self.analyze_name(&method_def.name, cp)?;
+        self.analyze_name(&method_def.method_descriptor.to_string(), cp)?;
 
         // visit instructions
         method_def
@@ -202,15 +360,160 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         Ok(())
     }
 
+    // todo
     fn visit_directive(&mut self, directive: &PhoronDirective, cp: Self::Input) -> Self::Result {
-        todo!()
+        Ok(())
     }
 
-    fn visit_jvm_instruction(
-        &mut self,
-        directive: &JvmInstruction,
-        cp: Self::Input,
-    ) -> Self::Result {
-        todo!()
+    fn visit_jvm_instruction(&mut self, instr: &JvmInstruction, cp: Self::Input) -> Self::Result {
+        use JvmInstruction::*;
+
+        match instr {
+            Anewarray { ref component_type } => {}
+            Aload { ref varnum } => {}
+            Arraylength => {}
+            Astore { ref varnum } => {}
+            Bipush(ref sb) => {}
+            Caload => {}
+            Checkcast { ref cast_type } => {}
+            Dload { ref varnum } => {}
+            Dstore { ref varnum } => {}
+            Fload { ref varnum } => {}
+            Fstore { ref varnum } => {}
+
+            Getstatic {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {
+                let class_name_idx = self.analyze_name(class_name, cp)?;
+                let class_idx = self.analyze_class(class_name_idx, cp)?;
+
+                let field_name_idx = self.analyze_name(field_name, cp)?;
+                let field_descriptor_idx = self.analyze_name(&field_descriptor.to_string(), cp)?;
+
+                let field_name_and_type_idx =
+                    self.analyze_name_and_type(field_name_idx, field_descriptor_idx, cp)?;
+
+                self.analyze_field_ref(class_idx, field_name_and_type_idx, cp)?;
+            }
+
+            Getfield {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {
+                let class_name_idx = self.analyze_name(class_name, cp)?;
+                let class_idx = self.analyze_class(class_name_idx, cp)?;
+
+                let field_name_idx = self.analyze_name(field_name, cp)?;
+                let field_descriptor_idx = self.analyze_name(&field_descriptor.to_string(), cp)?;
+
+                let field_name_and_type_idx =
+                    self.analyze_name_and_type(field_name_idx, field_descriptor_idx, cp)?;
+
+                self.analyze_field_ref(class_idx, field_name_and_type_idx, cp)?;
+            }
+
+            Goto { ref label } => {}
+            Gotow { ref label } => {}
+            Ifacmpeq { ref label } => {}
+            Ifacmpne { ref label } => {}
+            Ificmpeq { ref label } => {}
+            Ificmpge { ref label } => {}
+            Ificmpgt { ref label } => {}
+            Ificmple { ref label } => {}
+            Ificmplt { ref label } => {}
+            Ificmpne { ref label } => {}
+            Ifeq { ref label } => {}
+            Ifge { ref label } => {}
+            Ifgt { ref label } => {}
+            Ifle { ref label } => {}
+            Iflt { ref label } => {}
+            Ifne { ref label } => {}
+            Ifnonnull { ref label } => {}
+            Ifnull { ref label } => {}
+            Iinc {
+                ref varnum,
+                ref delta,
+            } => {}
+            Iload { ref varnum } => {}
+            Instanceof { ref check_type } => {}
+            Invokeinterface {
+                ref interface_name,
+                ref method_name,
+                ref method_descriptor,
+                ref ub,
+            } => {}
+            Invokespecial {
+                ref class_name,
+                ref method_name,
+                ref method_descriptor,
+            } => {}
+            Invokestatic {
+                ref class_name,
+                ref method_name,
+                ref method_descriptor,
+            } => {}
+
+            Invokevirtual {
+                ref class_name,
+                ref method_name,
+                ref method_descriptor,
+            } => {
+                let class_name_idx = self.analyze_name(class_name, cp)?;
+                let class_idx = self.analyze_class(class_name_idx, cp)?;
+
+                let method_name_idx = self.analyze_name(method_name, cp)?;
+                let method_descriptor_idx =
+                    self.analyze_name(&method_descriptor.to_string(), cp)?;
+
+                let method_name_and_type_idx =
+                    self.analyze_name_and_type(method_name_idx, method_descriptor_idx, cp)?;
+
+                self.analyze_method_ref(class_idx, method_name_and_type_idx, cp)?;
+            }
+
+            Istore { ref varnum } => {}
+            Jsrw { ref label } => {}
+            Jsr { ref label } => {}
+            Ldc2w(ref ldc2w_val) => {}
+            Ldcw(ref ldc_val) => {}
+            Ldc(ref ldc_val) => {}
+            Ldiv => {}
+            Lload { ref varnum } => {}
+            Lookupswitch {
+                ref switches,
+                ref default,
+            } => {}
+            Lstore { ref varnum } => {}
+            Multianewarray {
+                ref component_type,
+                ref dimensions,
+            } => {}
+            Newarray { ref component_type } => {}
+            New { ref class_name } => {}
+            Putfield {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {}
+            Putstatic {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {}
+            Ret { ref varnum } => {}
+            Sipush(ref ss) => {}
+            Tableswitch {
+                ref low,
+                ref high,
+                ref switches,
+                ref default,
+            } => {}
+            _ => {}
+        }
+
+        Ok(())
     }
 }
