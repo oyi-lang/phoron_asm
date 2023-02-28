@@ -3,22 +3,25 @@ use phoron_core::{
     error::SerializeError,
     model::{
         access_flags::*,
+        attributes::AttributeInfo,
         constant_pool::{tags::*, types::CpInfo},
         *,
     },
     rw::writer::Writer,
     serializer::Serializer,
 };
-use std::{
-    error::Error,
-    fmt,
-    io::{BufWriter, Write},
-};
+use std::{error::Error, fmt, io::Write};
 
 #[derive(Debug)]
 pub enum CodegenError {
-    Missing { component: &'static str },
-
+    Missing {
+        component: &'static str,
+    },
+    OpcodeError {
+        opcode: &'static str,
+        details: &'static str,
+    },
+    Unknown,
     SerializeError(SerializeError),
 }
 
@@ -33,6 +36,11 @@ impl fmt::Display for CodegenError {
             "{}",
             match *self {
                 Missing { ref component } => format!("Missing : {component}"),
+                OpcodeError {
+                    ref opcode,
+                    ref details,
+                } => format!("Malformed or Invalid opcode {opcode} : {details}"),
+                Unknown => "an unknown error occurred during code generation".into(),
                 SerializeError(ref ser_err) => ser_err.to_string(),
             }
         )
@@ -46,6 +54,56 @@ impl From<SerializeError> for CodegenError {
 }
 
 pub type CodegenResult<T> = Result<T, CodegenError>;
+
+impl PhoronClassOrInterfaceAccessFlag {
+    fn to_u16(&self) -> u16 {
+        match self {
+            PhoronClassOrInterfaceAccessFlag::AccPublic => ACC_PUBLIC,
+            PhoronClassOrInterfaceAccessFlag::AccFinal => ACC_FINAL,
+            PhoronClassOrInterfaceAccessFlag::AccSuper => ACC_SUPER,
+            PhoronClassOrInterfaceAccessFlag::AccInterface => ACC_INTERFACE,
+            PhoronClassOrInterfaceAccessFlag::AccAbstract => ACC_ABSTRACT,
+            PhoronClassOrInterfaceAccessFlag::AccSynthetic => ACC_SYNTHETIC,
+            PhoronClassOrInterfaceAccessFlag::AccAnnotation => ACC_ANNOTATION,
+            PhoronClassOrInterfaceAccessFlag::AccEnum => ACC_ENUM,
+            PhoronClassOrInterfaceAccessFlag::AccModule => ACC_MODULE,
+        }
+    }
+}
+impl PhoronFieldAccessFlag {
+    fn to_u16(&self) -> u16 {
+        match self {
+            PhoronFieldAccessFlag::AccPublic => ACC_PUBLIC,
+            PhoronFieldAccessFlag::AccPrivate => ACC_PRIVATE,
+            PhoronFieldAccessFlag::AccProtected => ACC_PROTECTED,
+            PhoronFieldAccessFlag::AccStatic => ACC_STATIC,
+            PhoronFieldAccessFlag::AccFinal => ACC_FINAL,
+            PhoronFieldAccessFlag::AccVolatile => ACC_VOLATILE,
+            PhoronFieldAccessFlag::AccTransient => ACC_TRANSIENT,
+            PhoronFieldAccessFlag::AccSynthetic => ACC_SYNTHETIC,
+            PhoronFieldAccessFlag::AccEnum => ACC_ENUM,
+        }
+    }
+}
+
+impl PhoronMethodAccessFlag {
+    fn to_u16(&self) -> u16 {
+        match self {
+            PhoronMethodAccessFlag::AccPublic => ACC_PUBLIC,
+            PhoronMethodAccessFlag::AccPrivate => ACC_PRIVATE,
+            PhoronMethodAccessFlag::AccProtected => ACC_PROTECTED,
+            PhoronMethodAccessFlag::AccStatic => ACC_STATIC,
+            PhoronMethodAccessFlag::AccFinal => ACC_FINAL,
+            PhoronMethodAccessFlag::AccSynchronized => ACC_SYNCHRONIZED,
+            PhoronMethodAccessFlag::AccBridge => ACC_BRIDGE,
+            PhoronMethodAccessFlag::AccVarargs => ACC_VARARGS,
+            PhoronMethodAccessFlag::AccNative => ACC_NATIVE,
+            PhoronMethodAccessFlag::AccAbstract => ACC_ABSTRACT,
+            PhoronMethodAccessFlag::AccStrict => ACC_STRICT,
+            PhoronMethodAccessFlag::AccSynthetic => ACC_SYNTHETIC,
+        }
+    }
+}
 
 const MAGIC: u32 = 0xcafebabe;
 const MAJOR_VERSION: u16 = 45;
@@ -92,50 +150,57 @@ where
         let constant_pool_count = cp.len();
         self.classfile.constant_pool_count = constant_pool_count as u16;
 
-        let mut constant_pool = Vec::with_capacity(constant_pool_count);
-        constant_pool.push(None); // index is not used
+        let mut constant_pool = vec![None; constant_pool_count + 1];
 
         for (cp_key, cp_idx) in cp.iter() {
+            let cp_idx = *cp_idx as usize;
+
             match cp_key {
                 PhoronConstantPoolKind::Class { ref name_index } => {
-                    constant_pool.push(Some(CpInfo::ConstantClassInfo {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantClassInfo {
                         tag: CONSTANT_CLASS,
                         name_index: *name_index,
-                    }))
+                    })
                 }
 
                 PhoronConstantPoolKind::Fieldref {
                     ref class_index,
                     ref name_and_type_index,
-                } => constant_pool.push(Some(CpInfo::ConstantFieldrefInfo {
-                    tag: CONSTANT_FIELD_REF,
-                    class_index: *class_index,
-                    name_and_type_index: *name_and_type_index,
-                })),
+                } => {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantFieldrefInfo {
+                        tag: CONSTANT_FIELD_REF,
+                        class_index: *class_index,
+                        name_and_type_index: *name_and_type_index,
+                    })
+                }
 
                 PhoronConstantPoolKind::Methodref {
                     ref class_index,
                     ref name_and_type_index,
-                } => constant_pool.push(Some(CpInfo::ConstantMethodrefInfo {
-                    tag: CONSTANT_METHOD_REF,
-                    class_index: *class_index,
-                    name_and_type_index: *name_and_type_index,
-                })),
+                } => {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantMethodrefInfo {
+                        tag: CONSTANT_METHOD_REF,
+                        class_index: *class_index,
+                        name_and_type_index: *name_and_type_index,
+                    })
+                }
 
                 PhoronConstantPoolKind::InterfaceMethodref {
                     ref class_index,
                     ref name_and_type_index,
-                } => constant_pool.push(Some(CpInfo::ConstantInterfaceMethodrefInfo {
-                    tag: CONSTANT_INTERFACE_METHOD_REF,
-                    class_index: *class_index,
-                    name_and_type_index: *name_and_type_index,
-                })),
+                } => {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantInterfaceMethodrefInfo {
+                        tag: CONSTANT_INTERFACE_METHOD_REF,
+                        class_index: *class_index,
+                        name_and_type_index: *name_and_type_index,
+                    })
+                }
 
                 PhoronConstantPoolKind::String { ref string_index } => {
-                    constant_pool.push(Some(CpInfo::ConstantStringInfo {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantStringInfo {
                         tag: CONSTANT_STRING,
                         string_index: *string_index,
-                    }))
+                    })
                 }
 
                 PhoronConstantPoolKind::Integer(int_bytes) => {
@@ -155,18 +220,20 @@ where
                 PhoronConstantPoolKind::NameAndType {
                     ref name_index,
                     ref descriptor_index,
-                } => constant_pool.push(Some(CpInfo::ConstantNameAndTypeInfo {
-                    tag: CONSTANT_NAME_AND_TYPE,
-                    name_index: *name_index,
-                    descriptor_index: *descriptor_index,
-                })),
+                } => {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantNameAndTypeInfo {
+                        tag: CONSTANT_NAME_AND_TYPE,
+                        name_index: *name_index,
+                        descriptor_index: *descriptor_index,
+                    })
+                }
 
                 PhoronConstantPoolKind::Utf8(ref s) => {
-                    constant_pool.push(Some(CpInfo::ConstantUtf8Info {
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantUtf8Info {
                         tag: CONSTANT_UTF8,
                         length: s.len() as u16,
                         bytes: s.bytes().collect::<_>(),
-                    }))
+                    })
                 }
             }
         }
@@ -180,21 +247,25 @@ where
         &mut self,
         access_flags: &[PhoronClassOrInterfaceAccessFlag],
     ) -> CodegenResult<()> {
-        let class_or_interface_af_to_val = |af| match af {
-            &PhoronClassOrInterfaceAccessFlag::AccPublic => ACC_PUBLIC,
-            &PhoronClassOrInterfaceAccessFlag::AccFinal => ACC_FINAL,
-            &PhoronClassOrInterfaceAccessFlag::AccSuper => ACC_SUPER,
-            &PhoronClassOrInterfaceAccessFlag::AccInterface => ACC_INTERFACE,
-            &PhoronClassOrInterfaceAccessFlag::AccAbstract => ACC_ABSTRACT,
-            &PhoronClassOrInterfaceAccessFlag::AccSynthetic => ACC_SYNTHETIC,
-            &PhoronClassOrInterfaceAccessFlag::AccAnnotation => ACC_ANNOTATION,
-            &PhoronClassOrInterfaceAccessFlag::AccEnum => ACC_ENUM,
-            &PhoronClassOrInterfaceAccessFlag::AccModule => ACC_MODULE,
-        };
+        self.classfile.access_flags = access_flags.iter().fold(0u16, |acc, af| acc | af.to_u16());
+        Ok(())
+    }
 
-        self.classfile.access_flags = access_flags
-            .iter()
-            .fold(0u16, |acc, af| acc | class_or_interface_af_to_val(af));
+    fn gen_field_access_flags(
+        &mut self,
+        field_info: &mut FieldInfo,
+        access_flags: &[PhoronFieldAccessFlag],
+    ) -> CodegenResult<()> {
+        field_info.access_flags = access_flags.iter().fold(0u16, |acc, af| acc | af.to_u16());
+        Ok(())
+    }
+
+    fn gen_method_access_flags(
+        &mut self,
+        method_info: &mut MethodInfo,
+        access_flags: &[PhoronMethodAccessFlag],
+    ) -> CodegenResult<()> {
+        method_info.access_flags = access_flags.iter().fold(0u16, |acc, af| acc | af.to_u16());
         Ok(())
     }
 
@@ -215,11 +286,16 @@ where
         self.gen_constant_pool(&cp)?;
         self.visit_program(&program, &cp)?;
 
-        println!("classfile = {:#?}", self.classfile);
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())
     }
+}
+
+#[derive(Debug)]
+pub enum CodegenResultType {
+    ByteVec(Vec<u8>),
+    Empty,
 }
 
 impl<'a, 'c, W> PhoronAstVisitor<'a> for Codegen<'c, W>
@@ -227,13 +303,13 @@ where
     W: Write,
 {
     type Input = &'a PhoronConstantPool;
-    type Result = CodegenResult<()>;
+    type Result = CodegenResult<CodegenResultType>;
 
     fn visit_program(&mut self, program: &PhoronProgram, cp: Self::Input) -> Self::Result {
         self.visit_header(&program.header, &cp)?;
         self.visit_body(&program.body, &cp)?;
 
-        Ok(())
+        Ok(CodegenResultType::Empty)
     }
 
     fn visit_header(&mut self, header: &PhoronHeader, cp: Self::Input) -> Self::Result {
@@ -246,10 +322,10 @@ where
             PhoronClassOrInterface::Interface(ref interface_def) => {
                 self.visit_interface_def(interface_def, &cp)?
             }
-        }
+        };
         self.visit_super_def(&header.super_def, &cp)?;
 
-        Ok(())
+        Ok(CodegenResultType::Empty)
     }
 
     fn visit_sourcefile_def(
@@ -279,7 +355,7 @@ where
                 component: "`this` class",
             })?;
 
-        Ok(())
+        Ok(CodegenResultType::Empty)
     }
 
     fn visit_interface_def(
@@ -297,44 +373,854 @@ where
                     component: "`super` class",
                 })?;
 
-        Ok(())
+        Ok(CodegenResultType::Empty)
     }
 
     fn visit_body(&mut self, body: &PhoronBody, cp: Self::Input) -> Self::Result {
         self.classfile.fields_count = body.field_defs.len() as u16;
-        body.field_defs
-            .iter()
-            .try_for_each(|field| self.visit_field_def(&field, cp))?;
+
+        for field in &body.field_defs {
+            self.visit_field_def(field, cp)?;
+        }
 
         self.classfile.methods_count = body.method_defs.len() as u16;
-        body.method_defs
-            .iter()
-            .try_for_each(|method| self.visit_method_def(&method, cp))?;
+        for method in &body.method_defs {
+            self.visit_method_def(method, cp)?;
+        }
 
-        Ok(())
+        println!("classfile = {:#?}", self.classfile);
+
+        Ok(CodegenResultType::Empty)
     }
 
+    /// Generate JVM bytecode for the field definition
     fn visit_field_def(&mut self, field_def: &PhoronFieldDef, cp: Self::Input) -> Self::Result {
         todo!()
     }
 
-    fn visit_method_def(
-        &mut self,
-        method_def: &PhoronMethodDef,
-        input: Self::Input,
-    ) -> Self::Result {
-        todo!()
+    //pub access_flags: u16,
+    //pub name_index: u16,
+    //pub descriptor_index: u16,
+    //pub attributes_count: u16,
+    //pub attributes: Vec<AttributeInfo>,
+
+    //pub name: String,
+    //pub access_flags: Vec<PhoronMethodAccessFlag>,
+    //pub method_descriptor: PhoronMethodDescriptor,
+    //pub instructions: Vec<PhoronInstruction>,
+
+    /// Generate JVM bytecode for the method definition
+    fn visit_method_def(&mut self, method_def: &PhoronMethodDef, cp: Self::Input) -> Self::Result {
+        let mut method_info = MethodInfo::default();
+
+        self.gen_method_access_flags(&mut method_info, &method_def.access_flags)?;
+
+        method_info.name_index = *cp.get_name(&method_def.name).ok_or(CodegenError::Missing {
+            component: "method name",
+        })?;
+
+        method_info.descriptor_index = *cp
+            .get_name(&method_def.method_descriptor.to_string())
+            .ok_or(CodegenError::Missing {
+                component: "method descriptor",
+            })?;
+
+        // todo - attributes
+
+        //Code {
+        //    attribute_name_index: u16,
+        //    attribute_length: u32,
+        //    max_stack: u16,
+        //    max_locals: u16,
+        //    code_length: u32,
+        //    code: Vec<u8>,
+        //    exception_table_length: u16,
+        //    exception_table: Vec<ExceptionHandler>,
+        //    code_attributes_count: u16,
+        //    code_attributes: Vec<AttributeInfo>,
+        //},
+
+        method_info.attributes_count = 1;
+        //let mut attrs = Vec::new();
+
+        let attribute_name_index = *cp.get_name("Code").ok_or(CodegenError::Missing {
+            component: "`Code` attribute",
+        })?;
+
+        let attribute_length = 0;
+        let mut max_stack = 0;
+        let mut max_locals = 0;
+        let mut code = Vec::new();
+        let exception_table_length = 0;
+        let exception_table = vec![];
+        let code_attributes_count = 0;
+        let code_attributes = vec![];
+
+        for instr in &method_def.instructions {
+            match instr {
+                PhoronInstruction::PhoronDirective(ref dir) => match dir {
+                    PhoronDirective::LimitStack(stack) => {
+                        max_stack = *stack;
+                    }
+
+                    PhoronDirective::LimitLocals(locals) => {
+                        max_locals = *locals;
+                    }
+                    _ => unreachable!(),
+                },
+
+                PhoronInstruction::PhoronLabel(ref label) => {}
+
+                PhoronInstruction::JvmInstruction(ref jvm_instr) => {
+                    if let Ok(CodegenResultType::ByteVec(instr_opcodes)) =
+                        self.visit_jvm_instruction(jvm_instr, cp)
+                    {
+                        code.extend_from_slice(&instr_opcodes);
+                    } else {
+                        return Err(CodegenError::Unknown);
+                    }
+                }
+            }
+        }
+
+        let code_length = code.len() as u32;
+
+        method_info.attributes.push(AttributeInfo::Code {
+            attribute_name_index,
+            attribute_length,
+            max_stack,
+            max_locals,
+            code_length,
+            code,
+            exception_table_length,
+            exception_table,
+            code_attributes_count,
+            code_attributes,
+        });
+
+        self.classfile.methods.push(method_info);
+
+        Ok(CodegenResultType::Empty)
     }
 
+    /// Generate JVM bytecode for Phoron directive
     fn visit_directive(&mut self, directive: &PhoronDirective, cp: Self::Input) -> Self::Result {
-        todo!()
+        Ok(CodegenResultType::Empty)
     }
 
+    /// Generate JVM bytecode for JVM instruction
     fn visit_jvm_instruction(
         &mut self,
-        instr: &JvmInstruction,
-        input: Self::Input,
+        jvm_instr: &JvmInstruction,
+        cp: Self::Input,
     ) -> Self::Result {
-        todo!()
+        use JvmInstruction::*;
+
+        Ok(match jvm_instr {
+            Aaload => {
+                todo!()
+            }
+            Anewarray { ref component_type } => {
+                todo!()
+            }
+            Areturn => {
+                todo!()
+            }
+            Aastore => {
+                todo!()
+            }
+            Aconstnull => {
+                todo!()
+            }
+
+            Aload0 => CodegenResultType::ByteVec(vec![0x2a]),
+            Aload1 => {
+                todo!()
+            }
+            Aload2 => {
+                todo!()
+            }
+            Aload3 => {
+                todo!()
+            }
+            Aload { ref varnum } => {
+                todo!()
+            }
+            Arraylength => {
+                todo!()
+            }
+            Astore0 => {
+                todo!()
+            }
+
+            Astore1 => {
+                todo!()
+            }
+            Astore2 => {
+                todo!()
+            }
+            Astore3 => {
+                todo!()
+            }
+            Astore { ref varnum } => {
+                todo!()
+            }
+            Athrow => {
+                todo!()
+            }
+            Baload => {
+                todo!()
+            }
+            Bastore => {
+                todo!()
+            }
+
+            Bipush(sb) => {
+                todo!()
+            }
+            Caload => {
+                todo!()
+            }
+            Castore => {
+                todo!()
+            }
+            Checkcast { ref cast_type } => {
+                todo!()
+            }
+            Dadd => {
+                todo!()
+            }
+            Daload => {
+                todo!()
+            }
+            Dastore => {
+                todo!()
+            }
+            Dcmpg => {
+                todo!()
+            }
+            Dcmpl => {
+                todo!()
+            }
+            Dconst0 => {
+                todo!()
+            }
+            Dconst1 => {
+                todo!()
+            }
+            Ddiv => {
+                todo!()
+            }
+            D2f => {
+                todo!()
+            }
+            D2i => {
+                todo!()
+            }
+            D2l => {
+                todo!()
+            }
+            Dload0 => {
+                todo!()
+            }
+            Dload1 => {
+                todo!()
+            }
+            Dload2 => {
+                todo!()
+            }
+            Dload3 => {
+                todo!()
+            }
+            Dload { ref varnum } => {
+                todo!()
+            }
+            Dmul => {
+                todo!()
+            }
+            Dneg => {
+                todo!()
+            }
+            Drem => {
+                todo!()
+            }
+            Dreturn => {
+                todo!()
+            }
+            Dstore0 => {
+                todo!()
+            }
+            Dstore1 => {
+                todo!()
+            }
+            Dstore2 => {
+                todo!()
+            }
+            Dstore3 => {
+                todo!()
+            }
+            Dstore { ref varnum } => {
+                todo!()
+            }
+            Dsub => {
+                todo!()
+            }
+            Dup2x1 => {
+                todo!()
+            }
+            Dup2x2 => {
+                todo!()
+            }
+            Dup2 => {
+                todo!()
+            }
+            Dupx1 => {
+                todo!()
+            }
+            Dupx2 => {
+                todo!()
+            }
+            Dup => {
+                todo!()
+            }
+            F2d => {
+                todo!()
+            }
+            F2i => {
+                todo!()
+            }
+            F2l => {
+                todo!()
+            }
+            Fadd => {
+                todo!()
+            }
+            Faload => {
+                todo!()
+            }
+            Fastore => {
+                todo!()
+            }
+            Fcmpg => {
+                todo!()
+            }
+            Fcmpl => {
+                todo!()
+            }
+            Fconst0 => {
+                todo!()
+            }
+            Fconst1 => {
+                todo!()
+            }
+            Fconst2 => {
+                todo!()
+            }
+            Fdiv => {
+                todo!()
+            }
+            Fload0 => {
+                todo!()
+            }
+            Fload1 => {
+                todo!()
+            }
+            Fload2 => {
+                todo!()
+            }
+            Fload3 => {
+                todo!()
+            }
+            Fload { ref varnum } => {
+                todo!()
+            }
+            Fmul => {
+                todo!()
+            }
+            Fneg => {
+                todo!()
+            }
+            Frem => {
+                todo!()
+            }
+            Freturn => {
+                todo!()
+            }
+            Fstore0 => {
+                todo!()
+            }
+            Fstore1 => {
+                todo!()
+            }
+            Fstore2 => {
+                todo!()
+            }
+            Fstore3 => {
+                todo!()
+            }
+            Fstore { ref varnum } => {
+                todo!()
+            }
+            Fsub => {
+                todo!()
+            }
+
+            Getstatic {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {
+                let mut opcodes = Vec::new();
+                opcodes.push(0xb2);
+
+                let fieldref = *cp
+                    .get_fieldref(class_name, field_name, &field_descriptor.to_string())
+                    .ok_or(CodegenError::OpcodeError {
+                        opcode: "getstatic",
+                        details: "missing field reference",
+                    })?;
+                opcodes.extend_from_slice(&fieldref.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Getfield {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {
+                todo!()
+            }
+            Goto { ref label } => {
+                todo!()
+            }
+            Gotow { ref label } => {
+                todo!()
+            }
+            I2b => {
+                todo!()
+            }
+            I2c => {
+                todo!()
+            }
+            I2d => {
+                todo!()
+            }
+            I2f => {
+                todo!()
+            }
+            I2l => {
+                todo!()
+            }
+            I2s => {
+                todo!()
+            }
+            Iadd => {
+                todo!()
+            }
+            Iaload => {
+                todo!()
+            }
+            Iand => {
+                todo!()
+            }
+            Iastore => {
+                todo!()
+            }
+            Iconstm1 => {
+                todo!()
+            }
+            Iconst0 => {
+                todo!()
+            }
+            Iconst1 => {
+                todo!()
+            }
+            Iconst2 => {
+                todo!()
+            }
+            Iconst3 => {
+                todo!()
+            }
+            Iconst4 => {
+                todo!()
+            }
+            Iconst5 => {
+                todo!()
+            }
+            Idiv => {
+                todo!()
+            }
+
+            Ifacmpeq { ref label } => {
+                todo!()
+            }
+            Ifacmpne { ref label } => {
+                todo!()
+            }
+            Ificmpeq { ref label } => {
+                todo!()
+            }
+            Ificmpge { ref label } => {
+                todo!()
+            }
+            Ificmpgt { ref label } => {
+                todo!()
+            }
+            Ificmple { ref label } => {
+                todo!()
+            }
+            Ificmplt { ref label } => {
+                todo!()
+            }
+            Ificmpne { ref label } => {
+                todo!()
+            }
+            Ifeq { ref label } => {
+                todo!()
+            }
+            Ifge { ref label } => {
+                todo!()
+            }
+            Ifgt { ref label } => {
+                todo!()
+            }
+            Ifle { ref label } => {
+                todo!()
+            }
+            Iflt { ref label } => {
+                todo!()
+            }
+            Ifne { ref label } => {
+                todo!()
+            }
+            Ifnonnull { ref label } => {
+                todo!()
+            }
+            Ifnull { ref label } => {
+                todo!()
+            }
+            Iinc {
+                ref varnum,
+                ref delta,
+            } => {
+                todo!()
+            }
+            Iload0 => {
+                todo!()
+            }
+            Iload1 => {
+                todo!()
+            }
+            Iload2 => {
+                todo!()
+            }
+            Iload3 => {
+                todo!()
+            }
+            Iload { ref varnum } => {
+                todo!()
+            }
+            Imul => {
+                todo!()
+            }
+            Ineg => {
+                todo!()
+            }
+            Instanceof { ref check_type } => {
+                todo!()
+            }
+            Invokeinterface {
+                ref interface_name,
+                ref method_name,
+                ref method_descriptor,
+                ref ub,
+            } => {
+                todo!()
+            }
+
+            Invokespecial {
+                ref class_name,
+                ref method_name,
+                ref method_descriptor,
+            } => {
+                let mut opcodes = Vec::new();
+                opcodes.push(0xb7);
+
+                let methodref_index = *cp
+                    .get_methodref(class_name, method_name, &method_descriptor.to_string())
+                    .ok_or(CodegenError::OpcodeError {
+                        opcode: "invokespecial",
+                        details: "missing method reference",
+                    })?;
+                opcodes.extend_from_slice(&methodref_index.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Invokestatic {
+                ref class_name,
+                ref method_name,
+                ref method_descriptor,
+            } => {
+                todo!()
+            }
+
+            Invokevirtual {
+                ref class_name,
+                ref method_name,
+                ref method_descriptor,
+            } => {
+                let mut opcodes = Vec::new();
+                opcodes.push(0xb6);
+
+                let methodref_index = *cp
+                    .get_methodref(class_name, method_name, &method_descriptor.to_string())
+                    .ok_or(CodegenError::OpcodeError {
+                        opcode: "invokevirtual",
+                        details: "missing method reference",
+                    })?;
+
+                opcodes.extend_from_slice(&methodref_index.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ior => {
+                todo!()
+            }
+            Irem => {
+                todo!()
+            }
+            Ireturn => {
+                todo!()
+            }
+            Ishl => {
+                todo!()
+            }
+            Ishr => {
+                todo!()
+            }
+            Istore0 => {
+                todo!()
+            }
+            Istore1 => {
+                todo!()
+            }
+            Istore2 => {
+                todo!()
+            }
+            Istore3 => {
+                todo!()
+            }
+            Istore { ref varnum } => {
+                todo!()
+            }
+            Isub => {
+                todo!()
+            }
+            Iushr => {
+                todo!()
+            }
+            Ixor => {
+                todo!()
+            }
+            Jsrw { ref label } => {
+                todo!()
+            }
+            Jsr { ref label } => {
+                todo!()
+            }
+            L2d => {
+                todo!()
+            }
+            L2f => {
+                todo!()
+            }
+            L2i => {
+                todo!()
+            }
+            Ladd => {
+                todo!()
+            }
+            Laload => {
+                todo!()
+            }
+            Land => {
+                todo!()
+            }
+            Lastore => {
+                todo!()
+            }
+            Lcmp => {
+                todo!()
+            }
+            Lconst0 => {
+                todo!()
+            }
+            Lconst1 => {
+                todo!()
+            }
+            Ldc2w(ref ldc2w_val) => {
+                todo!()
+            }
+            Ldcw(ref ldcw_val) => {
+                todo!()
+            }
+
+            Ldc(ref ldc_val) => {
+                let mut opcodes = Vec::new();
+                opcodes.push(0x12);
+
+                match ldc_val {
+                    LdcValue::QuotedString(ref string) => {
+                        let string_index =
+                            *cp.get_string(string).ok_or(CodegenError::OpcodeError {
+                                opcode: "ldc",
+                                details: "missing quoted string",
+                            })?;
+
+                        opcodes.extend_from_slice(&string_index.to_be_bytes())
+                    }
+                    _ => unreachable!(),
+                }
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ldiv => {
+                todo!()
+            }
+            Lload { ref varnum } => {
+                todo!()
+            }
+            Lload0 => {
+                todo!()
+            }
+            Lload1 => {
+                todo!()
+            }
+            Lload2 => {
+                todo!()
+            }
+            Lload3 => {
+                todo!()
+            }
+            Lmul => {
+                todo!()
+            }
+            Lneg => {
+                todo!()
+            }
+            Lookupswitch {
+                ref switches,
+                ref default,
+            } => {
+                todo!()
+            }
+            Lor => {
+                todo!()
+            }
+            Lrem => {
+                todo!()
+            }
+            Lreturn => {
+                todo!()
+            }
+            Lshl => {
+                todo!()
+            }
+            Lshr => {
+                todo!()
+            }
+            Lstore { ref varnum } => {
+                todo!()
+            }
+            Lstore0 => {
+                todo!()
+            }
+            Lstore1 => {
+                todo!()
+            }
+            Lstore2 => {
+                todo!()
+            }
+            Lstore3 => {
+                todo!()
+            }
+            Lsub => {
+                todo!()
+            }
+            Lushr => {
+                todo!()
+            }
+            Lxor => {
+                todo!()
+            }
+            Monitorenter => {
+                todo!()
+            }
+            Monitorexit => {
+                todo!()
+            }
+            Multianewarray {
+                ref component_type,
+                ref dimensions,
+            } => {
+                todo!()
+            }
+            Newarray { ref component_type } => {
+                todo!()
+            }
+            New { ref class_name } => todo!(),
+            Nop => {
+                todo!()
+            }
+            Pop2 => {
+                todo!()
+            }
+            Pop => {
+                todo!()
+            }
+            Putfield {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {
+                todo!()
+            }
+            Putstatic {
+                ref class_name,
+                ref field_name,
+                ref field_descriptor,
+            } => {
+                todo!()
+            }
+
+            Return => CodegenResultType::ByteVec(vec![0xb1]),
+
+            Ret { ref varnum } => todo!(),
+            Saload => {
+                todo!()
+            }
+            Sastore => {
+                todo!()
+            }
+            Sipush(ref ss) => todo!(),
+            Swap => {
+                todo!()
+            }
+            Tableswitch {
+                ref low,
+                ref high,
+                ref switches,
+                ref default,
+            } => {
+                todo!()
+            }
+            Wide => {
+                todo!()
+            }
+        })
     }
 }

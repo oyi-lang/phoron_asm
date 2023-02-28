@@ -1,7 +1,4 @@
-use crate::{
-    ast::*,
-    error_handler::{PhoronError, PhoronResult},
-};
+use crate::{ast::*, attributes::*};
 
 use std::{
     collections::{hash_map::Iter, HashMap},
@@ -44,15 +41,34 @@ pub enum PhoronConstantPoolKind {
 pub struct PhoronConstantPool(HashMap<PhoronConstantPoolKind, u16>);
 
 impl PhoronConstantPool {
+    /// Return the size of the Constant Pool
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
+    /// Return an iterator over the contents of the Constant Pool.
     pub fn iter(&self) -> Iter<'_, PhoronConstantPoolKind, u16> {
         self.0.iter()
     }
 
+    /// Retrueve the index in the Constant Pool, if present, of the
+    /// given String.
+    pub fn get_string(&self, string: &str) -> Option<&u16> {
+        self.get_name(string).and_then(|string_index| {
+            self.0.get(&PhoronConstantPoolKind::String {
+                string_index: *string_index,
+            })
+        })
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the
+    /// given name.
+    pub fn get_name(&self, name: &str) -> Option<&u16> {
+        self.0.get(&PhoronConstantPoolKind::Utf8(name.to_string()))
+    }
+
+    /// Retrieve the index in the Constant Pool, if present,  of the given class.
     pub fn get_class(&self, class_name: &str) -> Option<&u16> {
-        println!("class_name = {class_name:#?}");
         self.0
             .get(&PhoronConstantPoolKind::Utf8(class_name.to_string()))
             .and_then(|name_index| {
@@ -60,6 +76,54 @@ impl PhoronConstantPool {
                     name_index: *name_index,
                 })
             })
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the given NamdAndType.
+    pub fn get_name_and_type(&self, name: &str, descriptor: &str) -> Option<&u16> {
+        self.get_name(name).and_then(|name_index| {
+            self.get_name(descriptor).and_then(|descriptor_index| {
+                self.0.get(&PhoronConstantPoolKind::NameAndType {
+                    name_index: *name_index,
+                    descriptor_index: *descriptor_index,
+                })
+            })
+        })
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the given Fieldref.
+    pub fn get_fieldref(
+        &self,
+        class_name: &str,
+        field_name: &str,
+        field_descriptor: &str,
+    ) -> Option<&u16> {
+        self.get_class(class_name).and_then(|class_index| {
+            self.get_name_and_type(field_name, field_descriptor)
+                .and_then(|name_and_type_index| {
+                    self.0.get(&PhoronConstantPoolKind::Fieldref {
+                        class_index: *class_index,
+                        name_and_type_index: *name_and_type_index,
+                    })
+                })
+        })
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the given Methodref.
+    pub fn get_methodref(
+        &self,
+        class_name: &str,
+        method_name: &str,
+        method_descriptor: &str,
+    ) -> Option<&u16> {
+        self.get_class(class_name).and_then(|class_index| {
+            self.get_name_and_type(method_name, method_descriptor)
+                .and_then(|name_and_type_index| {
+                    self.0.get(&PhoronConstantPoolKind::Methodref {
+                        class_index: *class_index,
+                        name_and_type_index: *name_and_type_index,
+                    })
+                })
+        })
     }
 }
 
@@ -107,6 +171,23 @@ impl ConstantPoolAnalyzer {
         Ok(*cp
             .0
             .entry(PhoronConstantPoolKind::Utf8(name.to_owned()))
+            .or_insert_with(|| {
+                let curr_cp_index = self.cp_index;
+                self.cp_index += 1;
+                curr_cp_index
+            }))
+    }
+
+    /// check if the name (Utf8) is already in the constant pool, and if not, insert it.
+    /// Update the Constant Pool index accordingly.
+    fn analyze_string(
+        &mut self,
+        string_index: u16,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        Ok(*cp
+            .0
+            .entry(PhoronConstantPoolKind::String { string_index })
             .or_insert_with(|| {
                 let curr_cp_index = self.cp_index;
                 self.cp_index += 1;
@@ -289,6 +370,8 @@ impl ConstantPoolAnalyzer {
         let mut cp = PhoronConstantPool(HashMap::new());
         self.visit_program(program, &mut cp)?;
 
+        println!("cp = {cp:#?}");
+
         Ok(cp)
     }
 }
@@ -403,6 +486,9 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
     fn visit_jvm_instruction(&mut self, instr: &JvmInstruction, cp: Self::Input) -> Self::Result {
         use JvmInstruction::*;
 
+        // if we have reached this stage, then we know that there is a `Code` attribute for sure.
+        self.analyze_name(PHORON_CODE, cp)?;
+
         match instr {
             Anewarray { ref component_type } => {}
             Aload { ref varnum } => {}
@@ -482,11 +568,25 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref method_descriptor,
                 ref ub,
             } => {}
+
             Invokespecial {
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
-            } => {}
+            } => {
+                let class_name_index = self.analyze_name(class_name, cp)?;
+                let class_index = self.analyze_class(class_name_index, cp)?;
+
+                let method_name_index = self.analyze_name(method_name, cp)?;
+                let method_descriptor_index =
+                    self.analyze_name(&method_descriptor.to_string(), cp)?;
+
+                let method_name_and_type_index =
+                    self.analyze_name_and_type(method_name_index, method_descriptor_index, cp)?;
+
+                self.analyze_method_ref(class_index, method_name_and_type_index, cp)?;
+            }
+
             Invokestatic {
                 ref class_name,
                 ref method_name,
@@ -516,7 +616,16 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             Jsr { ref label } => {}
             Ldc2w(ref ldc2w_val) => {}
             Ldcw(ref ldc_val) => {}
-            Ldc(ref ldc_val) => {}
+
+            Ldc(ref ldc_val) => match ldc_val {
+                LdcValue::Double(double) => {}
+                LdcValue::Integer(int) => {}
+                LdcValue::QuotedString(string) => {
+                    let string_index = self.analyze_name(string, cp)?;
+                    self.analyze_string(string_index, cp)?;
+                }
+            },
+
             Ldiv => {}
             Lload { ref varnum } => {}
             Lookupswitch {

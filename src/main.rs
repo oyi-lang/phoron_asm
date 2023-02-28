@@ -21,7 +21,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut cp_analyzer = ConstantPoolAnalyzer::new();
         let cp = cp_analyzer.analyze(&ast)?;
-        println!("{cp:#?}");
 
         let mut outfile = BufWriter::new(fs::File::create(match args[0].find('.') {
             Some(pos) => format!("{}.class", &args[0][..pos]),
