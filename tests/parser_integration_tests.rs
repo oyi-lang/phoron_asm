@@ -26,7 +26,10 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Malign".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -102,7 +105,10 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FieldsDemo".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -198,7 +204,10 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "HolaMundo".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -281,7 +290,10 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "HelloWorld".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -364,7 +376,10 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "MalignJasmin".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -441,7 +456,10 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "PrivetMir".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -524,7 +542,10 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Areturn".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -623,7 +644,10 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CreateArrayOfThreads".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -718,7 +742,10 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "SwapTopTwoItems".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -802,7 +829,10 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CreateMatrixOfInt".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -913,7 +943,10 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Count".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1024,7 +1057,10 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Catcher".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1131,7 +1167,10 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Anewarray".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1230,7 +1269,10 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "ArgsToMain".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1312,7 +1354,10 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CountJasmin2".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1407,7 +1452,10 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AddNumsJasmin".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1516,7 +1564,10 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "StackPushJasmin".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1600,7 +1651,10 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FactorialGoto".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1729,7 +1783,10 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FactorialJasmin".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1854,7 +1911,10 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CheckArrayType".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -1976,7 +2036,10 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "PrintHello10Times".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -2095,7 +2158,10 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AddNums".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -2247,7 +2313,10 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CountJasmin".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -2357,7 +2426,10 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "StringBufferDemo".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -2511,7 +2583,10 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
             sourcefile_def: None,
             class_or_interface_def: Class(PhoronClassDef {
                 name: "ArrayDemo".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
@@ -2773,7 +2848,10 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
             }),
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AllInOne".to_string(),
-                access_flags: vec![PhoronClassOrInterfaceAccessFlag::AccPublic],
+                access_flags: vec![
+                    PhoronClassOrInterfaceAccessFlag::AccSuper,
+                    PhoronClassOrInterfaceAccessFlag::AccPublic,
+                ],
             }),
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Thread".to_string(),

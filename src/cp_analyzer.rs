@@ -37,10 +37,18 @@ pub enum PhoronConstantPoolKind {
 }
 
 // Map from Constant Pool entries to indices
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct PhoronConstantPool(HashMap<PhoronConstantPoolKind, u16>);
 
 impl PhoronConstantPool {
+    pub fn new() -> Self {
+        PhoronConstantPool(HashMap::new())
+    }
+
+    pub fn insert(&mut self, cp_key: PhoronConstantPoolKind, cp_val: u16) {
+        self.0.insert(cp_key, cp_val);
+    }
+
     /// Return the size of the Constant Pool
     pub fn len(&self) -> usize {
         self.0.len()
@@ -366,7 +374,7 @@ impl ConstantPoolAnalyzer {
         &mut self,
         program: &PhoronProgram,
     ) -> ConstantPoolAnalyzerResult<PhoronConstantPool> {
-        let mut cp = PhoronConstantPool(HashMap::new());
+        let mut cp = PhoronConstantPool::new();
         self.visit_program(program, &mut cp)?;
 
         println!("cp = {cp:#?}");
