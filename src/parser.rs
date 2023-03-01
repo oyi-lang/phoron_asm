@@ -195,7 +195,7 @@ impl<'a> Parser<'a> {
     fn parse_class_def(&mut self) -> ParserResult<PhoronClassDef> {
         self.advance()?;
 
-        let mut access_flags = Vec::new();
+        let mut access_flags = vec![self.get_class_or_interface_access_flag(&TSuper)?];
         Ok(match self.see() {
             TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
             | TEnum | TModule => {
@@ -237,7 +237,7 @@ impl<'a> Parser<'a> {
     fn parse_interface_def(&mut self) -> ParserResult<PhoronInterfaceDef> {
         self.advance()?;
 
-        let mut access_flags = Vec::new();
+        let mut access_flags = vec![self.get_class_or_interface_access_flag(&TAbstract)?];
 
         Ok(match self.see() {
             TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation

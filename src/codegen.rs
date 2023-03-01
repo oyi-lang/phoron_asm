@@ -3,7 +3,7 @@ use phoron_core::{
     error::SerializeError,
     model::{
         access_flags::*,
-        attributes::AttributeInfo,
+        attributes::{AttributeInfo, *},
         constant_pool::{tags::*, types::CpInfo},
         *,
     },
@@ -148,7 +148,7 @@ where
 
     fn gen_constant_pool(&mut self, cp: &PhoronConstantPool) -> CodegenResult<()> {
         let constant_pool_count = cp.len();
-        self.classfile.constant_pool_count = constant_pool_count as u16;
+        self.classfile.constant_pool_count = constant_pool_count as u16 + 1;
 
         let mut constant_pool = vec![None; constant_pool_count + 1];
 
@@ -238,6 +238,11 @@ where
             }
         }
 
+        println!("codegen cp...");
+        for (idx, entry) in constant_pool.iter().enumerate() {
+            println!("{idx} => {entry:?}");
+        }
+
         self.classfile.constant_pool = constant_pool;
 
         Ok(())
@@ -285,6 +290,8 @@ where
         self.gen_classfile_headers()?;
         self.gen_constant_pool(&cp)?;
         self.visit_program(&program, &cp)?;
+
+        println!("classfile = {:#?}", self.classfile);
 
         self.outfile.serialize(&self.classfile)?;
 
@@ -371,7 +378,8 @@ where
             *cp.get_class(&super_def.super_class_name)
                 .ok_or(CodegenError::Missing {
                     component: "`super` class",
-                })?;
+                })?
+                - 1; // fixme
 
         Ok(CodegenResultType::Empty)
     }
@@ -447,9 +455,9 @@ where
             component: "`Code` attribute",
         })?;
 
-        let attribute_length = 0;
-        let mut max_stack = 0;
-        let mut max_locals = 0;
+        let mut attribute_length = 12; // default minimum
+        let mut max_stack = 1; // default
+        let mut max_locals = 1; // default
         let mut code = Vec::new();
         let exception_table_length = 0;
         let exception_table = vec![];
@@ -484,6 +492,7 @@ where
         }
 
         let code_length = code.len() as u32;
+        attribute_length += code_length; // need to add sizes of all attributes
 
         method_info.attributes.push(AttributeInfo::Code {
             attribute_name_index,
@@ -1079,8 +1088,10 @@ where
                                 opcode: "ldc",
                                 details: "missing quoted string",
                             })?;
+                        println!("string_index = {string_index:#?}");
 
-                        opcodes.extend_from_slice(&string_index.to_be_bytes())
+                        // fixme
+                        opcodes.extend_from_slice(&string_index.to_be_bytes()[1..])
                     }
                     _ => unreachable!(),
                 }
