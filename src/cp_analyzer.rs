@@ -69,13 +69,11 @@ impl PhoronConstantPool {
 
     /// Retrieve the index in the Constant Pool, if present,  of the given class.
     pub fn get_class(&self, class_name: &str) -> Option<&u16> {
-        self.0
-            .get(&PhoronConstantPoolKind::Utf8(class_name.to_string()))
-            .and_then(|name_index| {
-                self.0.get(&PhoronConstantPoolKind::Class {
-                    name_index: *name_index,
-                })
+        self.get_name(class_name).and_then(|name_index| {
+            self.0.get(&PhoronConstantPoolKind::Class {
+                name_index: *name_index,
             })
+        })
     }
 
     /// Retrieve the index in the Constant Pool, if present, of the given NamdAndType.
@@ -358,6 +356,7 @@ impl ConstantPoolAnalyzer {
             .entry(PhoronConstantPoolKind::Class { name_index })
             .or_insert_with(|| {
                 let curr_cp_index = self.cp_index;
+                println!("inserting class with index {:#?}", curr_cp_index);
                 self.cp_index += 1;
                 curr_cp_index
             }))

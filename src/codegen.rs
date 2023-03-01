@@ -151,7 +151,6 @@ where
         self.classfile.constant_pool_count = constant_pool_count as u16 + 1;
 
         let mut constant_pool = vec![None; constant_pool_count + 1];
-
         for (cp_key, cp_idx) in cp.iter() {
             let cp_idx = *cp_idx as usize;
 
@@ -289,10 +288,9 @@ where
     ) -> CodegenResult<()> {
         self.gen_classfile_headers()?;
         self.gen_constant_pool(&cp)?;
+
         self.visit_program(&program, &cp)?;
-
         println!("classfile = {:#?}", self.classfile);
-
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())
@@ -378,8 +376,7 @@ where
             *cp.get_class(&super_def.super_class_name)
                 .ok_or(CodegenError::Missing {
                     component: "`super` class",
-                })?
-                - 1; // fixme
+                })?;
 
         Ok(CodegenResultType::Empty)
     }
@@ -395,8 +392,6 @@ where
         for method in &body.method_defs {
             self.visit_method_def(method, cp)?;
         }
-
-        println!("classfile = {:#?}", self.classfile);
 
         Ok(CodegenResultType::Empty)
     }
@@ -1088,7 +1083,6 @@ where
                                 opcode: "ldc",
                                 details: "missing quoted string",
                             })?;
-                        println!("string_index = {string_index:#?}");
 
                         // fixme
                         opcodes.extend_from_slice(&string_index.to_be_bytes()[1..])
