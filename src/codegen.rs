@@ -580,8 +580,12 @@ where
             }
 
             Bipush(sb) => {
-                todo!()
+                let mut opcodes = vec![0x10];
+                opcodes.extend_from_slice(&sb.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
             }
+
             Caload => {
                 todo!()
             }
