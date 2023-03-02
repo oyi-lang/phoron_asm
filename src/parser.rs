@@ -2915,7 +2915,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            tok => {
+            _ => {
                 return Err(ParserError::IncorrectTypeOrValue {
                     instr: "parsing header",
                     type_or_val: "token",
