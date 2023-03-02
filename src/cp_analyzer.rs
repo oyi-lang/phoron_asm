@@ -51,7 +51,15 @@ impl PhoronConstantPool {
 
     /// Return the size of the Constant Pool
     pub fn len(&self) -> usize {
-        self.0.len()
+        let mut len = 0;
+
+        for (cp_kind, _) in &self.0 {
+            match cp_kind {
+                PhoronConstantPoolKind::Long(_) | PhoronConstantPoolKind::Double(_) => len += 2,
+                _ => len += 1,
+            }
+        }
+        len
     }
 
     /// Return an iterator over the contents of the Constant Pool.
@@ -230,7 +238,7 @@ impl ConstantPoolAnalyzer {
             .entry(PhoronConstantPoolKind::Long(long.to_be_bytes()))
             .or_insert_with(|| {
                 let curr_cp_index = self.cp_index;
-                self.cp_index += 1;
+                self.cp_index += 2; // extra index slot for LongInfo
                 curr_cp_index
             }))
     }
@@ -263,7 +271,7 @@ impl ConstantPoolAnalyzer {
             .entry(PhoronConstantPoolKind::Double(double.to_be_bytes()))
             .or_insert_with(|| {
                 let curr_cp_index = self.cp_index;
-                self.cp_index += 1;
+                self.cp_index += 2; // extra index slot for DoubleInfo
                 curr_cp_index
             }))
     }
@@ -377,8 +385,6 @@ impl ConstantPoolAnalyzer {
         let mut cp = PhoronConstantPool::new();
         self.visit_program(program, &mut cp)?;
 
-        println!("cp = {cp:#?}");
-
         Ok(cp)
     }
 }
@@ -459,9 +465,26 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
     // pub access_flags: Vec<PhoronFieldAccessFlag>,
     // pub field_descriptor: PhoronFieldDescriptor,
     // pub init_val: Option<PhoronFieldInitValue>,
-
     fn visit_field_def(&mut self, field_def: &PhoronFieldDef, cp: Self::Input) -> Self::Result {
-        todo!()
+        self.analyze_name(&field_def.name, cp)?;
+        self.analyze_name(&field_def.field_descriptor.to_string(), cp)?;
+
+        if let Some(field_init_val) = &field_def.init_val {
+            match field_init_val {
+                PhoronFieldInitValue::Integer(int) => {
+                    self.analyze_int(*int as i32, cp)?;
+                }
+                PhoronFieldInitValue::Double(double) => {
+                    self.analyze_double(*double, cp)?;
+                }
+                PhoronFieldInitValue::QuotedString(ref s) => {
+                    let string_index = self.analyze_name(s, cp)?;
+                    self.analyze_string(string_index, cp)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn visit_method_def(&mut self, method_def: &PhoronMethodDef, cp: Self::Input) -> Self::Result {

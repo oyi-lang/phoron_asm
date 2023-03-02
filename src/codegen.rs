@@ -17,6 +17,10 @@ pub enum CodegenError {
     Missing {
         component: &'static str,
     },
+    ConstantPoolError {
+        cp_entry: &'static str,
+        details: &'static str,
+    },
     OpcodeError {
         opcode: &'static str,
         details: &'static str,
@@ -36,6 +40,12 @@ impl fmt::Display for CodegenError {
             "{}",
             match *self {
                 Missing { ref component } => format!("Missing : {component}"),
+                ConstantPoolError {
+                    ref cp_entry,
+                    ref details,
+                } => format!(
+                    "Error while constructing Constant Pool for entry {cp_entry} : {details}"
+                ),
                 OpcodeError {
                     ref opcode,
                     ref details,
@@ -148,6 +158,7 @@ where
 
     fn gen_constant_pool(&mut self, cp: &PhoronConstantPool) -> CodegenResult<()> {
         let constant_pool_count = cp.len();
+
         self.classfile.constant_pool_count = constant_pool_count as u16 + 1;
 
         let mut constant_pool = vec![None; constant_pool_count + 1];
@@ -203,17 +214,61 @@ where
                 }
 
                 PhoronConstantPoolKind::Integer(int_bytes) => {
-                    todo!()
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantIntegerInfo {
+                        tag: CONSTANT_INTEGER,
+                        bytes: u32::from_be_bytes(*int_bytes),
+                    })
                 }
 
                 PhoronConstantPoolKind::Float(float_bytes) => {
-                    todo!()
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantFloatInfo {
+                        tag: CONSTANT_FLOAT,
+                        bytes: u32::from_be_bytes(*float_bytes),
+                    })
                 }
+
                 PhoronConstantPoolKind::Long(long_bytes) => {
-                    todo!()
+                    let high_bytes: [u8; 4] = long_bytes[0..4].try_into().map_err(|_| {
+                        CodegenError::ConstantPoolError {
+                            cp_entry: "long",
+                            details: "failed to get high bytes",
+                        }
+                    })?;
+
+                    let low_bytes: [u8; 4] = long_bytes[4..].try_into().map_err(|_| {
+                        CodegenError::ConstantPoolError {
+                            cp_entry: "long",
+                            details: "failed to get low bytes",
+                        }
+                    })?;
+
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantLongInfo {
+                        tag: CONSTANT_LONG,
+                        high_bytes: u32::from_be_bytes(high_bytes),
+                        low_bytes: u32::from_be_bytes(low_bytes),
+                    })
                 }
+
                 PhoronConstantPoolKind::Double(double_bytes) => {
-                    todo!()
+                    let high_bytes: [u8; 4] = double_bytes[0..4].try_into().map_err(|_| {
+                        CodegenError::ConstantPoolError {
+                            cp_entry: "double",
+                            details: "failed to get high bytes",
+                        }
+                    })?;
+
+                    let low_bytes: [u8; 4] = double_bytes[4..].try_into().map_err(|_| {
+                        CodegenError::ConstantPoolError {
+                            cp_entry: "double",
+                            details: " failed to get low bytes",
+                        }
+                    })?;
+
+                    constant_pool[cp_idx] = Some(CpInfo::ConstantDoubleInfo {
+                        tag: CONSTANT_DOUBLE,
+                        high_bytes: u32::from_be_bytes(high_bytes),
+                        low_bytes: u32::from_be_bytes(low_bytes),
+                    })
                 }
 
                 PhoronConstantPoolKind::NameAndType {
@@ -396,16 +451,34 @@ where
         Ok(CodegenResultType::Empty)
     }
 
+    //pub init_val: Option<PhoronFieldInitValue>,
+
+    // pub attributes_count: u16,
+    // pub attributes: Vec<AttributeInfo>,
+
     /// Generate JVM bytecode for the field definition
     fn visit_field_def(&mut self, field_def: &PhoronFieldDef, cp: Self::Input) -> Self::Result {
-        todo!()
-    }
+        let mut field_info = FieldInfo::default();
 
-    //pub access_flags: u16,
-    //pub name_index: u16,
-    //pub descriptor_index: u16,
-    //pub attributes_count: u16,
-    //pub attributes: Vec<AttributeInfo>,
+        self.gen_field_access_flags(&mut field_info, &field_def.access_flags)?;
+
+        field_info.name_index = *cp.get_name(&field_def.name).ok_or(CodegenError::Missing {
+            component: "field name",
+        })?;
+
+        field_info.descriptor_index =
+            *cp.get_name(&field_def.field_descriptor.to_string())
+                .ok_or(CodegenError::Missing {
+                    component: "field descriptor",
+                })?;
+
+        // todo - attributes
+        field_info.attributes_count = 0;
+
+        self.classfile.fields.push(field_info);
+
+        Ok(CodegenResultType::Empty)
+    }
 
     //pub name: String,
     //pub access_flags: Vec<PhoronMethodAccessFlag>,
@@ -521,9 +594,8 @@ where
         use JvmInstruction::*;
 
         Ok(match jvm_instr {
-            Aaload => {
-                todo!()
-            }
+            Aaload => CodegenResultType::ByteVec(vec![0x32]),
+
             Anewarray { ref component_type } => {
                 todo!()
             }
