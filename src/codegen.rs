@@ -127,6 +127,7 @@ where
     outfile: Serializer<'c, W>,
     classfile: ClassFile,
     label_mapping: HashMap<String, i16>,
+    curr_code_offset: i16,
 }
 
 impl<'c, W> Codegen<'c, W>
@@ -138,6 +139,7 @@ where
             outfile: Serializer::new(Writer::new(outfile)),
             classfile: ClassFile::default(),
             label_mapping: HashMap::new(),
+            curr_code_offset: 0,
         }
     }
     //pub const CONSTANT_INVALID_DEFAULT: u8 = 255;
@@ -310,6 +312,158 @@ where
         let byte2 = (label_offset ^ ((byte1 as i16) << 8)) as u8;
 
         [byte1, byte2]
+    }
+
+    fn gen_label_mappings(&mut self, instructions: &[PhoronInstruction]) -> CodegenResult<()> {
+        use JvmInstruction::*;
+
+        self.label_mapping.clear();
+        let mut curr_code_offset = 0i16;
+
+        for instr in instructions {
+            match instr {
+                PhoronInstruction::PhoronDirective(ref _dir) => {}
+
+                PhoronInstruction::PhoronLabel(ref label) => {
+                    self.label_mapping
+                        .insert(label.to_string(), curr_code_offset);
+                }
+
+                PhoronInstruction::JvmInstruction(ref jvm_instr) => {
+                    curr_code_offset += match jvm_instr {
+                        // 1-byte instructions
+                        Aaload | Aastore | Aconstnull | Aload0 | Aload1 | Aload2 | Aload3
+                        | Areturn | Arraylength | Astore0 | Astore1 | Astore2 | Astore3
+                        | Athrow | Baload | Bastore | Caload | Castore | D2f | D2i | D2l | Dadd
+                        | Daload | Dastore | Dcmpg | Dcmpl | Dconst0 | Dconst1 | Ddiv | Dload0
+                        | Dload1 | Dload2 | Dload3 | Dmul | Dneg | Drem | Dreturn | Dstore0
+                        | Dstore1 | Dstore2 | Dstore3 | Dsub | Dup | Dupx1 | Dupx2 | Dup2
+                        | Dup2x1 | Dup2x2 | F2d | F2i | F2l | Fadd | Faload | Fastore | Fcmpg
+                        | Fcmpl | Fconst0 | Fconst1 | Fconst2 | Fdiv | Fload0 | Fload1 | Fload2
+                        | Fload3 | Fmul | Fneg | Frem | Freturn | Fstore0 | Fstore1 | Fstore2
+                        | Fstore3 | Fsub | I2b | I2c | I2d | I2f | I2l | I2s | Iadd | Iaload
+                        | Iand | Iastore | Iconstm1 | Iconst0 | Iconst1 | Iconst2 | Iconst3
+                        | Iconst4 | Iconst5 | Idiv | Iload0 | Iload1 | Iload2 | Iload3 | Imul
+                        | Ineg | Ior | Irem | Ireturn | Ishl | Ishr | Istore0 | Istore1
+                        | Istore2 | Istore3 | Isub | Iushr | Ixor | L2d | L2f | L2i | Ladd
+                        | Laload | Land | Lastore | Lcmp | Lconst0 | Lconst1 | Ldiv | Lload0
+                        | Lload1 | Lload2 | Lload3 | Lmul | Lneg | Lor | Lrem | Lreturn | Lshl
+                        | Lshr | Lstore0 | Lstore1 | Lstore2 | Lstore3 | Lsub | Lushr | Lxor
+                        | Monitorenter | Monitorexit | Nop | Pop | Pop2 | Return | Saload
+                        | Sastore | Swap => 1,
+
+                        Bipush(ref _sb) => 2,
+
+                        Iload { .. }
+                        | Fload { .. }
+                        | Aload { .. }
+                        | Lload { .. }
+                        | Dload { .. }
+                        | Istore { .. }
+                        | Fstore { .. }
+                        | Astore { .. }
+                        | Lstore { .. }
+                        | Dstore { .. }
+                        | Ret { .. } => 2,
+
+                        Sipush(ref _ss) => 3,
+
+                        Getstatic { .. }
+                        | Getfield { .. }
+                        | Iinc { .. }
+                        | Invokespecial { .. }
+                        | Invokestatic { .. }
+                        | Invokevirtual { .. }
+                        | Putfield { .. }
+                        | Putstatic { .. }
+                        | Goto { .. }
+                        | Ifacmpeq { .. }
+                        | Ifacmpne { .. }
+                        | Ificmpeq { .. }
+                        | Ificmpge { .. }
+                        | Ificmpgt { .. }
+                        | Ificmple { .. }
+                        | Ificmplt { .. }
+                        | Ificmpne { .. }
+                        | Ifeq { .. }
+                        | Ifge { .. }
+                        | Ifgt { .. }
+                        | Ifle { .. }
+                        | Iflt { .. }
+                        | Ifne { .. }
+                        | Ifnonnull { .. }
+                        | Ifnull { .. } => 3,
+
+                        Invokeinterface => 4,
+
+                        Anewarray { ref component_type } => {
+                            let mut opcodes = vec![0xbd];
+                            todo!()
+                        }
+
+                        Checkcast { ref cast_type } => {
+                            todo!()
+                        }
+
+                        // 5 bytes
+                        Gotow { ref label } => {
+                            todo!()
+                        }
+
+                        Jsrw { ref label } => {
+                            todo!()
+                        }
+
+                        Jsr { ref label } => {
+                            todo!()
+                        }
+
+                        Ldc2w(ref ldc2w_val) => {
+                            todo!()
+                        }
+
+                        Ldcw(ref ldcw_val) => {
+                            todo!()
+                        }
+
+                        Ldc(ref ldc_val) => {
+                            todo!()
+                        }
+
+                        Lookupswitch {
+                            ref switches,
+                            ref default,
+                        } => {
+                            todo!()
+                        }
+
+                        Multianewarray {
+                            ref component_type,
+                            ref dimensions,
+                        } => {
+                            todo!()
+                        }
+
+                        Newarray { ref component_type } => {
+                            todo!()
+                        }
+
+                        New { ref class_name } => todo!(),
+
+                        Tableswitch {
+                            ref low,
+                            ref high,
+                            ref switches,
+                            ref default,
+                        } => {
+                            todo!()
+                        }
+                    } as i16;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn gen_class_or_interface_access_flags(
@@ -499,6 +653,7 @@ where
     fn visit_method_def(&mut self, method_def: &PhoronMethodDef, cp: Self::Input) -> Self::Result {
         let mut method_info = MethodInfo::default();
 
+        // todo
         self.gen_method_access_flags(&mut method_info, &method_def.access_flags)?;
 
         method_info.name_index = *cp.get_name(&method_def.name).ok_or(CodegenError::Missing {
@@ -529,6 +684,20 @@ where
         method_info.attributes_count = 1;
         //let mut attrs = Vec::new();
 
+        // Visit all the JVM instructions first to collect metadata about all the
+        // labels used in the Code section. This will be used to calculate the branch
+        // offsets of the labels in the actual instructions in the next iteration
+        // using the following algorithm:
+        //
+        // s: i16 = label_offset - curr_code_offset
+        // b1: u8 = (s >> 8) as u8
+        // b2: u8 = (s ^ (b1 as i16) << 8) as u8
+        //
+        // This also offsets the need to performa complicated "backpatching" of the
+        // offsets after the Code vector/array has already beem generated (as would have
+        // been the case in a more traditional compiler).
+        self.gen_label_mappings(&method_def.instructions)?;
+
         // code attributes
         let attribute_name_index = *cp.get_name("Code").ok_or(CodegenError::Missing {
             component: "`Code` attribute",
@@ -539,14 +708,13 @@ where
         let mut max_locals = 1; // default
 
         let mut code = Vec::new();
-        let mut code_offset = 0i16;
-        self.label_mapping.clear(); // fresh mappings per method
 
         let exception_table_length = 0;
         let exception_table = vec![];
         let code_attributes_count = 0;
         let code_attributes = vec![];
 
+        self.curr_code_offset = 0;
         for instr in &method_def.instructions {
             match instr {
                 PhoronInstruction::PhoronDirective(ref dir) => match dir {
@@ -557,24 +725,18 @@ where
                     PhoronDirective::LimitLocals(locals) => {
                         max_locals = *locals;
                     }
-                    _ => unreachable!(),
+                    _ => todo!(),
                 },
 
-                // Labels are aliases for offsets from the beginning of the Code
-                // vector/array of the method.
-                PhoronInstruction::PhoronLabel(ref label) => {
-                    println!("code offset before label {label:#?} = {code_offset}");
-                    self.label_mapping.insert(label.to_string(), code_offset);
-                }
+                PhoronInstruction::PhoronLabel(ref label) => {}
 
                 PhoronInstruction::JvmInstruction(ref jvm_instr) => {
                     if let Ok(CodegenResultType::ByteVec(instr_opcodes)) =
                         self.visit_jvm_instruction(jvm_instr, cp)
                     {
-                        let instr_opcodes_len = instr_opcodes.len();
+                        let opcode_len = instr_opcodes.len() as i16;
                         code.extend_from_slice(&instr_opcodes);
-                        code_offset += instr_opcodes_len as i16;
-                        println!("code offset after instruction {jvm_instr:#?} = {code_offset}");
+                        self.curr_code_offset += opcode_len;
                     } else {
                         return Err(CodegenError::Unknown);
                     }
@@ -834,9 +996,9 @@ where
                 todo!()
             }
 
-            // fixme: find a way to thread the current code offset
             Ificmple { ref label } => {
                 let mut opcodes = vec![0xa4];
+
                 let label_offset =
                     self.label_mapping
                         .get(label)
@@ -844,17 +1006,9 @@ where
                             opcode: "if_icmple",
                             details: "missing label offset",
                         })?;
-                println!("label offset for {label:#?} = {label_offset}");
 
-                // label bytes calculation:
-                // s: i16 = label_offset - curr_code_offset
-                // b1: u8 = (s >> 8) as u8
-                // b2: u8 = (s ^ (b1 as i16) << 8) as u8
-                let curr_code_offset = 29;
-                let bytes = self.gen_offset_for_label(label_offset - curr_code_offset);
-                println!("bytes = {bytes:#?}");
+                let bytes = self.gen_offset_for_label(label_offset - self.curr_code_offset);
                 opcodes.extend_from_slice(&bytes);
-                //opcodes.extend_from_slice(&self.gen_offset_for_label(*label_offset));
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1166,7 +1320,10 @@ where
             }
 
             // check
-            Wide => CodegenResultType::ByteVec(vec![0xc4]),
+            Wide(ref wide_instr) => {
+                CodegenResultType::ByteVec(vec![0xc4]);
+                todo!()
+            }
         })
     }
 }

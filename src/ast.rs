@@ -308,6 +308,22 @@ pub struct LookupSwitchPair {
     pub label: String,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum WideInstruction {
+    Iload { varnum: u16 },
+    Fload { varnum: u16 },
+    Aload { varnum: u16 },
+    Lload { varnum: u16 },
+    Dload { varnum: u16 },
+    Istore { varnum: u16 },
+    Fstore { varnum: u16 },
+    Astore { varnum: u16 },
+    Lstore { varnum: u16 },
+    Dstore { varnum: u16 },
+    Ret { varnum: u16 },
+    IInc { varnum: u16, delta: i16 },
+}
+
 #[derive(PartialEq, Debug)]
 pub enum JvmInstruction {
     Aaload,
@@ -322,7 +338,7 @@ pub enum JvmInstruction {
     Aload2,
     Aload3,
     Aload {
-        varnum: u16,
+        varnum: u8,
     },
     Arraylength,
     Astore0,
@@ -330,7 +346,7 @@ pub enum JvmInstruction {
     Astore2,
     Astore3,
     Astore {
-        varnum: u16,
+        varnum: u8,
     },
     Athrow,
     Baload,
@@ -357,7 +373,7 @@ pub enum JvmInstruction {
     Dload2,
     Dload3,
     Dload {
-        varnum: u16,
+        varnum: u8,
     },
     Dmul,
     Dneg,
@@ -368,7 +384,7 @@ pub enum JvmInstruction {
     Dstore2,
     Dstore3,
     Dstore {
-        varnum: u16,
+        varnum: u8,
     },
     Dsub,
     Dup2x1,
@@ -394,7 +410,7 @@ pub enum JvmInstruction {
     Fload2,
     Fload3,
     Fload {
-        varnum: u16,
+        varnum: u8,
     },
     Fmul,
     Fneg,
@@ -405,7 +421,7 @@ pub enum JvmInstruction {
     Fstore2,
     Fstore3,
     Fstore {
-        varnum: u16,
+        varnum: u8,
     },
     Fsub,
     Getstatic {
@@ -491,15 +507,15 @@ pub enum JvmInstruction {
         label: String,
     },
     Iinc {
-        varnum: u16,
-        delta: i16,
+        varnum: u8,
+        delta: i8,
     },
     Iload0,
     Iload1,
     Iload2,
     Iload3,
     Iload {
-        varnum: u16,
+        varnum: u8,
     },
     Imul,
     Ineg,
@@ -537,7 +553,7 @@ pub enum JvmInstruction {
     Istore2,
     Istore3,
     Istore {
-        varnum: u16,
+        varnum: u8,
     },
     Isub,
     Iushr,
@@ -563,7 +579,7 @@ pub enum JvmInstruction {
     Ldc(LdcValue),
     Ldiv,
     Lload {
-        varnum: u16,
+        varnum: u8,
     },
     Lload0,
     Lload1,
@@ -581,7 +597,7 @@ pub enum JvmInstruction {
     Lshl,
     Lshr,
     Lstore {
-        varnum: u16,
+        varnum: u8,
     },
     Lstore0,
     Lstore1,
@@ -617,7 +633,7 @@ pub enum JvmInstruction {
     },
     Return,
     Ret {
-        varnum: u16,
+        varnum: u8,
     },
     Saload,
     Sastore,
@@ -629,7 +645,8 @@ pub enum JvmInstruction {
         switches: Vec<String>,
         default: String,
     },
-    Wide,
+
+    Wide(WideInstruction),
 }
 
 #[derive(PartialEq, Debug)]

@@ -793,9 +793,9 @@ impl<'a> Parser<'a> {
             Token::TAload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "aload",
-                    component: "var num",
+                    component: "varnum",
                 })?;
                 JvmInstruction::Aload { varnum }
             }
@@ -854,9 +854,9 @@ impl<'a> Parser<'a> {
             Token::TAstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "astore",
-                    component: "var num",
+                    component: "varnum",
                 })?;
                 JvmInstruction::Astore { varnum }
             }
@@ -1010,9 +1010,9 @@ impl<'a> Parser<'a> {
             Token::TDload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "doad",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
                 JvmInstruction::Dload { varnum }
@@ -1070,9 +1070,9 @@ impl<'a> Parser<'a> {
             Token::TDstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "dstor",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
                 JvmInstruction::Dstore { varnum }
@@ -1220,9 +1220,9 @@ impl<'a> Parser<'a> {
             Token::TFload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "fload",
-                    component: "var num",
+                    component: "varnum",
                 })?;
                 JvmInstruction::Fload { varnum }
             }
@@ -1279,9 +1279,9 @@ impl<'a> Parser<'a> {
             Token::TFstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "fstore",
-                    component: "var num",
+                    component: "varnum",
                 })?;
                 JvmInstruction::Fstore { varnum }
             }
@@ -1718,12 +1718,12 @@ impl<'a> Parser<'a> {
             Token::TIinc => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "iinc",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
-                let delta = self.parse_ss().map_err(|_| ParserError::Missing {
+                let delta = self.parse_sb().map_err(|_| ParserError::Missing {
                     instr: "iinc",
                     component: "delta",
                 })?;
@@ -1735,9 +1735,9 @@ impl<'a> Parser<'a> {
             Token::TIload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "iload",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
                 JvmInstruction::Iload { varnum }
@@ -1978,9 +1978,9 @@ impl<'a> Parser<'a> {
             Token::TIstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "istore",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
                 JvmInstruction::Istore { varnum }
@@ -2210,9 +2210,9 @@ impl<'a> Parser<'a> {
             Token::TLload => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "iload",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
                 JvmInstruction::Lload { varnum }
@@ -2300,9 +2300,9 @@ impl<'a> Parser<'a> {
             Token::TLstore => {
                 self.advance()?;
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
                     instr: "lstore",
-                    component: "var num",
+                    component: "varnum",
                 })?;
 
                 JvmInstruction::Lstore { varnum }
@@ -2560,17 +2560,12 @@ impl<'a> Parser<'a> {
             Token::TRet => {
                 self.advance()?;
 
-                if let Token::TInt(varnum) = self.see() {
-                    let varnum = *varnum as u16;
-                    self.advance()?;
+                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
+                    instr: "ret",
+                    component: "varnum",
+                })?;
 
-                    JvmInstruction::Ret { varnum }
-                } else {
-                    return Err(ParserError::Missing {
-                        instr: "ret",
-                        component: "var num",
-                    });
-                }
+                JvmInstruction::Ret { varnum }
             }
 
             // return
@@ -2640,10 +2635,147 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // wide
+            // The `wide` instruction must be followed by one of the
+            // following instructions:
+            // iload, fload, aload, lload, dload, istore, fstore, astore,
+            // lstore, dstore, or iinc.
             Token::Twide => {
                 self.advance()?;
-                JvmInstruction::Wide
+
+                match self.see() {
+                    Token::TIload => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide iload",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Iload { varnum })
+                    }
+
+                    Token::TFload => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide fload",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Fload { varnum })
+                    }
+
+                    Token::TAload => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide aload",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Aload { varnum })
+                    }
+
+                    Token::TLload => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide lload",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Lload { varnum })
+                    }
+
+                    Token::TDload => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide dload",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Dload { varnum })
+                    }
+
+                    Token::TIstore => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide istore",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Istore { varnum })
+                    }
+
+                    Token::TFstore => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide fstore",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Fstore { varnum })
+                    }
+
+                    Token::TAstore => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide astore",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Astore { varnum })
+                    }
+
+                    Token::TLstore => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide lstore",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Lstore { varnum })
+                    }
+
+                    Token::TDstore => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide dstore",
+                            component: "varnum",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::Dstore { varnum })
+                    }
+
+                    Token::TIinc => {
+                        self.advance()?;
+
+                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
+                            instr: "wide iinc",
+                            component: "varnum",
+                        })?;
+
+                        let delta = self.parse_ss().map_err(|_| ParserError::Missing {
+                            instr: "wide iinc",
+                            component: "delta",
+                        })?;
+
+                        JvmInstruction::Wide(WideInstruction::IInc { varnum, delta })
+                    }
+
+                    _ => {
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: "wide",
+                            type_or_val: "inocrrect instruction following `wide` instruction",
+                        })
+                    }
+                }
             }
 
             _ => {

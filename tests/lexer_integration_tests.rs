@@ -141,6 +141,7 @@ fn test_lex_fields() -> Result<(), Box<dyn Error>> {
         TLimit,
         TLocals,
         TInt(1),
+        TReturn,
         TEnd,
         TEndMethod,
     ];
