@@ -592,6 +592,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             } => {}
             Iload { ref varnum } => {}
             Instanceof { ref check_type } => {}
+
             Invokeinterface {
                 ref interface_name,
                 ref method_name,
@@ -621,7 +622,19 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
-            } => {}
+            } => {
+                let class_name_index = self.analyze_name(class_name, cp)?;
+                let class_index = self.analyze_class(class_name_index, cp)?;
+
+                let method_name_index = self.analyze_name(method_name, cp)?;
+                let method_descriptor_index =
+                    self.analyze_name(&method_descriptor.to_string(), cp)?;
+
+                let method_name_and_type_index =
+                    self.analyze_name_and_type(method_name_index, method_descriptor_index, cp)?;
+
+                self.analyze_method_ref(class_index, method_name_and_type_index, cp)?;
+            }
 
             Invokevirtual {
                 ref class_name,

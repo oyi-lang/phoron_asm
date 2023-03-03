@@ -334,6 +334,7 @@ where
         self.label_mapping.clear();
         let mut curr_code_offset = 0i16;
 
+        // TODO: calculate sizes for all instructions
         for instr in instructions {
             match instr {
                 PhoronInstruction::PhoronDirective(ref _dir) => {}
@@ -368,7 +369,8 @@ where
 
                         Bipush(ref _sb) => 2,
 
-                        Iload { .. }
+                        Newarray { .. }
+                        | Iload { .. }
                         | Fload { .. }
                         | Aload { .. }
                         | Lload { .. }
@@ -410,10 +412,7 @@ where
 
                         Invokeinterface => 4,
 
-                        Anewarray { ref component_type } => {
-                            let mut opcodes = vec![0xbd];
-                            todo!()
-                        }
+                        Anewarray { ref component_type } => todo!(),
 
                         Checkcast { ref cast_type } => {
                             todo!()
@@ -455,10 +454,6 @@ where
                             ref component_type,
                             ref dimensions,
                         } => {
-                            todo!()
-                        }
-
-                        Newarray { ref component_type } => {
                             todo!()
                         }
 
@@ -745,9 +740,10 @@ where
                 PhoronInstruction::PhoronLabel(ref label) => {}
 
                 PhoronInstruction::JvmInstruction(ref jvm_instr) => {
-                    if let Ok(CodegenResultType::ByteVec(instr_opcodes)) =
-                        self.visit_jvm_instruction(jvm_instr, cp)
-                    {
+                    println!("Processing jvm opcode {jvm_instr:#?}");
+                    let opcodes = self.visit_jvm_instruction(jvm_instr, cp)?;
+
+                    if let CodegenResultType::ByteVec(instr_opcodes) = opcodes {
                         let opcode_len = instr_opcodes.len() as i16;
                         code.extend_from_slice(&instr_opcodes);
                         self.curr_code_offset += opcode_len;
@@ -812,7 +808,6 @@ where
             Aload3 => CodegenResultType::ByteVec(vec![0x2d]),
 
             Anewarray { ref component_type } => {
-                let mut opcodes = vec![0xbd];
                 todo!()
             }
 
@@ -1469,7 +1464,20 @@ where
             }
 
             Newarray { ref component_type } => {
-                todo!()
+                let mut opcodes = vec![0xbc];
+
+                opcodes.push(match component_type {
+                    PhoronBaseType::Byte => 8,
+                    PhoronBaseType::Character => 5,
+                    PhoronBaseType::Double => 7,
+                    PhoronBaseType::Float => 6,
+                    PhoronBaseType::Integer => 10,
+                    PhoronBaseType::Long => 11,
+                    PhoronBaseType::Short => 9,
+                    PhoronBaseType::Boolean => 4,
+                });
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             New { ref class_name } => todo!(),
