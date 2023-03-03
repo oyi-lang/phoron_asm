@@ -986,14 +986,90 @@ where
             Ifacmpne { ref label } => {
                 todo!()
             }
+
             Ificmpeq { ref label } => {
-                todo!()
+                let mut opcodes = vec![0x9f];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_icmpeq",
+                            details: "invalid label ",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
+
+            Ificmpne { ref label } => {
+                let mut opcodes = vec![0xa0];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_icmpne",
+                            details: "invalid label ",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ificmplt { ref label } => {
+                let mut opcodes = vec![0xa1];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_icmplt",
+                            details: "invalid label ",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
             Ificmpge { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xa2];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_icmpge",
+                            details: "invalid label ",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
+
             Ificmpgt { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xa3];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_icmpgt",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Ificmple { ref label } => {
@@ -1004,46 +1080,149 @@ where
                         .get(label)
                         .ok_or(CodegenError::OpcodeError {
                             opcode: "if_icmple",
-                            details: "missing label offset",
+                            details: "invalid label ",
                         })?;
 
-                let bytes = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&bytes);
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
 
                 CodegenResultType::ByteVec(opcodes)
             }
 
-            Ificmplt { ref label } => {
-                todo!()
-            }
-
-            Ificmpne { ref label } => {
-                todo!()
-            }
-
             Ifeq { ref label } => {
-                todo!()
+                let mut opcodes = vec![0x99];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifeq",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
-            Ifge { ref label } => {
-                todo!()
-            }
-            Ifgt { ref label } => {
-                todo!()
-            }
-            Ifle { ref label } => {
-                todo!()
-            }
-            Iflt { ref label } => {
-                todo!()
-            }
+
             Ifne { ref label } => {
-                todo!()
+                let mut opcodes = vec![0x9a];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifne",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
-            Ifnonnull { ref label } => {
-                todo!()
+
+            Iflt { ref label } => {
+                let mut opcodes = vec![0x9b];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "iflt",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
+
+            Ifge { ref label } => {
+                let mut opcodes = vec![0x9c];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifge",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ifgt { ref label } => {
+                let mut opcodes = vec![0x9d];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifgt",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ifle { ref label } => {
+                let mut opcodes = vec![0x9e];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifle",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
             Ifnull { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xc6];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifnull",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ifnonnull { ref label } => {
+                let mut opcodes = vec![0xc7];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "ifnull",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             // check: wide
@@ -1203,6 +1382,7 @@ where
                 todo!()
             }
 
+            // TODO: sort out valid types for values (wide, non-wide)
             Ldc(ref ldc_val) => {
                 let mut opcodes = vec![0x12];
 
@@ -1319,7 +1499,6 @@ where
                 todo!()
             }
 
-            // check
             Wide(ref wide_instr) => {
                 CodegenResultType::ByteVec(vec![0xc4]);
                 todo!()
