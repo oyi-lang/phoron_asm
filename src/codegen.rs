@@ -314,6 +314,20 @@ where
         [byte1, byte2]
     }
 
+    fn gen_offset_for_local_var(&self, local_var: u16) -> [u8; 2] {
+        let byte1 = (local_var >> 8) as u8;
+        let byte2 = (local_var ^ ((byte1 as u16) << 8)) as u8;
+
+        [byte1, byte2]
+    }
+
+    fn gen_offset_for_delta(&self, wide_index: i16) -> [u8; 2] {
+        let byte1 = (wide_index >> 8) as u8;
+        let byte2 = (wide_index ^ ((byte1 as i16) << 8)) as u8;
+
+        [byte1, byte2]
+    }
+
     fn gen_label_mappings(&mut self, instructions: &[PhoronInstruction]) -> CodegenResult<()> {
         use JvmInstruction::*;
 
@@ -1084,6 +1098,7 @@ where
                         })?;
 
                 let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                println!("offset = {offset:#?}");
                 opcodes.extend_from_slice(&offset);
 
                 CodegenResultType::ByteVec(opcodes)
@@ -1500,8 +1515,94 @@ where
             }
 
             Wide(ref wide_instr) => {
-                CodegenResultType::ByteVec(vec![0xc4]);
-                todo!()
+                let mut opcodes = vec![0xc4];
+
+                match wide_instr {
+                    WideInstruction::Iload { ref varnum } => {
+                        opcodes.push(0x15);
+
+                        // fixme: how to map this to the local var array as in the case of label
+                        // offsets? How is the local variable number mapped - at the Jasmin level
+                        // and at the JVM level?
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Fload { ref varnum } => {
+                        opcodes.push(0x17);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Aload { ref varnum } => {
+                        opcodes.push(0x19);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Lload { ref varnum } => {
+                        opcodes.push(0x16);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Dload { ref varnum } => {
+                        opcodes.push(0x18);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Istore { ref varnum } => {
+                        opcodes.push(0x36);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Fstore { ref varnum } => {
+                        opcodes.push(0x38);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Astore { ref varnum } => {
+                        opcodes.push(0x3a);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Lstore { ref varnum } => {
+                        opcodes.push(0x37);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Dstore { ref varnum } => {
+                        opcodes.push(0x39);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::Ret { ref varnum } => {
+                        opcodes.push(0xa9);
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+                    }
+
+                    WideInstruction::IInc {
+                        ref varnum,
+                        ref delta,
+                    } => {
+                        opcodes.push(0x84);
+
+                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
+                        opcodes.extend_from_slice(&local_var_offset);
+
+                        let local_delta_offset = self.gen_offset_for_delta(*delta);
+                        opcodes.extend_from_slice(&local_delta_offset);
+                    }
+                }
+
+                CodegenResultType::ByteVec(opcodes)
             }
         })
     }
