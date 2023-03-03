@@ -143,7 +143,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                         PhoronFieldAccessFlag::AccStatic,
                         PhoronFieldAccessFlag::AccFinal,
                     ],
-                    field_descriptor: BaseType(Double),
+                    field_descriptor: BaseType(Float),
                     init_val: Some(PhoronFieldInitValue::Double(3.14159)),
                 },
             ],
@@ -185,6 +185,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
                     instructions: vec![
                         PhoronDirective(LimitStack(1)),
                         PhoronDirective(LimitLocals(1)),
+                        JvmInstruction(Return),
                     ],
                 },
             ],

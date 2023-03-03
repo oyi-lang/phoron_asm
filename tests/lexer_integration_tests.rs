@@ -108,7 +108,7 @@ fn test_lex_fields() -> Result<(), Box<dyn Error>> {
         TStatic,
         TFinal,
         TIdent("PI".to_string()),
-        TIdent("D".to_string()),
+        TIdent("F".to_string()),
         TAssign,
         TFloat(3.14159),
         TMethod,
