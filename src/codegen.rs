@@ -15,6 +15,11 @@ use std::{collections::HashMap, error::Error, fmt, io::Write};
 
 #[derive(Debug)]
 pub enum CodegenError {
+    AttributeError {
+        attr: &'static str,
+        details: &'static str,
+    },
+
     Missing {
         component: &'static str,
     },
@@ -40,13 +45,15 @@ impl fmt::Display for CodegenError {
             f,
             "{}",
             match *self {
+                AttributeError {
+                    ref attr,
+                    ref details,
+                } => format!("{attr}: {details}"),
                 Missing { ref component } => format!("Missing : {component}"),
                 ConstantPoolError {
                     ref cp_entry,
                     ref details,
-                } => format!(
-                    "Error while constructing Constant Pool for entry {cp_entry} : {details}"
-                ),
+                } => format!("{cp_entry} : {details}"),
                 OpcodeError {
                     ref opcode,
                     ref details,
@@ -339,7 +346,7 @@ where
 
         for instr in instructions {
             match instr {
-                PhoronInstruction::PhoronDirective(ref _dir) => {}
+                PhoronInstruction::PhoronDirective(ref directive) => {}
 
                 PhoronInstruction::PhoronLabel(ref label) => {
                     self.label_mapping
@@ -693,8 +700,8 @@ where
 
         let mut code = Vec::new();
 
-        let exception_table_length = 0;
-        let exception_table = vec![];
+        let mut exception_table_length = 0;
+        let mut exception_table = vec![];
         let code_attributes_count = 0;
         let code_attributes = vec![];
 
@@ -708,6 +715,98 @@ where
 
                     PhoronDirective::LimitLocals(locals) => {
                         max_locals = *locals;
+                    }
+
+                    PhoronDirective::Throws { ref class_name } => {}
+
+                    PhoronDirective::LineNumber(ref linum) => {}
+
+                    PhoronDirective::Var {
+                        ref varnum,
+                        ref name,
+                        ref field_descriptor,
+                        ref from_label,
+                        ref to_label,
+                    } => {
+                        todo!()
+                    }
+
+                    //Code {
+                    //    attribute_name_index: u16,
+                    //    attribute_length: u32,
+                    //    max_stack: u16,
+                    //    max_locals: u16,
+                    //    code_length: u32,
+                    //    code: Vec<u8>,
+                    //    exception_table_length: u16,
+                    //    exception_table: Vec<ExceptionHandler>,
+                    //    code_attributes_count: u16,
+                    //    code_attributes: Vec<AttributeInfo>,
+                    //},
+
+                    //Catch {
+                    //    class_name: String,
+                    //    from_label: String,
+                    //    to_label: String,
+                    //    handler_label: String,
+                    //},
+
+                    //Exceptions {
+                    //    attribute_name_index: u16,
+                    //    attribute_length: u32,
+                    //    number_of_exceptions: u16,
+                    //    exception_index_table: Vec<u16>,
+                    //},
+
+                    // this goes in the exception_table field of the Code attribute
+                    PhoronDirective::Catch {
+                        ref class_name,
+                        ref from_label,
+                        ref to_label,
+                        ref handler_label,
+                    } => {
+                        exception_table_length += 1;
+
+                        let mut exc_handler = ExceptionHandler::default();
+                        //pub struct ExceptionHandler {
+                        //    pub start_pc: u16,
+                        //    pub end_pc: u16,
+                        //    pub handler_pc: u16,
+                        //    pub catch_type: u16,
+                        //}
+                        exc_handler.start_pc = *self.label_mapping.get(from_label).ok_or(
+                            CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing start_pc for exception handler",
+                            },
+                        )? as u16;
+
+                        exc_handler.end_pc = *self.label_mapping.get(to_label).ok_or(
+                            CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing end_pc for exception handler",
+                            },
+                        )? as u16;
+
+                        exc_handler.handler_pc = *self.label_mapping.get(handler_label).ok_or(
+                            CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing handler_pc for exception handler",
+                            },
+                        )? as u16;
+
+                        exc_handler.catch_type =
+                            *cp.get_class(class_name)
+                                .ok_or(CodegenError::AttributeError {
+                                    attr: "Code",
+                                    details: "missing catch_type in exception handler",
+                                })?
+                                - 1; // fixme: see why this doesn't work evern though the idx in the cp is correct
+
+                        exception_table.push(exc_handler);
+
+                        // update attribute length for `Code` attribute
+                        attribute_length += 4 * std::mem::size_of::<u16>() as u32;
                     }
                     _ => todo!(),
                 },
@@ -1509,7 +1608,19 @@ where
                 CodegenResultType::ByteVec(opcodes)
             }
 
-            New { ref class_name } => todo!(),
+            New { ref class_name } => {
+                let mut opcodes = vec![0xbb];
+
+                let class_ref =
+                    *cp.get_class(&class_name.to_string())
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "new",
+                            details: "missing class reference",
+                        })?;
+                opcodes.extend_from_slice(&class_ref.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
+            }
 
             Nop => CodegenResultType::ByteVec(vec![0x00]),
             Pop => CodegenResultType::ByteVec(vec![0x57]),

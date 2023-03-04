@@ -566,8 +566,21 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         Ok(())
     }
 
-    // todo
     fn visit_directive(&mut self, directive: &PhoronDirective, cp: Self::Input) -> Self::Result {
+        match directive {
+            PhoronDirective::Catch {
+                ref class_name,
+                ref from_label,
+                ref to_label,
+                ref handler_label,
+            } => {
+                let name_index = self.analyze_name(class_name, cp)?;
+                self.analyze_class(name_index, cp)?;
+            }
+
+            _ => {}
+        }
+
         Ok(())
     }
 
