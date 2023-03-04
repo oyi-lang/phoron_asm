@@ -367,9 +367,8 @@ where
                         | Monitorenter | Monitorexit | Nop | Pop | Pop2 | Return | Saload
                         | Sastore | Swap => 1,
 
-                        Bipush(ref _sb) => 2,
-
-                        Newarray { .. }
+                        Bipush(..)
+                        | Newarray { .. }
                         | Iload { .. }
                         | Fload { .. }
                         | Aload { .. }
@@ -380,11 +379,13 @@ where
                         | Astore { .. }
                         | Lstore { .. }
                         | Dstore { .. }
+                        | Ldc(..)
                         | Ret { .. } => 2,
 
-                        Sipush(ref _ss) => 3,
-
-                        Getstatic { .. }
+                        Sipush(..)
+                        | Anewarray { .. }
+                        | Checkcast { .. }
+                        | Getstatic { .. }
                         | Getfield { .. }
                         | Iinc { .. }
                         | Invokespecial { .. }
@@ -408,56 +409,23 @@ where
                         | Iflt { .. }
                         | Ifne { .. }
                         | Ifnonnull { .. }
-                        | Ifnull { .. } => 3,
+                        | Ifnull { .. }
+                        | Instanceof { .. }
+                        | Ldcw(..)
+                        | Ldc2w(..)
+                        | New { .. }
+                        | Jsr { .. } => 3,
 
-                        Invokeinterface => 4,
+                        Invokeinterface { .. } | Multianewarray { .. } => 4,
 
-                        Anewarray { ref component_type } => todo!(),
-
-                        Checkcast { ref cast_type } => {
-                            todo!()
-                        }
-
-                        // 5 bytes
-                        Gotow { ref label } => {
-                            todo!()
-                        }
-
-                        Jsrw { ref label } => {
-                            todo!()
-                        }
-
-                        Jsr { ref label } => {
-                            todo!()
-                        }
-
-                        Ldc2w(ref ldc2w_val) => {
-                            todo!()
-                        }
-
-                        Ldcw(ref ldcw_val) => {
-                            todo!()
-                        }
-
-                        Ldc(ref ldc_val) => {
-                            todo!()
-                        }
+                        Jsrw { .. } | Gotow { .. } => 5,
 
                         Lookupswitch {
                             ref switches,
                             ref default,
                         } => {
-                            todo!()
+                            todo!() // variable-length
                         }
-
-                        Multianewarray {
-                            ref component_type,
-                            ref dimensions,
-                        } => {
-                            todo!()
-                        }
-
-                        New { ref class_name } => todo!(),
 
                         Tableswitch {
                             ref low,
@@ -465,8 +433,13 @@ where
                             ref switches,
                             ref default,
                         } => {
-                            todo!()
+                            todo!() // variable-length
                         }
+
+                        Wide(ref wide_instr) => match wide_instr {
+                            WideInstruction::IInc { .. } => 6,
+                            _ => 4,
+                        },
                     } as i16;
                 }
             }
@@ -740,7 +713,6 @@ where
                 PhoronInstruction::PhoronLabel(ref label) => {}
 
                 PhoronInstruction::JvmInstruction(ref jvm_instr) => {
-                    println!("Processing jvm opcode {jvm_instr:#?}");
                     let opcodes = self.visit_jvm_instruction(jvm_instr, cp)?;
 
                     if let CodegenResultType::ByteVec(instr_opcodes) = opcodes {
@@ -799,6 +771,7 @@ where
             Aload { ref varnum } => {
                 let mut opcodes = vec![0x19];
                 opcodes.extend_from_slice(&varnum.to_be_bytes());
+
                 CodegenResultType::ByteVec(opcodes)
             }
 
@@ -808,7 +781,38 @@ where
             Aload3 => CodegenResultType::ByteVec(vec![0x2d]),
 
             Anewarray { ref component_type } => {
-                todo!()
+                let mut opcodes = vec![0xbd];
+
+                println!(
+                    "anewarray component type = {:#?}",
+                    component_type.to_string()
+                );
+
+                let component_name = component_type.to_string();
+
+                opcodes.extend_from_slice(&match component_type {
+                    ClassOrArrayTypeDescriptor::ClassType { ref class_name } => {
+                        let class_ref = *cp
+                            .get_class(&component_name[1..component_name.len() - 1])
+                            .ok_or(CodegenError::OpcodeError {
+                                opcode: "anewarray",
+                                details: "missing class reference",
+                            })?;
+                        class_ref.to_be_bytes()
+                    }
+
+                    ClassOrArrayTypeDescriptor::ArrayType { .. } => {
+                        let array_class_ref =
+                            *cp.get_class(&component_name)
+                                .ok_or(CodegenError::OpcodeError {
+                                    opcode: "anewarray",
+                                    details: "missing array class reference",
+                                })?;
+                        array_class_ref.to_be_bytes()
+                    }
+                });
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Areturn => CodegenResultType::ByteVec(vec![0xb0]),
@@ -831,6 +835,7 @@ where
             Bipush(sb) => {
                 let mut opcodes = vec![0x10];
                 opcodes.extend_from_slice(&sb.to_be_bytes());
+
                 CodegenResultType::ByteVec(opcodes)
             }
 
@@ -1265,7 +1270,18 @@ where
             Ineg => CodegenResultType::ByteVec(vec![0x74]),
 
             Instanceof { ref check_type } => {
-                todo!()
+                let mut opcodes = vec![0xc1];
+
+                println!("check_type = {:#?}, {}", check_type, check_type.to_string());
+                let class_ref =
+                    *cp.get_class(&check_type.to_string())
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "instanceof",
+                            details: "missing class reference",
+                        })?;
+                opcodes.extend_from_slice(&class_ref.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             // check

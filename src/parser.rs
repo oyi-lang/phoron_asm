@@ -17,6 +17,7 @@ pub enum ParserError {
 
     Malformed {
         component: &'static str,
+        details: &'static str,
     },
 
     Unknown {
@@ -50,7 +51,10 @@ impl fmt::Display for ParserError {
                     instr, "incorrect type or value of ", type_or_val
                 ),
 
-                Malformed { ref component } => format!("Malformed {}", component),
+                Malformed {
+                    ref component,
+                    ref details,
+                } => format!("Malformed {}: {}", component, details),
                 Unknown { ref component } => format!("Unknown {component}"),
 
                 LexerError(ref err) => err.to_string(),
@@ -332,7 +336,18 @@ impl<'a> Parser<'a> {
                 }
             }
             Token::TIdent(class_name_str) => {
-                let class_name = class_name_str.to_string();
+                let class_name = if class_name_str.starts_with('L') {
+                    if !class_name_str.ends_with(';') {
+                        return Err(ParserError::Malformed {
+                            component: "class or array type descriptor",
+                            details: "missing ; at end of class name",
+                        });
+                    } else {
+                        class_name_str[1..class_name_str.len() - 1].to_string()
+                    }
+                } else {
+                    class_name_str.to_string()
+                };
                 self.advance()?;
 
                 ClassOrArrayTypeDescriptor::ClassType { class_name }
@@ -340,7 +355,8 @@ impl<'a> Parser<'a> {
 
             _ => {
                 return Err(ParserError::Malformed {
-                    component: "class or array tupe descriptor",
+                    component: "class or array type descriptor",
+                    details: "invalid or unexpected token while parsing class or array type",
                 })
             }
         })
@@ -398,12 +414,14 @@ impl<'a> Parser<'a> {
                     } else {
                         return Err(ParserError::Malformed {
                             component: "field descriptor",
+                            details: "missing ; while parsing field descriptor",
                         });
                     }
                 }
                 _ => {
                     return Err(ParserError::Malformed {
                         component: "field descriptor",
+                        details: "invalid or unexpected token while parsing field descriptor",
                     })
                 }
             })
@@ -421,6 +439,7 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::Malformed {
                 component: "field descriptor",
+                details: "malformed field descriptor",
             })
         }
     }
@@ -451,6 +470,7 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::Malformed {
                 component: "field definition",
+                details: "malformed field definition",
             })
         }
     }
@@ -473,6 +493,7 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::Malformed {
                 component: "class name",
+                details: "malformed class name",
             })
         }
     }
@@ -484,7 +505,10 @@ impl<'a> Parser<'a> {
 
             Ok(label)
         } else {
-            Err(ParserError::Malformed { component: "label" })
+            Err(ParserError::Malformed {
+                component: "label",
+                details: "malformed label",
+            })
         }
     }
 
@@ -639,6 +663,7 @@ impl<'a> Parser<'a> {
             _ => {
                 return Err(ParserError::Malformed {
                     component: "Phoron directive",
+                    details: "invalid Phoron directive",
                 })
             }
         })
@@ -653,6 +678,7 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::Malformed {
                 component: "unsigned byte",
+                details: "invalid unsigned byte",
             })
         }
     }
@@ -666,19 +692,7 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::Malformed {
                 component: "signed byte",
-            })
-        }
-    }
-
-    fn parse_ss(&mut self) -> ParserResult<i16> {
-        if let Token::TInt(n) = self.see() {
-            let n = *n as i16;
-            self.advance()?;
-
-            Ok(n)
-        } else {
-            Err(ParserError::Malformed {
-                component: "signed integer",
+                details: "invalid signed byte",
             })
         }
     }
@@ -691,7 +705,22 @@ impl<'a> Parser<'a> {
             Ok(n)
         } else {
             Err(ParserError::Malformed {
-                component: "unsigned integer",
+                component: "unsigned short",
+                details: "invalid unsigned short",
+            })
+        }
+    }
+
+    fn parse_ss(&mut self) -> ParserResult<i16> {
+        if let Token::TInt(n) = self.see() {
+            let n = *n as i16;
+            self.advance()?;
+
+            Ok(n)
+        } else {
+            Err(ParserError::Malformed {
+                component: "signed short",
+                details: "invalid signed short",
             })
         }
     }
@@ -705,6 +734,7 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::Malformed {
                 component: "signed integer",
+                details: "invalid signed integer",
             })
         }
     }
@@ -740,6 +770,7 @@ impl<'a> Parser<'a> {
             } else {
                 return Err(ParserError::Malformed {
                     component: "lookupswitch",
+                    details: "missing : in lookupswitch pair",
                 });
             }
         }
@@ -759,6 +790,7 @@ impl<'a> Parser<'a> {
             } else {
                 Err(ParserError::Malformed {
                     component: "default switch pair",
+                    details: "misasing : in default switch pair",
                 })
             }
         } else {
@@ -2460,6 +2492,7 @@ impl<'a> Parser<'a> {
                 } else {
                     return Err(ParserError::Malformed {
                         component: "newarray",
+                        details: "malformed newarray instruction",
                     });
                 }
             }
@@ -2830,12 +2863,16 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                     PhoronInstruction::PhoronLabel(label)
                 } else {
-                    return Err(ParserError::Malformed { component: "label" });
+                    return Err(ParserError::Malformed {
+                        component: "label",
+                        details: "malformed label",
+                    });
                 }
             }
             _ => {
                 return Err(ParserError::Malformed {
                     component: "Phoron instruction",
+                    details: "malformed instruction",
                 })
             }
         })
@@ -2904,6 +2941,7 @@ impl<'a> Parser<'a> {
                 } else {
                     return Err(ParserError::Malformed {
                         component: "method descriptor",
+                        details: "malformed method descriptor",
                     });
                 };
 
@@ -2914,11 +2952,13 @@ impl<'a> Parser<'a> {
             } else {
                 Err(ParserError::Malformed {
                     component: "method descriptor",
+                    details: "malformed method descriptor",
                 })
             }
         } else {
             Err(ParserError::Malformed {
                 component: "method descriptor",
+                details: "malformed method descriptor",
             })
         }
     }

@@ -712,7 +712,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Instanceof {
                             check_type: ClassOrArrayTypeDescriptor::ArrayType {
                                 component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
-                                    class_name: "Ljava/lang/Thread;".to_string(),
+                                    class_name: "java/lang/Thread".to_string(),
                                 }),
                             },
                         }),
@@ -1228,7 +1228,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Anewarray {
                             component_type: ClassOrArrayTypeDescriptor::ArrayType {
                                 component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
-                                    class_name: "Ljava/lang/String;".to_string(),
+                                    class_name: "java/lang/String".to_string(),
                                 }),
                             },
                         }),

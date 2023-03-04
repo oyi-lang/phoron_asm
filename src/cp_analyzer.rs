@@ -372,10 +372,40 @@ impl ConstantPoolAnalyzer {
             .entry(PhoronConstantPoolKind::Class { name_index })
             .or_insert_with(|| {
                 let curr_cp_index = self.cp_index;
-                println!("inserting class with index {:#?}", curr_cp_index);
+                println!(
+                    "inserting class {:#?} at index {:#?}",
+                    name_index, curr_cp_index
+                );
                 self.cp_index += 1;
                 curr_cp_index
             }))
+    }
+
+    fn analyze_class_or_interface_type_descriptor(
+        &mut self,
+        component_type: &ClassOrArrayTypeDescriptor,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<u16> {
+        let component_name = component_type.to_string();
+
+        Ok(match *component_type {
+            ClassOrArrayTypeDescriptor::ClassType { ref class_name } => {
+                // check
+                let class_name_idx = self.analyze_name(class_name, cp)?;
+                println!("[cpana] Inserted class {class_name} at {class_name_idx}");
+                self.analyze_class(class_name_idx, cp)?
+            }
+
+            ClassOrArrayTypeDescriptor::ArrayType { ref component_type } => {
+                self.analyze_class_or_interface_type_descriptor(component_type, cp)?;
+                let array_name_idx = self.analyze_name(&component_name, cp)?;
+                println!(
+                    "[cpana] Inserted array {:#?} at {array_name_idx}",
+                    component_name
+                );
+                self.analyze_class(array_name_idx, cp)?
+            }
+        })
     }
 
     pub fn analyze(
@@ -520,7 +550,10 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         self.analyze_name(PHORON_CODE, cp)?;
 
         match instr {
-            Anewarray { ref component_type } => {}
+            Anewarray { ref component_type } => {
+                self.analyze_class_or_interface_type_descriptor(component_type, cp)?;
+            }
+
             Aload { ref varnum } => {}
             Arraylength => {}
             Astore { ref varnum } => {}
@@ -591,7 +624,10 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref delta,
             } => {}
             Iload { ref varnum } => {}
-            Instanceof { ref check_type } => {}
+
+            Instanceof { ref check_type } => {
+                self.analyze_class_or_interface_type_descriptor(check_type, cp)?;
+            }
 
             Invokeinterface {
                 ref interface_name,

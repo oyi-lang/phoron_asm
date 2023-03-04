@@ -289,6 +289,21 @@ pub enum ClassOrArrayTypeDescriptor {
     },
 }
 
+impl fmt::Display for ClassOrArrayTypeDescriptor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use ClassOrArrayTypeDescriptor::*;
+
+        write!(
+            f,
+            "{}",
+            match *self {
+                ClassType { ref class_name } => format!("L{};", class_name.to_string()),
+                ArrayType { ref component_type } => format!("[{}", component_type),
+            }
+        )
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Ldc2wValue {
     Long(i64),
@@ -722,5 +737,20 @@ mod tests {
             "(IDLjava/lang/Thread;)Ljava/lang/Object;",
             &method_desc.to_string()
         );
+    }
+
+    #[test]
+    fn test_class_or_interface_type_descriptor() {
+        let class_type = ClassOrArrayTypeDescriptor::ClassType {
+            class_name: "java/lang/Thread".to_string(),
+        };
+        assert_eq!("Ljava/lang/Thread;", class_type.to_string());
+
+        let array_type = ClassOrArrayTypeDescriptor::ArrayType {
+            component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
+                class_name: "java/lang/String".to_string(),
+            }),
+        };
+        assert_eq!("[Ljava/lang/String;", array_type.to_string());
     }
 }
