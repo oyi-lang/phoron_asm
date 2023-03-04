@@ -381,31 +381,59 @@ impl ConstantPoolAnalyzer {
             }))
     }
 
+    /// check if the class represented by the type descriptor is already in the constant pool,
+    /// and if not, insert it. Update the Constant Pool index accordingly.
+    fn analyze_field_descriptor(
+        &mut self,
+        field_desc: &PhoronFieldDescriptor,
+        cp: &mut PhoronConstantPool,
+    ) -> ConstantPoolAnalyzerResult<()> {
+        let component_name = field_desc.to_string();
+
+        match *field_desc {
+            PhoronFieldDescriptor::BaseType(..) => {}
+
+            PhoronFieldDescriptor::ObjectType { ref class_name } => {
+                let class_name_idx = self.analyze_name(class_name, cp)?;
+                self.analyze_class(class_name_idx, cp)?;
+            }
+
+            PhoronFieldDescriptor::ArrayType { ref component_type } => {
+                //self.analyze_field_descriptor(component_type, cp)?;
+                let array_name_idx = self.analyze_name(&component_name, cp)?;
+                self.analyze_class(array_name_idx, cp)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// check if the Class or interface represented by the type descriptor is already in the constant pool,
+    /// and if not, insert it. Update the Constant Pool index accordingly.
     fn analyze_class_or_interface_type_descriptor(
         &mut self,
         component_type: &ClassOrArrayTypeDescriptor,
         cp: &mut PhoronConstantPool,
-    ) -> ConstantPoolAnalyzerResult<u16> {
+    ) -> ConstantPoolAnalyzerResult<()> {
         let component_name = component_type.to_string();
 
-        Ok(match *component_type {
+        match *component_type {
+            ClassOrArrayTypeDescriptor::BaseType(..) => {}
+
             ClassOrArrayTypeDescriptor::ClassType { ref class_name } => {
                 // check
                 let class_name_idx = self.analyze_name(class_name, cp)?;
-                println!("[cpana] Inserted class {class_name} at {class_name_idx}");
-                self.analyze_class(class_name_idx, cp)?
+                self.analyze_class(class_name_idx, cp)?;
             }
 
             ClassOrArrayTypeDescriptor::ArrayType { ref component_type } => {
-                self.analyze_class_or_interface_type_descriptor(component_type, cp)?;
+                // self.analyze_class_or_interface_type_descriptor(component_type, cp)?;
                 let array_name_idx = self.analyze_name(&component_name, cp)?;
-                println!(
-                    "[cpana] Inserted array {:#?} at {array_name_idx}",
-                    component_name
-                );
-                self.analyze_class(array_name_idx, cp)?
+                self.analyze_class(array_name_idx, cp)?;
             }
-        })
+        }
+
+        Ok(())
     }
 
     pub fn analyze(
@@ -712,10 +740,12 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref default,
             } => {}
             Lstore { ref varnum } => {}
+
             Multianewarray {
                 ref component_type,
                 ref dimensions,
-            } => {}
+            } => self.analyze_field_descriptor(component_type, cp)?,
+
             Newarray { ref component_type } => {}
             New { ref class_name } => {}
             Putfield {

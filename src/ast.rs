@@ -280,6 +280,8 @@ pub enum PhoronDirective {
 
 #[derive(Debug, PartialEq)]
 pub enum ClassOrArrayTypeDescriptor {
+    // fixme: how to disallow this variant at the top-level?
+    BaseType(PhoronBaseType),
     ClassType {
         class_name: String,
     },
@@ -297,6 +299,7 @@ impl fmt::Display for ClassOrArrayTypeDescriptor {
             f,
             "{}",
             match *self {
+                BaseType(ref base_type) => base_type.to_string(),
                 ClassType { ref class_name } => format!("L{};", class_name.to_string()),
                 ArrayType { ref component_type } => format!("[{}", component_type),
             }

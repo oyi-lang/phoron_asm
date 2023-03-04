@@ -323,6 +323,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// BaseType <- 'B' / 'C' / 'D' / 'F' / 'I' / 'J' / 'S' / 'Z'
     /// ClassType <- ClassName
     /// ArrayType <- '[' AnewarrayTypeDescriptor ';'
     fn parse_class_or_array_type(&mut self) -> ParserResult<ClassOrArrayTypeDescriptor> {
@@ -335,22 +336,39 @@ impl<'a> Parser<'a> {
                     component_type: Box::new(component_type),
                 }
             }
+
             Token::TIdent(class_name_str) => {
-                let class_name = if class_name_str.starts_with('L') {
+                let typ = if class_name_str.starts_with('L') {
                     if !class_name_str.ends_with(';') {
                         return Err(ParserError::Malformed {
                             component: "class or array type descriptor",
                             details: "missing ; at end of class name",
                         });
                     } else {
-                        class_name_str[1..class_name_str.len() - 1].to_string()
+                        let class_name = class_name_str[1..class_name_str.len() - 1].to_string();
+                        ClassOrArrayTypeDescriptor::ClassType { class_name }
                     }
                 } else {
-                    class_name_str.to_string()
+                    match class_name_str.chars().nth(0).unwrap() {
+                        'B' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Byte),
+                        'C' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Character),
+                        'D' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Double),
+                        'F' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Float),
+                        'I' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Integer),
+                        'J' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Long),
+                        'S' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Short),
+                        'Z' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Boolean),
+                        _ => {
+                            // this is where it differes from FieldDescriptor - assume that
+                            // the string passed in is a class
+                            ClassOrArrayTypeDescriptor::ClassType {
+                                class_name: class_name_str.to_string(),
+                            }
+                        }
+                    }
                 };
                 self.advance()?;
-
-                ClassOrArrayTypeDescriptor::ClassType { class_name }
+                typ
             }
 
             _ => {

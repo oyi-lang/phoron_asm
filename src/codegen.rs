@@ -307,6 +307,7 @@ where
         Ok(())
     }
 
+    // todo - check if this is really needed
     fn gen_offset_for_label(&self, label_offset: i16) -> [u8; 2] {
         let byte1 = (label_offset >> 8) as u8;
         let byte2 = (label_offset ^ ((byte1 as i16) << 8)) as u8;
@@ -314,6 +315,7 @@ where
         [byte1, byte2]
     }
 
+    // todo - check if this is really needed
     fn gen_offset_for_local_var(&self, local_var: u16) -> [u8; 2] {
         let byte1 = (local_var >> 8) as u8;
         let byte2 = (local_var ^ ((byte1 as u16) << 8)) as u8;
@@ -321,6 +323,7 @@ where
         [byte1, byte2]
     }
 
+    // todo - check if this is really needed
     fn gen_offset_for_delta(&self, wide_index: i16) -> [u8; 2] {
         let byte1 = (wide_index >> 8) as u8;
         let byte2 = (wide_index ^ ((byte1 as i16) << 8)) as u8;
@@ -334,7 +337,6 @@ where
         self.label_mapping.clear();
         let mut curr_code_offset = 0i16;
 
-        // TODO: calculate sizes for all instructions
         for instr in instructions {
             match instr {
                 PhoronInstruction::PhoronDirective(ref _dir) => {}
@@ -789,8 +791,9 @@ where
                 );
 
                 let component_name = component_type.to_string();
-
                 opcodes.extend_from_slice(&match component_type {
+                    ClassOrArrayTypeDescriptor::BaseType(..) => unreachable!(),
+
                     ClassOrArrayTypeDescriptor::ClassType { ref class_name } => {
                         let class_ref = *cp
                             .get_class(&component_name[1..component_name.len() - 1])
@@ -1476,7 +1479,17 @@ where
                 ref component_type,
                 ref dimensions,
             } => {
-                todo!()
+                let mut opcodes = vec![0xc5];
+                let class_ref = *cp.get_class(&component_type.to_string()).ok_or(
+                    CodegenError::OpcodeError {
+                        opcode: "multianewarray",
+                        details: "missing class reference",
+                    },
+                )?;
+                opcodes.extend_from_slice(&class_ref.to_be_bytes());
+                opcodes.push(*dimensions);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Newarray { ref component_type } => {
