@@ -1503,13 +1503,6 @@ where
             Lconst0 => CodegenResultType::ByteVec(vec![0x09]),
             Lconst1 => CodegenResultType::ByteVec(vec![0x0a]),
 
-            Ldc2w(ref ldc2w_val) => {
-                todo!()
-            }
-            Ldcw(ref ldcw_val) => {
-                todo!()
-            }
-
             // TODO: sort out valid types for values (wide, non-wide)
             Ldc(ref ldc_val) => {
                 let mut opcodes = vec![0x12];
@@ -1525,7 +1518,73 @@ where
                         // fixme
                         opcodes.extend_from_slice(&string_index.to_be_bytes()[1..])
                     }
-                    _ => unreachable!(),
+
+                    LdcValue::Integer(int) => {
+                        let int_index = *cp.get_integer(*int).ok_or(CodegenError::OpcodeError {
+                            opcode: "ldc",
+                            details: "missing integer",
+                        })?;
+                        opcodes.extend_from_slice(&int_index.to_be_bytes());
+                    }
+
+                    LdcValue::Float(float) => {
+                        let float_index =
+                            *cp.get_float(*float).ok_or(CodegenError::OpcodeError {
+                                opcode: "lcd",
+                                details: "missing float",
+                            })?;
+                        opcodes.extend_from_slice(&float_index.to_be_bytes());
+                    }
+                }
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ldcw(ref ldcw_val) => {
+                let mut opcodes = vec![0x13];
+
+                match ldcw_val {
+                    LdcwValue::Integer(int) => {
+                        let int_index = *cp.get_integer(*int).ok_or(CodegenError::OpcodeError {
+                            opcode: "ldcw",
+                            details: "missing integer",
+                        })?;
+                        opcodes.extend_from_slice(&int_index.to_be_bytes());
+                    }
+
+                    LdcwValue::Float(float) => {
+                        let float_index =
+                            *cp.get_float(*float).ok_or(CodegenError::OpcodeError {
+                                opcode: "ldcw",
+                                details: "missing float",
+                            })?;
+                        opcodes.extend_from_slice(&float_index.to_be_bytes());
+                    }
+                }
+
+                CodegenResultType::ByteVec(opcodes)
+            }
+
+            Ldc2w(ref ldc2w_val) => {
+                let mut opcodes = vec![0x14];
+
+                match ldc2w_val {
+                    Ldc2wValue::Long(long) => {
+                        let long_index = *cp.get_long(*long).ok_or(CodegenError::OpcodeError {
+                            opcode: "ldc2w",
+                            details: "missing long",
+                        })?;
+                        opcodes.extend_from_slice(&long_index.to_be_bytes());
+                    }
+
+                    Ldc2wValue::Double(double) => {
+                        let double_index =
+                            *cp.get_double(*double).ok_or(CodegenError::OpcodeError {
+                                opcode: "ldc2w",
+                                details: "missing double",
+                            })?;
+                        opcodes.extend_from_slice(&double_index.to_be_bytes());
+                    }
                 }
 
                 CodegenResultType::ByteVec(opcodes)

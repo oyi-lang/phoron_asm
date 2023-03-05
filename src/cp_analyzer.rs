@@ -67,6 +67,34 @@ impl PhoronConstantPool {
         self.0.iter()
     }
 
+    /// Retrieve the index in the Constant Pool, if present, of the
+    /// given double.
+    pub fn get_double(&self, double: f64) -> Option<&u16> {
+        self.0
+            .get(&PhoronConstantPoolKind::Double(double.to_be_bytes()))
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the
+    /// given float.
+    pub fn get_float(&self, float: f32) -> Option<&u16> {
+        self.0
+            .get(&PhoronConstantPoolKind::Float(float.to_be_bytes()))
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the
+    /// given long.
+    pub fn get_long(&self, long: i64) -> Option<&u16> {
+        self.0
+            .get(&PhoronConstantPoolKind::Long(long.to_be_bytes()))
+    }
+
+    /// Retrieve the index in the Constant Pool, if present, of the
+    /// given integer.
+    pub fn get_integer(&self, int: i32) -> Option<&u16> {
+        self.0
+            .get(&PhoronConstantPoolKind::Integer(int.to_be_bytes()))
+    }
+
     /// Retrueve the index in the Constant Pool, if present, of the
     /// given String.
     pub fn get_string(&self, string: &str) -> Option<&u16> {
@@ -211,7 +239,7 @@ impl ConstantPoolAnalyzer {
 
     /// check if the int (i32) is already in the constant pool, and if not, insert it.
     /// Update the Constant Pool index accordingly.
-    fn analyze_int(
+    fn analyze_integer(
         &mut self,
         int: i32,
         cp: &mut PhoronConstantPool,
@@ -530,7 +558,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         if let Some(field_init_val) = &field_def.init_val {
             match field_init_val {
                 PhoronFieldInitValue::Integer(int) => {
-                    self.analyze_int(*int as i32, cp)?;
+                    self.analyze_integer(*int as i32, cp)?;
                 }
                 PhoronFieldInitValue::Double(double) => {
                     self.analyze_double(*double, cp)?;
@@ -734,15 +762,35 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             Istore { ref varnum } => {}
             Jsrw { ref label } => {}
             Jsr { ref label } => {}
-            Ldc2w(ref ldc2w_val) => {}
-            Ldcw(ref ldc_val) => {}
 
             Ldc(ref ldc_val) => match ldc_val {
-                LdcValue::Double(double) => {}
-                LdcValue::Integer(int) => {}
+                LdcValue::Integer(int) => {
+                    self.analyze_integer(*int, cp)?;
+                }
+                LdcValue::Float(float) => {
+                    self.analyze_float(*float, cp)?;
+                }
                 LdcValue::QuotedString(string) => {
                     let string_index = self.analyze_name(string, cp)?;
                     self.analyze_string(string_index, cp)?;
+                }
+            },
+
+            Ldcw(ref ldcw_val) => match ldcw_val {
+                LdcwValue::Integer(int) => {
+                    self.analyze_integer(*int, cp)?;
+                }
+                LdcwValue::Float(float) => {
+                    self.analyze_float(*float, cp)?;
+                }
+            },
+
+            Ldc2w(ref ldc2w_val) => match ldc2w_val {
+                Ldc2wValue::Long(long) => {
+                    self.analyze_long(*long, cp)?;
+                }
+                Ldc2wValue::Double(double) => {
+                    self.analyze_double(*double, cp)?;
                 }
             },
 

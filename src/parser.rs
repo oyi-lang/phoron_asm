@@ -387,7 +387,9 @@ impl<'a> Parser<'a> {
     /// ArrayType <- '[' ComponentType
     /// ComponentType <- FieldType
     fn parse_field_descriptor(&mut self) -> ParserResult<PhoronFieldDescriptor> {
+        // fixme : handle ident_tok of the form II IID et al.
         let ident_tok = self.see();
+        println!("ident_tok = {ident_tok:#?}");
 
         if let Token::TIdent(ident) = ident_tok {
             Ok(match &ident[0..1] {
@@ -445,6 +447,7 @@ impl<'a> Parser<'a> {
             })
         } else if let Token::TLeftSquareBracket = self.see() {
             self.advance()?;
+
             let component_type = self.parse_field_descriptor()?;
             Ok(PhoronFieldDescriptor::ArrayType {
                 component_type: Box::new(component_type),
@@ -2160,21 +2163,21 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Lconst1
             }
 
-            // ldc <double / integer / quoted string>
+            // ldc <integer / float / quoted string>
             Token::TLdc => {
                 self.advance()?;
 
                 match self.see() {
                     Token::TInt(n) => {
-                        let ival = *n as i64;
+                        let ival = *n as i32;
                         self.advance()?;
                         JvmInstruction::Ldc(LdcValue::Integer(ival))
                     }
 
                     Token::TFloat(f) => {
-                        let dval = *f as f64;
+                        let fval = *f as f32;
                         self.advance()?;
-                        JvmInstruction::Ldc(LdcValue::Double(dval))
+                        JvmInstruction::Ldc(LdcValue::Float(fval))
                     }
 
                     Token::TString(s) => {
@@ -2186,7 +2189,33 @@ impl<'a> Parser<'a> {
                     _ => {
                         return Err(ParserError::IncorrectTypeOrValue {
                             instr: "lcd",
-                            type_or_val: "integer, double, or quoted string",
+                            type_or_val: "integer, float, or quoted string constant",
+                        })
+                    }
+                }
+            }
+
+            // ldcw <integer / float
+            Token::TLdcw => {
+                self.advance()?;
+
+                match self.see() {
+                    Token::TInt(n) => {
+                        let ival = *n as i32;
+                        self.advance()?;
+                        JvmInstruction::Ldcw(LdcwValue::Integer(ival))
+                    }
+
+                    Token::TFloat(f) => {
+                        let fval = *f as f32;
+                        self.advance()?;
+                        JvmInstruction::Ldcw(LdcwValue::Float(fval))
+                    }
+
+                    _ => {
+                        return Err(ParserError::IncorrectTypeOrValue {
+                            instr: "ldcw",
+                            type_or_val: "integer or float constant",
                         })
                     }
                 }
@@ -2198,9 +2227,9 @@ impl<'a> Parser<'a> {
 
                 match self.see() {
                     Token::TInt(n) => {
-                        let ival = *n as i64;
+                        let lval = *n as i64;
                         self.advance()?;
-                        JvmInstruction::Ldc2w(Ldc2wValue::Long(ival))
+                        JvmInstruction::Ldc2w(Ldc2wValue::Long(lval))
                     }
 
                     Token::TFloat(f) => {
@@ -2213,38 +2242,6 @@ impl<'a> Parser<'a> {
                         return Err(ParserError::IncorrectTypeOrValue {
                             instr: "lcd2w",
                             type_or_val: "long or double constant",
-                        })
-                    }
-                }
-            }
-
-            // ldcw <double / integer / quoted string>
-            Token::TLdcw => {
-                self.advance()?;
-
-                match self.see() {
-                    Token::TInt(n) => {
-                        let ival = *n as i64;
-                        self.advance()?;
-                        JvmInstruction::Ldcw(LdcValue::Integer(ival))
-                    }
-
-                    Token::TFloat(f) => {
-                        let dval = *f as f64;
-                        self.advance()?;
-                        JvmInstruction::Ldcw(LdcValue::Double(dval))
-                    }
-
-                    Token::TString(s) => {
-                        let sval = s.to_owned();
-                        self.advance()?;
-                        JvmInstruction::Ldcw(LdcValue::QuotedString(sval))
-                    }
-
-                    _ => {
-                        return Err(ParserError::IncorrectTypeOrValue {
-                            instr: "ldcw",
-                            type_or_val: "integer, double, or quoted string",
                         })
                     }
                 }
@@ -2943,6 +2940,7 @@ impl<'a> Parser<'a> {
                     }
                 };
             }
+            println!("param_descriptor = {param_descriptor:#?}");
 
             if let Token::TRightParen = self.see() {
                 self.advance()?;

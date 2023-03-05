@@ -308,16 +308,22 @@ impl fmt::Display for ClassOrArrayTypeDescriptor {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Ldc2wValue {
-    Long(i64),
-    Double(f64),
+pub enum LdcValue {
+    Float(f32),
+    Integer(i32),
+    QuotedString(String),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum LdcValue {
+pub enum LdcwValue {
+    Float(f32),
+    Integer(i32),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Ldc2wValue {
     Double(f64),
-    Integer(i64),
-    QuotedString(String),
+    Long(i64),
 }
 
 #[derive(Debug, PartialEq)]
@@ -592,9 +598,9 @@ pub enum JvmInstruction {
     Lcmp,
     Lconst0,
     Lconst1,
-    Ldc2w(Ldc2wValue),
-    Ldcw(LdcValue),
     Ldc(LdcValue),
+    Ldcw(LdcwValue),
+    Ldc2w(Ldc2wValue),
     Ldiv,
     Lload {
         varnum: u8,
