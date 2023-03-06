@@ -1,4 +1,7 @@
-use crate::{ast::*, cp_analyzer::*};
+use crate::{
+    ast::*,
+    cp_analyzer::{constant_pool::*, *},
+};
 use phoron_core::{
     error::SerializeError,
     model::{
@@ -891,9 +894,9 @@ where
 
                 let component_name = component_type.to_string();
                 opcodes.extend_from_slice(&match component_type {
-                    ClassOrArrayTypeDescriptor::BaseType(..) => unreachable!(),
+                    PhoronFieldDescriptor::BaseType(..) => unreachable!(),
 
-                    ClassOrArrayTypeDescriptor::ClassType { ref class_name } => {
+                    PhoronFieldDescriptor::ObjectType { ref class_name } => {
                         let class_ref = *cp
                             .get_class(&component_name[1..component_name.len() - 1])
                             .ok_or(CodegenError::OpcodeError {
@@ -903,7 +906,7 @@ where
                         class_ref.to_be_bytes()
                     }
 
-                    ClassOrArrayTypeDescriptor::ArrayType { .. } => {
+                    PhoronFieldDescriptor::ArrayType { .. } => {
                         let array_class_ref =
                             *cp.get_class(&component_name)
                                 .ok_or(CodegenError::OpcodeError {
@@ -1544,6 +1547,17 @@ where
                 let mut opcodes = vec![0x13];
 
                 match ldcw_val {
+                    LdcwValue::QuotedString(ref string) => {
+                        let string_index =
+                            *cp.get_string(string).ok_or(CodegenError::OpcodeError {
+                                opcode: "ldcw",
+                                details: "missing quoted string",
+                            })?;
+
+                        // fixme
+                        opcodes.extend_from_slice(&string_index.to_be_bytes()[1..])
+                    }
+
                     LdcwValue::Integer(int) => {
                         let int_index = *cp.get_integer(*int).ok_or(CodegenError::OpcodeError {
                             opcode: "ldcw",

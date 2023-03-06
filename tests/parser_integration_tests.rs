@@ -696,7 +696,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         PhoronDirective(LimitLocals(2)),
                         JvmInstruction(Bipush(10)),
                         JvmInstruction(Anewarray {
-                            component_type: ClassOrArrayTypeDescriptor::ClassType {
+                            component_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/Thread".to_string(),
                             },
                         }),
@@ -710,8 +710,8 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
                         }),
                         JvmInstruction(Aload1),
                         JvmInstruction(Instanceof {
-                            check_type: ClassOrArrayTypeDescriptor::ArrayType {
-                                component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
+                            check_type: PhoronFieldDescriptor::ArrayType {
+                                component_type: Box::new(PhoronFieldDescriptor::ObjectType {
                                     class_name: "java/lang/Thread".to_string(),
                                 }),
                             },
@@ -902,17 +902,13 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
                         }),
                         JvmInstruction(Aload1),
                         JvmInstruction(Instanceof {
-                            check_type: ClassOrArrayTypeDescriptor::ArrayType {
-                                component_type: Box::new(ClassOrArrayTypeDescriptor::ArrayType {
-                                    component_type: Box::new(
-                                        ClassOrArrayTypeDescriptor::ArrayType {
-                                            component_type: Box::new(
-                                                ClassOrArrayTypeDescriptor::ClassType {
-                                                    class_name: "I".to_string(),
-                                                },
-                                            ),
-                                        },
-                                    ),
+                            check_type: PhoronFieldDescriptor::ArrayType {
+                                component_type: Box::new(PhoronFieldDescriptor::ArrayType {
+                                    component_type: Box::new(PhoronFieldDescriptor::ArrayType {
+                                        component_type: Box::new(PhoronFieldDescriptor::BaseType(
+                                            Integer,
+                                        )),
+                                    }),
                                 }),
                             },
                         }),
@@ -1219,15 +1215,15 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                         PhoronDirective(LimitLocals(4)),
                         JvmInstruction(Bipush(10)),
                         JvmInstruction(Anewarray {
-                            component_type: ClassOrArrayTypeDescriptor::ClassType {
+                            component_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/Thread".to_string(),
                             },
                         }),
                         JvmInstruction(Astore1),
                         JvmInstruction(Iconst2),
                         JvmInstruction(Anewarray {
-                            component_type: ClassOrArrayTypeDescriptor::ArrayType {
-                                component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
+                            component_type: PhoronFieldDescriptor::ArrayType {
+                                component_type: Box::new(PhoronFieldDescriptor::ObjectType {
                                     class_name: "java/lang/String".to_string(),
                                 }),
                             },
@@ -1237,7 +1233,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Iconst0),
                         JvmInstruction(Bipush(5)),
                         JvmInstruction(Anewarray {
-                            component_type: ClassOrArrayTypeDescriptor::ClassType {
+                            component_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/String".to_string(),
                             },
                         }),
@@ -1246,7 +1242,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Iconst1),
                         JvmInstruction(Bipush(5)),
                         JvmInstruction(Anewarray {
-                            component_type: ClassOrArrayTypeDescriptor::ClassType {
+                            component_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/String".to_string(),
                             },
                         }),
@@ -1492,7 +1488,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     method_descriptor: PhoronMethodDescriptor {
-                        param_descriptor: vec![BaseType(Integer)],
+                        param_descriptor: vec![BaseType(Integer), BaseType(Integer)],
                         return_descriptor: FieldDescriptor(BaseType(Integer)),
                     },
                     instructions: vec![
@@ -1534,7 +1530,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
                             class_name: "AddNumsJasmin".to_string(),
                             method_name: "addNums".to_string(),
                             method_descriptor: PhoronMethodDescriptor {
-                                param_descriptor: vec![BaseType(Integer)],
+                                param_descriptor: vec![BaseType(Integer), BaseType(Integer)],
                                 return_descriptor: FieldDescriptor(BaseType(Integer)),
                             },
                         }),
@@ -1630,7 +1626,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
                         JvmInstruction(Bipush(10)),
                         JvmInstruction(Sipush(1000)),
                         JvmInstruction(Ldc(LdcValue::QuotedString("Hello, world".to_string()))),
-                        JvmInstruction(Ldcw(LdcValue::QuotedString("Hola, mundo".to_string()))),
+                        JvmInstruction(Ldcw(LdcwValue::QuotedString("Hola, mundo".to_string()))),
                         JvmInstruction(Ldc2w(Ldc2wValue::Long(12345))),
                         JvmInstruction(Return),
                     ],
@@ -1975,10 +1971,8 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         }),
                         JvmInstruction(Aload1),
                         JvmInstruction(Instanceof {
-                            check_type: ClassOrArrayTypeDescriptor::ArrayType {
-                                component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
-                                    class_name: "I".to_string(),
-                                }),
+                            check_type: PhoronFieldDescriptor::ArrayType {
+                                component_type: Box::new(PhoronFieldDescriptor::BaseType(Integer)),
                             },
                         }),
                         JvmInstruction(Invokevirtual {
@@ -2003,10 +1997,8 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
                         }),
                         JvmInstruction(Aload2),
                         JvmInstruction(Instanceof {
-                            check_type: ClassOrArrayTypeDescriptor::ArrayType {
-                                component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
-                                    class_name: "I".to_string(),
-                                }),
+                            check_type: PhoronFieldDescriptor::ArrayType {
+                                component_type: Box::new(PhoronFieldDescriptor::BaseType(Integer)),
                             },
                         }),
                         JvmInstruction(Invokevirtual {
@@ -2476,7 +2468,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
                         PhoronDirective(LimitLocals(2)),
                         JvmInstruction(Aload0),
                         JvmInstruction(Checkcast {
-                            cast_type: ClassOrArrayTypeDescriptor::ClassType {
+                            cast_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/StringBuffer".to_string(),
                             },
                         }),
@@ -2623,9 +2615,13 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     method_descriptor: PhoronMethodDescriptor {
-                        param_descriptor: vec![ArrayType {
-                            component_type: Box::new(BaseType(Integer)),
-                        }],
+                        param_descriptor: vec![
+                            ArrayType {
+                                component_type: Box::new(BaseType(Integer)),
+                            },
+                            BaseType(Integer),
+                            BaseType(Integer),
+                        ],
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -2645,9 +2641,12 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                         PhoronMethodAccessFlag::AccStatic,
                     ],
                     method_descriptor: PhoronMethodDescriptor {
-                        param_descriptor: vec![ArrayType {
-                            component_type: Box::new(BaseType(Integer)),
-                        }],
+                        param_descriptor: vec![
+                            ArrayType {
+                                component_type: Box::new(BaseType(Integer)),
+                            },
+                            BaseType(Integer),
+                        ],
                         return_descriptor: VoidDescriptor,
                     },
                     instructions: vec![
@@ -2721,9 +2720,13 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                             class_name: "ArrayDemo".to_string(),
                             method_name: "setArr".to_string(),
                             method_descriptor: PhoronMethodDescriptor {
-                                param_descriptor: vec![ArrayType {
-                                    component_type: Box::new(BaseType(Integer)),
-                                }],
+                                param_descriptor: vec![
+                                    ArrayType {
+                                        component_type: Box::new(BaseType(Integer)),
+                                    },
+                                    BaseType(Integer),
+                                    BaseType(Integer),
+                                ],
                                 return_descriptor: VoidDescriptor,
                             },
                         }),
@@ -2749,9 +2752,12 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
                             class_name: "ArrayDemo".to_string(),
                             method_name: "printArr".to_string(),
                             method_descriptor: PhoronMethodDescriptor {
-                                param_descriptor: vec![ArrayType {
-                                    component_type: Box::new(BaseType(Integer)),
-                                }],
+                                param_descriptor: vec![
+                                    ArrayType {
+                                        component_type: Box::new(BaseType(Integer)),
+                                    },
+                                    BaseType(Integer),
+                                ],
                                 return_descriptor: VoidDescriptor,
                             },
                         }),
@@ -3149,7 +3155,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronDirective(LimitLocals(2)),
                         JvmInstruction(Aload0),
                         JvmInstruction(Checkcast {
-                            cast_type: ClassOrArrayTypeDescriptor::ClassType {
+                            cast_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/Object".to_string(),
                             },
                         }),
@@ -3168,7 +3174,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
                         PhoronDirective(LimitLocals(2)),
                         JvmInstruction(Aload0),
                         JvmInstruction(Instanceof {
-                            check_type: ClassOrArrayTypeDescriptor::ClassType {
+                            check_type: PhoronFieldDescriptor::ObjectType {
                                 class_name: "java/lang/Thread".to_string(),
                             },
                         }),

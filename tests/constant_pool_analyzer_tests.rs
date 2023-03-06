@@ -1,6 +1,9 @@
 use phoron_asm::{
     ast::*,
-    cp_analyzer::{PhoronConstantPoolKind::*, *},
+    cp_analyzer::{
+        constant_pool::{PhoronConstantPoolKind::*, *},
+        *,
+    },
     lexer::Lexer,
     parser::Parser,
 };

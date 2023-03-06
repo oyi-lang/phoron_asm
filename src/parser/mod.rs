@@ -3,6 +3,10 @@ use crate::{
     lexer::{Lexer, LexerError, Token},
 };
 
+mod type_descriptor_parser;
+
+use type_descriptor_parser as tdp;
+
 #[derive(Debug)]
 pub enum ParserError {
     Missing {
@@ -323,144 +327,22 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// BaseType <- 'B' / 'C' / 'D' / 'F' / 'I' / 'J' / 'S' / 'Z'
-    /// ClassType <- ClassName
-    /// ArrayType <- '[' AnewarrayTypeDescriptor ';'
-    fn parse_class_or_array_type(&mut self) -> ParserResult<ClassOrArrayTypeDescriptor> {
-        Ok(match self.see() {
-            Token::TLeftSquareBracket => {
-                self.advance()?;
-                let component_type = self.parse_class_or_array_type()?;
-
-                ClassOrArrayTypeDescriptor::ArrayType {
-                    component_type: Box::new(component_type),
-                }
-            }
-
-            Token::TIdent(class_name_str) => {
-                let typ = if class_name_str.starts_with('L') {
-                    if !class_name_str.ends_with(';') {
-                        return Err(ParserError::Malformed {
-                            component: "class or array type descriptor",
-                            details: "missing ; at end of class name",
-                        });
-                    } else {
-                        let class_name = class_name_str[1..class_name_str.len() - 1].to_string();
-                        ClassOrArrayTypeDescriptor::ClassType { class_name }
-                    }
-                } else {
-                    match class_name_str.chars().nth(0).unwrap() {
-                        'B' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Byte),
-                        'C' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Character),
-                        'D' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Double),
-                        'F' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Float),
-                        'I' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Integer),
-                        'J' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Long),
-                        'S' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Short),
-                        'Z' => ClassOrArrayTypeDescriptor::BaseType(PhoronBaseType::Boolean),
-                        _ => {
-                            // this is where it differes from FieldDescriptor - assume that
-                            // the string passed in is a class
-                            ClassOrArrayTypeDescriptor::ClassType {
-                                class_name: class_name_str.to_string(),
-                            }
-                        }
-                    }
-                };
-                self.advance()?;
-                typ
-            }
-
-            _ => {
-                return Err(ParserError::Malformed {
-                    component: "class or array type descriptor",
-                    details: "invalid or unexpected token while parsing class or array type",
-                })
-            }
-        })
-    }
-
-    /// FieldDescriptor <- FieldType
-    /// FieldType <- BaseType / ObjectType / ArrayType
-    /// BaseType <- 'B' / 'C' / 'D' / 'F' / 'I' / 'J' / 'S' / 'Z'
-    /// ObjectType <- 'L' ClassName ';'
-    /// ArrayType <- '[' ComponentType
-    /// ComponentType <- FieldType
     fn parse_field_descriptor(&mut self) -> ParserResult<PhoronFieldDescriptor> {
-        // fixme : handle ident_tok of the form II IID et al.
-        let ident_tok = self.see();
-        println!("ident_tok = {ident_tok:#?}");
-
-        if let Token::TIdent(ident) = ident_tok {
-            Ok(match &ident[0..1] {
-                "B" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Byte)
+        if let Token::TIdent(ident) = self.see() {
+            let mut field_desc_parser = tdp::TypeParser::new(&ident);
+            let field_desc = field_desc_parser.parse_field_descriptor().map_err(|err| {
+                ParserError::Malformed {
+                    component: "field descriptor",
+                    details: "invalid or malfomed field type descriptor",
                 }
-                "C" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Character)
-                }
-                "D" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Double)
-                }
-                "F" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Float)
-                }
-                "I" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Integer)
-                }
-                "J" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Long)
-                }
-                "S" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Short)
-                }
-                "Z" => {
-                    self.advance()?;
-                    PhoronFieldDescriptor::BaseType(PhoronBaseType::Boolean)
-                }
-                "L" => {
-                    let class_name = ident[1..ident.len() - 1].to_string();
-
-                    if ident.chars().last().unwrap() == ';' {
-                        self.advance()?;
-                        PhoronFieldDescriptor::ObjectType { class_name }
-                    } else {
-                        return Err(ParserError::Malformed {
-                            component: "field descriptor",
-                            details: "missing ; while parsing field descriptor",
-                        });
-                    }
-                }
-                _ => {
-                    return Err(ParserError::Malformed {
-                        component: "field descriptor",
-                        details: "invalid or unexpected token while parsing field descriptor",
-                    })
-                }
-            })
-        } else if let Token::TLeftSquareBracket = self.see() {
+            })?;
             self.advance()?;
 
-            let component_type = self.parse_field_descriptor()?;
-            Ok(PhoronFieldDescriptor::ArrayType {
-                component_type: Box::new(component_type),
-            })
-        } else if let Token::TRightParen = self.see() {
-            Err(ParserError::Missing {
-                instr: "parsing field descriptor",
-                component: "empty",
-            })
+            Ok(field_desc)
         } else {
             Err(ParserError::Malformed {
                 component: "field descriptor",
-                details: "malformed field descriptor",
+                details: "nvalid token for field descriptor",
             })
         }
     }
@@ -883,7 +765,7 @@ impl<'a> Parser<'a> {
                 self.advance()?;
 
                 let component_type =
-                    self.parse_class_or_array_type()
+                    self.parse_field_descriptor()
                         .map_err(|_| ParserError::Missing {
                             instr: "anewarray",
                             component: "compoenent type",
@@ -985,7 +867,7 @@ impl<'a> Parser<'a> {
                 self.advance()?;
 
                 let cast_type =
-                    self.parse_class_or_array_type()
+                    self.parse_field_descriptor()
                         .map_err(|_| ParserError::Missing {
                             instr: "checkcast",
                             component: "cast type",
@@ -1837,7 +1719,7 @@ impl<'a> Parser<'a> {
                 self.advance()?;
 
                 let check_type =
-                    self.parse_class_or_array_type()
+                    self.parse_field_descriptor()
                         .map_err(|_| ParserError::Missing {
                             instr: "instanceof",
                             component: "check type",
@@ -2195,7 +2077,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // ldcw <integer / float
+            // ldcw <integer / float / quoted string>
             Token::TLdcw => {
                 self.advance()?;
 
@@ -2210,6 +2092,12 @@ impl<'a> Parser<'a> {
                         let fval = *f as f32;
                         self.advance()?;
                         JvmInstruction::Ldcw(LdcwValue::Float(fval))
+                    }
+
+                    Token::TString(s) => {
+                        let sval = s.to_owned();
+                        self.advance()?;
+                        JvmInstruction::Ldcw(LdcwValue::QuotedString(sval))
                     }
 
                     _ => {
@@ -2924,47 +2812,54 @@ impl<'a> Parser<'a> {
         if let Token::TLeftParen = self.see() {
             self.advance()?;
 
-            let mut param_descriptor = Vec::new();
-            loop {
-                // todo
-                let field_descriptor = match self.parse_field_descriptor() {
-                    Err(err) => match err {
-                        ParserError::Missing {
-                            instr: "parsing field descriptor",
-                            component: "empty",
-                        } => break,
-                        _ => return Err(err),
-                    },
-                    Ok(desc) => {
-                        param_descriptor.push(desc);
-                    }
-                };
-            }
+            let ident_tok = self.see();
+            println!("ident_tok = {ident_tok:#?}");
+            let param_descriptor = if let Token::TIdent(ident) = ident_tok {
+                println!("ident = {ident:#?}");
+                let mut param_parser = tdp::TypeParser::new(ident);
+                let param_desc =
+                    param_parser
+                        .parse_param_descriptor()
+                        .map_err(|_| ParserError::Missing {
+                            instr: "method descriptor",
+                            component: "param descriptor",
+                        })?;
+                self.advance()?;
+
+                param_desc
+            } else {
+                vec![]
+            };
+
             println!("param_descriptor = {param_descriptor:#?}");
 
             if let Token::TRightParen = self.see() {
                 self.advance()?;
 
-                let return_descriptor = if let Token::TIdent(maybe_v) = self.see() {
-                    if maybe_v == "V" {
-                        self.advance()?;
-                        PhoronReturnDescriptor::VoidDescriptor
-                    } else {
-                        PhoronReturnDescriptor::FieldDescriptor(self.parse_field_descriptor()?)
-                    }
-                } else if let Token::TLeftSquareBracket = self.see() {
-                    PhoronReturnDescriptor::FieldDescriptor(self.parse_field_descriptor()?)
-                } else {
-                    return Err(ParserError::Malformed {
-                        component: "method descriptor",
-                        details: "malformed method descriptor",
-                    });
-                };
+                let ident_tok = self.see();
+                if let Token::TIdent(ret) = ident_tok {
+                    println!("ret = {ret:#?}");
+                    let mut ret_parser = tdp::TypeParser::new(ret);
+                    let return_descriptor =
+                        ret_parser
+                            .parse_return_descriptor()
+                            .map_err(|_| ParserError::Missing {
+                                instr: "method descriptor",
+                                component: "return descriptor",
+                            })?;
 
-                Ok(PhoronMethodDescriptor {
-                    param_descriptor,
-                    return_descriptor,
-                })
+                    self.advance()?;
+
+                    Ok(PhoronMethodDescriptor {
+                        param_descriptor,
+                        return_descriptor,
+                    })
+                } else {
+                    Err(ParserError::Missing {
+                        instr: "method descriptor",
+                        component: "return descriptor",
+                    })
+                }
             } else {
                 Err(ParserError::Malformed {
                     component: "method descriptor",

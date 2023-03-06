@@ -279,35 +279,6 @@ pub enum PhoronDirective {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum ClassOrArrayTypeDescriptor {
-    // fixme: how to disallow this variant at the top-level?
-    BaseType(PhoronBaseType),
-    ClassType {
-        class_name: String,
-    },
-
-    ArrayType {
-        component_type: Box<ClassOrArrayTypeDescriptor>,
-    },
-}
-
-impl fmt::Display for ClassOrArrayTypeDescriptor {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use ClassOrArrayTypeDescriptor::*;
-
-        write!(
-            f,
-            "{}",
-            match *self {
-                BaseType(ref base_type) => base_type.to_string(),
-                ClassType { ref class_name } => format!("L{};", class_name.to_string()),
-                ArrayType { ref component_type } => format!("[{}", component_type),
-            }
-        )
-    }
-}
-
-#[derive(Debug, PartialEq)]
 pub enum LdcValue {
     Float(f32),
     Integer(i32),
@@ -318,6 +289,7 @@ pub enum LdcValue {
 pub enum LdcwValue {
     Float(f32),
     Integer(i32),
+    QuotedString(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -352,7 +324,7 @@ pub enum WideInstruction {
 pub enum JvmInstruction {
     Aaload,
     Anewarray {
-        component_type: ClassOrArrayTypeDescriptor,
+        component_type: PhoronFieldDescriptor,
     },
     Areturn,
     Aastore,
@@ -379,7 +351,7 @@ pub enum JvmInstruction {
     Caload,
     Castore,
     Checkcast {
-        cast_type: ClassOrArrayTypeDescriptor,
+        cast_type: PhoronFieldDescriptor,
     },
     Dadd,
     Daload,
@@ -544,7 +516,7 @@ pub enum JvmInstruction {
     Imul,
     Ineg,
     Instanceof {
-        check_type: ClassOrArrayTypeDescriptor,
+        check_type: PhoronFieldDescriptor,
     },
     Invokeinterface {
         interface_name: String,
@@ -750,13 +722,13 @@ mod tests {
 
     #[test]
     fn test_class_or_interface_type_descriptor() {
-        let class_type = ClassOrArrayTypeDescriptor::ClassType {
+        let class_type = PhoronFieldDescriptor::ObjectType {
             class_name: "java/lang/Thread".to_string(),
         };
         assert_eq!("Ljava/lang/Thread;", class_type.to_string());
 
-        let array_type = ClassOrArrayTypeDescriptor::ArrayType {
-            component_type: Box::new(ClassOrArrayTypeDescriptor::ClassType {
+        let array_type = PhoronFieldDescriptor::ArrayType {
+            component_type: Box::new(PhoronFieldDescriptor::ObjectType {
                 class_name: "java/lang/String".to_string(),
             }),
         };

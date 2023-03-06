@@ -7,9 +7,9 @@
   return
 .end method
 
-.method public static multiply(IIJDF[I)I
+.method public static multiply(IIJDF[ILjava/lang/String;)I
   .limit stack 10
-  .limit locals 10
+  .limit locals 11
 
   iload_0
   iload_1
@@ -22,6 +22,9 @@
   aload 7
   iconst_0
   iaload
+  aload 8
+  invokestatic java/lang/Integer/parseInt(Ljava/lang/String;)I
+  imul
   imul
   imul
   imul
@@ -50,7 +53,8 @@
   ldc2_w 5.1234
   ldc_w 6.9992
   aload_1
-  invokestatic MultiplyNums/multiply(IIJDF[I)I
+  ldc "100"
+  invokestatic MultiplyNums/multiply(IIJDF[ILjava/lang/String;)I
   invokevirtual java/io/PrintStream/println(I)V
   return
 .end method
