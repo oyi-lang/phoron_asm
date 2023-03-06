@@ -307,11 +307,6 @@ where
             }
         }
 
-        println!("codegen cp...");
-        for (idx, entry) in constant_pool.iter().enumerate() {
-            println!("{idx} => {entry:?}");
-        }
-
         self.classfile.constant_pool = constant_pool;
 
         Ok(())
@@ -556,19 +551,25 @@ where
         sourcefile_def: &PhoronSourceFileDef,
         cp: Self::Input,
     ) -> Self::Result {
-        todo!()
-    }
+        self.classfile.attributes_count += 1;
 
-    //pub struct ClassFile {
-    //    pub interfaces_count: u16,
-    //    pub interfaces: Vec<u16>,
-    //    pub fields_count: u16,
-    //    pub fields: Vec<FieldInfo>,
-    //    pub methods_count: u16,
-    //    pub methods: Vec<MethodInfo>,
-    //    pub attributes_count: u16,
-    //    pub attributes: Vec<AttributeInfo>,
-    //}
+        let attribute_name_index = *cp.get_name("SourceFile").ok_or(CodegenError::Missing {
+            component: "`SourceFile` name attribute",
+        })?;
+        let attribute_length = 2; // as per the spec
+        let sourcefile_index =
+            *cp.get_name(&sourcefile_def.source_file)
+                .ok_or(CodegenError::Missing {
+                    component: "SourceFile class name",
+                })?;
+        self.classfile.attributes.push(AttributeInfo::SourceFile {
+            attribute_name_index,
+            attribute_length,
+            sourcefile_index,
+        });
+
+        Ok(CodegenResultType::Empty)
+    }
 
     fn visit_class_def(&mut self, class_def: &PhoronClassDef, cp: Self::Input) -> Self::Result {
         self.gen_class_or_interface_access_flags(&class_def.access_flags)?;
@@ -699,7 +700,7 @@ where
 
         // code attributes
         let attribute_name_index = *cp.get_name("Code").ok_or(CodegenError::Missing {
-            component: "`Code` attribute",
+            component: "`Code` attribute name",
         })?;
 
         let mut attribute_length = 12; // default minimum (as per the spec)
@@ -891,11 +892,6 @@ where
 
             Anewarray { ref component_type } => {
                 let mut opcodes = vec![0xbd];
-
-                println!(
-                    "anewarray component type = {:#?}",
-                    component_type.to_string()
-                );
 
                 let component_name = component_type.to_string();
                 opcodes.extend_from_slice(&match component_type {
@@ -1259,7 +1255,6 @@ where
                         })?;
 
                 let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                println!("offset = {offset:#?}");
                 opcodes.extend_from_slice(&offset);
 
                 CodegenResultType::ByteVec(opcodes)
@@ -1433,14 +1428,29 @@ where
             Instanceof { ref check_type } => {
                 let mut opcodes = vec![0xc1];
 
-                println!("check_type = {:#?}, {}", check_type, check_type.to_string());
-                let class_ref =
-                    *cp.get_class(&check_type.to_string())
-                        .ok_or(CodegenError::OpcodeError {
-                            opcode: "instanceof",
-                            details: "missing class reference",
-                        })?;
-                opcodes.extend_from_slice(&class_ref.to_be_bytes());
+                let check_name = check_type.to_string();
+                opcodes.extend_from_slice(&match check_type {
+                    PhoronFieldDescriptor::BaseType(..) => unreachable!(),
+
+                    PhoronFieldDescriptor::ObjectType { ref class_name } => {
+                        let class_ref = *cp.get_class(&check_name[1..check_name.len() - 1]).ok_or(
+                            CodegenError::OpcodeError {
+                                opcode: "instanecof",
+                                details: "missing class reference",
+                            },
+                        )?;
+                        class_ref.to_be_bytes()
+                    }
+
+                    PhoronFieldDescriptor::ArrayType { .. } => {
+                        let array_class_ref =
+                            *cp.get_class(&check_name).ok_or(CodegenError::OpcodeError {
+                                opcode: "instanceof",
+                                details: "missing array class reference",
+                            })?;
+                        array_class_ref.to_be_bytes()
+                    }
+                });
 
                 CodegenResultType::ByteVec(opcodes)
             }

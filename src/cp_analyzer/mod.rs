@@ -240,10 +240,6 @@ impl ConstantPoolAnalyzer {
             .entry(PhoronConstantPoolKind::Class { name_index })
             .or_insert_with(|| {
                 let curr_cp_index = self.cp_index;
-                println!(
-                    "inserting class {:#?} at index {:#?}",
-                    name_index, curr_cp_index
-                );
                 self.cp_index += 1;
                 curr_cp_index
             }))
@@ -347,7 +343,9 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         sourcefile_def: &PhoronSourceFileDef,
         cp: Self::Input,
     ) -> Self::Result {
+        self.analyze_name(PHORON_SOURCE_FILE, cp)?;
         self.analyze_name(&sourcefile_def.source_file, cp)?;
+
         Ok(())
     }
 
@@ -460,7 +458,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
 
         match instr {
             Anewarray { ref component_type } => {
-                self.analyze_class_or_interface_type_descriptor(component_type, cp)?;
+                self.analyze_class_or_interface_type_descriptor(component_type, cp)?
             }
 
             Aload { ref varnum } => {}
@@ -468,7 +466,11 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             Astore { ref varnum } => {}
             Bipush(ref sb) => {}
             Caload => {}
-            Checkcast { ref cast_type } => {}
+
+            Checkcast { ref cast_type } => {
+                self.analyze_class_or_interface_type_descriptor(&cast_type, cp)?
+            }
+
             Dload { ref varnum } => {}
             Dstore { ref varnum } => {}
             Fload { ref varnum } => {}
@@ -644,10 +646,12 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
 
             Ldiv => {}
             Lload { ref varnum } => {}
+
             Lookupswitch {
                 ref switches,
                 ref default,
             } => {}
+
             Lstore { ref varnum } => {}
 
             Multianewarray {
@@ -669,12 +673,14 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             } => {}
             Ret { ref varnum } => {}
             Sipush(ref ss) => {}
+
             Tableswitch {
                 ref low,
                 ref high,
                 ref switches,
                 ref default,
             } => {}
+
             _ => {}
         }
 

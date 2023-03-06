@@ -36,8 +36,6 @@ pub struct TypeParser<'p> {
 
 impl<'p> TypeParser<'p> {
     pub fn new(src: &'p str) -> Self {
-        println!("type_parser, src = {src:#?}");
-
         TypeParser {
             src: src.chars().peekable(),
         }

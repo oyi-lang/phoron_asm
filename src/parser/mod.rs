@@ -2813,9 +2813,7 @@ impl<'a> Parser<'a> {
             self.advance()?;
 
             let ident_tok = self.see();
-            println!("ident_tok = {ident_tok:#?}");
             let param_descriptor = if let Token::TIdent(ident) = ident_tok {
-                println!("ident = {ident:#?}");
                 let mut param_parser = tdp::TypeParser::new(ident);
                 let param_desc =
                     param_parser
@@ -2831,14 +2829,11 @@ impl<'a> Parser<'a> {
                 vec![]
             };
 
-            println!("param_descriptor = {param_descriptor:#?}");
-
             if let Token::TRightParen = self.see() {
                 self.advance()?;
 
                 let ident_tok = self.see();
                 if let Token::TIdent(ret) = ident_tok {
-                    println!("ret = {ret:#?}");
                     let mut ret_parser = tdp::TypeParser::new(ret);
                     let return_descriptor =
                         ret_parser
