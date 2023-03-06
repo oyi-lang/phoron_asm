@@ -317,7 +317,12 @@ where
         Ok(())
     }
 
-    // todo - check if this is really needed
+    fn gen_wide_offset_for_label(&self, label_offset: i16) -> [u8; 4] {
+        let label_offset = label_offset as i32;
+
+        todo!()
+    }
+
     fn gen_offset_for_label(&self, label_offset: i16) -> [u8; 2] {
         let byte1 = (label_offset >> 8) as u8;
         let byte2 = (label_offset ^ ((byte1 as i16) << 8)) as u8;
@@ -948,7 +953,33 @@ where
             Castore => CodegenResultType::ByteVec(vec![0x55]),
 
             Checkcast { ref cast_type } => {
-                todo!()
+                let mut opcodes = vec![0xc0];
+
+                let cast_name = cast_type.to_string();
+                opcodes.extend_from_slice(&match cast_type {
+                    PhoronFieldDescriptor::BaseType(..) => unreachable!(),
+
+                    PhoronFieldDescriptor::ObjectType { ref class_name } => {
+                        let class_ref = *cp.get_class(&cast_name[1..cast_name.len() - 1]).ok_or(
+                            CodegenError::OpcodeError {
+                                opcode: "checkcast",
+                                details: "missing class reference",
+                            },
+                        )?;
+                        class_ref.to_be_bytes()
+                    }
+
+                    PhoronFieldDescriptor::ArrayType { .. } => {
+                        let array_class_ref =
+                            *cp.get_class(&cast_name).ok_or(CodegenError::OpcodeError {
+                                opcode: "checkcast",
+                                details: "missing array class reference",
+                            })?;
+                        array_class_ref.to_be_bytes()
+                    }
+                });
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             D2f => CodegenResultType::ByteVec(vec![0x90]),
@@ -1071,13 +1102,38 @@ where
                 CodegenResultType::ByteVec(opcodes)
             }
 
-            // fixme: figure out how labels will be represented as branch offsets
             Goto { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xa7];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "goto",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Gotow { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xc8];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "goto_w",
+                            details: "invalid label",
+                        })?;
+
+                let offset = self.gen_wide_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             I2b => CodegenResultType::ByteVec(vec![0x91]),
@@ -1487,12 +1543,38 @@ where
             Iushr => CodegenResultType::ByteVec(vec![0x7c]),
             Ixor => CodegenResultType::ByteVec(vec![0x82]),
 
-            Jsrw { ref label } => {
-                todo!()
+            Jsr { ref label } => {
+                let mut opcodes = vec![0xa8];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "jsr",
+                            details: "missing label",
+                        })?;
+
+                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
-            Jsr { ref label } => {
-                todo!()
+            Jsrw { ref label } => {
+                let mut opcodes = vec![0xc9];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "jsr_w",
+                            details: "missing label",
+                        })?;
+
+                let offset = self.gen_wide_offset_for_label(label_offset - self.curr_code_offset);
+                opcodes.extend_from_slice(&offset);
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             L2d => CodegenResultType::ByteVec(vec![0x8a]),
@@ -1506,7 +1588,6 @@ where
             Lconst0 => CodegenResultType::ByteVec(vec![0x09]),
             Lconst1 => CodegenResultType::ByteVec(vec![0x0a]),
 
-            // TODO: sort out valid types for values (wide, non-wide)
             Ldc(ref ldc_val) => {
                 let mut opcodes = vec![0x12];
 
@@ -1518,7 +1599,6 @@ where
                                 details: "missing quoted string",
                             })?;
 
-                        // fixme
                         opcodes.extend_from_slice(&string_index.to_be_bytes()[1..])
                     }
 
@@ -1527,7 +1607,7 @@ where
                             opcode: "ldc",
                             details: "missing integer",
                         })?;
-                        opcodes.extend_from_slice(&int_index.to_be_bytes());
+                        opcodes.push(int_index.to_be_bytes()[1]);
                     }
 
                     LdcValue::Float(float) => {
@@ -1536,7 +1616,7 @@ where
                                 opcode: "lcd",
                                 details: "missing float",
                             })?;
-                        opcodes.extend_from_slice(&float_index.to_be_bytes());
+                        opcodes.push(float_index.to_be_bytes()[1]);
                     }
                 }
 
@@ -1554,8 +1634,7 @@ where
                                 details: "missing quoted string",
                             })?;
 
-                        // fixme
-                        opcodes.extend_from_slice(&string_index.to_be_bytes()[1..])
+                        opcodes.extend_from_slice(&string_index.to_be_bytes())
                     }
 
                     LdcwValue::Integer(int) => {
@@ -1717,12 +1796,20 @@ where
 
             Return => CodegenResultType::ByteVec(vec![0xb1]),
 
-            Ret { ref varnum } => CodegenResultType::ByteVec(vec![0xa9]),
+            Ret { ref varnum } => {
+                let mut opcodes = vec![0xa9];
+                opcodes.extend_from_slice(&varnum.to_be_bytes());
+                CodegenResultType::ByteVec(opcodes)
+            }
 
             Saload => CodegenResultType::ByteVec(vec![0x35]),
             Sastore => CodegenResultType::ByteVec(vec![0x56]),
 
-            Sipush(ref ss) => todo!(),
+            Sipush(ref ss) => {
+                let mut opcodes = vec![0x11];
+                opcodes.extend_from_slice(&ss.to_be_bytes());
+                CodegenResultType::ByteVec(opcodes)
+            }
 
             Swap => CodegenResultType::ByteVec(vec![0x5f]),
 

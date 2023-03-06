@@ -51,7 +51,7 @@
   ldc 3
   ldc2_w 4
   ldc2_w 5.1234
-  ldc_w 6.9992
+  ldc 6.9992
   aload_1
   ldc "100"
   invokestatic MultiplyNums/multiply(IIJDF[ILjava/lang/String;)I
