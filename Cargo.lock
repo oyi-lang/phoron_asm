@@ -11,6 +11,6 @@ dependencies = [
 
 [[package]]
 name = "phoron_core"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5331d089f10965983bb00f01f0ac55df6da6d58f1b9bb3531eb8d3abc963fc2d"
+checksum = "f53fa62a9ac7076db9ea83579bf1ff24b9fb92f75c6d6b19a92856e45bcd9738"

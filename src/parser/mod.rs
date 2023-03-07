@@ -2195,7 +2195,10 @@ impl<'a> Parser<'a> {
             Token::TLookupswitch => {
                 self.advance()?;
 
-                let switches = self.parse_lookup_switches()?;
+                let mut switches = self.parse_lookup_switches()?;
+                // sort the switches in order of keys
+                switches.sort_by_key(|p| p.key);
+
                 let default = self.parse_default_switch_pair()?;
 
                 JvmInstruction::Lookupswitch { switches, default }

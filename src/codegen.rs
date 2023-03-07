@@ -318,29 +318,6 @@ where
         todo!()
     }
 
-    fn gen_offset_for_label(&self, label_offset: i16) -> [u8; 2] {
-        let byte1 = (label_offset >> 8) as u8;
-        let byte2 = (label_offset ^ ((byte1 as i16) << 8)) as u8;
-
-        [byte1, byte2]
-    }
-
-    // todo - check if this is really needed
-    fn gen_offset_for_local_var(&self, local_var: u16) -> [u8; 2] {
-        let byte1 = (local_var >> 8) as u8;
-        let byte2 = (local_var ^ ((byte1 as u16) << 8)) as u8;
-
-        [byte1, byte2]
-    }
-
-    // todo - check if this is really needed
-    fn gen_offset_for_delta(&self, wide_index: i16) -> [u8; 2] {
-        let byte1 = (wide_index >> 8) as u8;
-        let byte2 = (wide_index ^ ((byte1 as i16) << 8)) as u8;
-
-        [byte1, byte2]
-    }
-
     fn gen_label_mappings(&mut self, instructions: &[PhoronInstruction]) -> CodegenResult<()> {
         use JvmInstruction::*;
 
@@ -436,7 +413,15 @@ where
                             ref switches,
                             ref default,
                         } => {
-                            todo!() // variable-length
+                            let mut opcode_len = 1i16; // for the opcode
+                            opcode_len +=
+                                switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16; // for the swith paird
+
+                            let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
+                            opcode_len += default_offset_padding;
+                            opcode_len += 2i16 * std::mem::size_of::<u32>() as i16; // for the default pair
+
+                            opcode_len
                         }
 
                         Tableswitch {
@@ -1109,8 +1094,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1126,8 +1111,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_wide_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = (label_offset - self.curr_code_offset) as i32;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1169,8 +1154,8 @@ where
                             details: "invalid label ",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1186,8 +1171,8 @@ where
                             details: "invalid label ",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1203,8 +1188,8 @@ where
                             details: "invalid label ",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1220,8 +1205,8 @@ where
                             details: "invalid label ",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1237,8 +1222,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1254,8 +1239,8 @@ where
                             details: "invalid label ",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1271,8 +1256,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1288,8 +1273,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1305,8 +1290,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1322,8 +1307,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1339,8 +1324,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1356,8 +1341,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1373,8 +1358,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1390,8 +1375,8 @@ where
                             details: "invalid label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1564,8 +1549,8 @@ where
                             details: "missing label",
                         })?;
 
-                let offset = self.gen_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1581,8 +1566,8 @@ where
                             details: "missing label",
                         })?;
 
-                let offset = self.gen_wide_offset_for_label(label_offset - self.curr_code_offset);
-                opcodes.extend_from_slice(&offset);
+                let offset = (label_offset - self.curr_code_offset) as i32;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
 
                 CodegenResultType::ByteVec(opcodes)
             }
@@ -1712,7 +1697,51 @@ where
                 ref switches,
                 ref default,
             } => {
-                todo!()
+                println!("lookupswitch - code offset = {}", self.curr_code_offset);
+                let mut opcodes = vec![0xab];
+
+                // default offset padding with zerees
+                let opcode_len =
+                    1i16 + switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16;
+                let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
+                println!("default_offset_padding = {default_offset_padding}");
+
+                for _ in 0..default_offset_padding {
+                    opcodes.push(0);
+                }
+
+                // default case
+                let default_label_offset =
+                    self.label_mapping
+                        .get(default)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "lookupswitch",
+                            details: "missing default label",
+                        })?;
+
+                let default_label_offset = (default_label_offset - self.curr_code_offset) as i32;
+                opcodes.extend_from_slice(&default_label_offset.to_be_bytes());
+
+                // number of match pairs
+                let n = switches.len() as i32;
+                opcodes.extend_from_slice(&n.to_be_bytes());
+
+                // each switch pair, in sorted order of keys
+                for swpair in switches {
+                    opcodes.extend_from_slice(&swpair.key.to_be_bytes());
+                    let label_offset =
+                        self.label_mapping
+                            .get(&swpair.label)
+                            .ok_or(CodegenError::OpcodeError {
+                                opcode: "lookupswitch",
+                                details: "missing label for switch pair",
+                            })?;
+
+                    let offset = (label_offset - self.curr_code_offset) as i32;
+                    opcodes.extend_from_slice(&offset.to_be_bytes());
+                }
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Lor => CodegenResultType::ByteVec(vec![0x81]),
@@ -1842,68 +1871,57 @@ where
                         // fixme: how to map this to the local var array as in the case of label
                         // offsets? How is the local variable number mapped - at the Jasmin level
                         // and at the JVM level?
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Fload { ref varnum } => {
                         opcodes.push(0x17);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Aload { ref varnum } => {
                         opcodes.push(0x19);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Lload { ref varnum } => {
                         opcodes.push(0x16);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Dload { ref varnum } => {
                         opcodes.push(0x18);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Istore { ref varnum } => {
                         opcodes.push(0x36);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Fstore { ref varnum } => {
                         opcodes.push(0x38);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Astore { ref varnum } => {
                         opcodes.push(0x3a);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Lstore { ref varnum } => {
                         opcodes.push(0x37);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Dstore { ref varnum } => {
                         opcodes.push(0x39);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::Ret { ref varnum } => {
                         opcodes.push(0xa9);
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
                     }
 
                     WideInstruction::IInc {
@@ -1912,11 +1930,8 @@ where
                     } => {
                         opcodes.push(0x84);
 
-                        let local_var_offset = self.gen_offset_for_local_var(*varnum);
-                        opcodes.extend_from_slice(&local_var_offset);
-
-                        let local_delta_offset = self.gen_offset_for_delta(*delta);
-                        opcodes.extend_from_slice(&local_delta_offset);
+                        opcodes.extend_from_slice(&varnum.to_be_bytes());
+                        opcodes.extend_from_slice(&delta.to_be_bytes());
                     }
                 }
 

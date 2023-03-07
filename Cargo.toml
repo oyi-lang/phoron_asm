@@ -14,5 +14,4 @@ edition = "2021"
 
 [dependencies]
 
-phoron_core = "0.5.1"
-#phoron_core =  { path = "../phoron_core" }
+phoron_core = "0.5.2"
