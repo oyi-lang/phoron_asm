@@ -1,0 +1,93 @@
+.source TableswitchDemo.pho
+.class public TableswitchDemo
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+; switches on the passed in integer and 
+; returns different values
+;   - for 1, returns 10
+;   - for 10, returns 100
+;   - default, returns 0
+.method private demo(I)I
+  .limit stack 3
+  .limit locals 3
+
+  iload_1
+  
+  tableswitch 0 2
+     Handle0
+     Handle1
+     Handle2
+    default : HandleDefault
+
+Handle0:
+  ldc 19
+  ireturn
+
+Handle1:
+  ldc 199
+  ireturn
+
+Handle2:
+  ldc 1009
+  ireturn
+
+HandleDefault:
+  ldc 0
+  ireturn
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 3
+  .limit locals 3
+
+  new TableswitchDemo
+  dup
+  invokespecial TableswitchDemo/<init>()V
+  astore_1
+
+  aload_1
+  ldc 0
+  invokevirtual TableswitchDemo/demo(I)I
+  jsr PrintInt
+
+  aload_1
+  ldc 1
+  invokevirtual TableswitchDemo/demo(I)I
+  jsr PrintInt
+
+  aload_1
+  ldc 2
+  invokevirtual TableswitchDemo/demo(I)I
+  jsr PrintInt
+
+  aload_1
+  ldc 100
+  invokevirtual TableswitchDemo/demo(I)I
+  jsr PrintInt
+
+  aload_1
+  ldc 200
+  invokevirtual TableswitchDemo/demo(I)I
+  jsr PrintInt
+
+  aload_1
+  ldc 12345
+  invokevirtual TableswitchDemo/demo(I)I
+  jsr PrintInt
+
+  return
+
+PrintInt:
+  astore_2
+
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  swap
+  invokevirtual java/io/PrintStream/println(I)V
+  ret 2
+.end method

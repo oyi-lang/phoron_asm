@@ -415,7 +415,7 @@ where
                         } => {
                             let mut opcode_len = 1i16; // for the opcode
                             opcode_len +=
-                                switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16; // for the swith paird
+                                switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16; // for the switch pairs
 
                             let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
                             opcode_len += default_offset_padding;
@@ -430,7 +430,20 @@ where
                             ref switches,
                             ref default,
                         } => {
-                            todo!() // variable-length
+                            let mut opcode_len = 1i16; // for the opcode
+
+                            // for `low` and `high`
+                            opcode_len += 2i16 * std::mem::size_of::<i32>() as i16;
+                            // for the switch offsets
+                            opcode_len +=
+                                (high - low + 1) as i16 * std::mem::size_of::<i32>() as i16;
+
+                            let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
+                            opcode_len += default_offset_padding;
+                            // for the default pair
+                            opcode_len += 2i16 & std::mem::size_of::<i32>() as i16;
+
+                            opcode_len
                         }
 
                         Wide(ref wide_instr) => match wide_instr {
@@ -711,9 +724,13 @@ where
                         max_locals = *locals;
                     }
 
-                    PhoronDirective::Throws { ref class_name } => {}
+                    PhoronDirective::Throws { ref class_name } => {
+                        todo!()
+                    }
 
-                    PhoronDirective::LineNumber(ref linum) => {}
+                    PhoronDirective::LineNumber(ref linum) => {
+                        todo!()
+                    }
 
                     PhoronDirective::Var {
                         ref varnum,
@@ -736,20 +753,6 @@ where
                     //    exception_table: Vec<ExceptionHandler>,
                     //    code_attributes_count: u16,
                     //    code_attributes: Vec<AttributeInfo>,
-                    //},
-
-                    //Catch {
-                    //    class_name: String,
-                    //    from_label: String,
-                    //    to_label: String,
-                    //    handler_label: String,
-                    //},
-
-                    //Exceptions {
-                    //    attribute_name_index: u16,
-                    //    attribute_length: u32,
-                    //    number_of_exceptions: u16,
-                    //    exception_index_table: Vec<u16>,
                     //},
 
                     // this goes in the exception_table field of the Code attribute
@@ -1697,14 +1700,12 @@ where
                 ref switches,
                 ref default,
             } => {
-                println!("lookupswitch - code offset = {}", self.curr_code_offset);
                 let mut opcodes = vec![0xab];
 
                 // default offset padding with zerees
                 let opcode_len =
                     1i16 + switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16;
                 let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
-                println!("default_offset_padding = {default_offset_padding}");
 
                 for _ in 0..default_offset_padding {
                     opcodes.push(0);
@@ -1858,7 +1859,51 @@ where
                 ref switches,
                 ref default,
             } => {
-                todo!()
+                let mut opcodes = vec![0xaa];
+
+                // default offset padding with zerees
+                let opcode_len = 1i16
+                    + 2i16 * std::mem::size_of::<i32>() as i16
+                    + (high - low + 1) as i16 * std::mem::size_of::<i32>() as i16;
+
+                let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
+
+                for _ in 0..default_offset_padding {
+                    opcodes.push(0);
+                }
+
+                // default case
+                let default_label_offset =
+                    self.label_mapping
+                        .get(default)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "tableswitch",
+                            details: "missing default label",
+                        })?;
+
+                let default_label_offset =
+                    (4 + default_label_offset - self.curr_code_offset) as i32;
+                opcodes.extend_from_slice(&default_label_offset.to_be_bytes());
+
+                // low and high
+                opcodes.extend_from_slice(&low.to_be_bytes());
+                opcodes.extend_from_slice(&high.to_be_bytes());
+
+                // switch offsets
+                for swoffset in switches {
+                    let label_offset =
+                        self.label_mapping
+                            .get(swoffset)
+                            .ok_or(CodegenError::OpcodeError {
+                                opcode: "tableswitch",
+                                details: "missing label for switch offset",
+                            })?;
+
+                    let offset = (4 + label_offset - self.curr_code_offset) as i32;
+                    opcodes.extend_from_slice(&offset.to_be_bytes());
+                }
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Wide(ref wide_instr) => {
