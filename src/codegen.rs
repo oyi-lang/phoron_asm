@@ -527,6 +527,11 @@ where
         };
         self.visit_super_def(&header.super_def, cp)?;
 
+        self.classfile.interfaces_count = header.implements_defs.len() as u16;
+        for impl_def in &header.implements_defs {
+            self.visit_implements_def(impl_def, cp)?;
+        }
+
         Ok(CodegenResultType::Empty)
     }
 
@@ -589,6 +594,21 @@ where
                 .ok_or(CodegenError::Missing {
                     component: "`super` class",
                 })?;
+
+        Ok(CodegenResultType::Empty)
+    }
+
+    fn visit_implements_def(
+        &mut self,
+        impl_def: &PhoronImplementsDef,
+        cp: Self::Input,
+    ) -> Self::Result {
+        let impl_def_index = *cp
+            .get_class(&impl_def.class_name)
+            .ok_or(CodegenError::Missing {
+                component: "implements class",
+            })?;
+        self.classfile.interfaces.push(impl_def_index);
 
         Ok(CodegenResultType::Empty)
     }

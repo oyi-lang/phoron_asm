@@ -328,7 +328,13 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 self.visit_interface_def(interface_def, cp)?
             }
         }
+
         self.visit_super_def(&header.super_def, cp)?;
+
+        header
+            .implements_defs
+            .iter()
+            .try_for_each(|impl_def| self.visit_implements_def(impl_def, cp))?;
 
         Ok(())
     }
@@ -364,6 +370,17 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
 
     fn visit_super_def(&mut self, super_def: &PhoronSuperDef, cp: Self::Input) -> Self::Result {
         let name_index = self.analyze_name(&super_def.super_class_name, cp)?;
+        self.analyze_class(name_index, cp)?;
+
+        Ok(())
+    }
+
+    fn visit_implements_def(
+        &mut self,
+        impl_def: &PhoronImplementsDef,
+        cp: Self::Input,
+    ) -> Self::Result {
+        let name_index = self.analyze_name(&impl_def.class_name, cp)?;
         self.analyze_class(name_index, cp)?;
 
         Ok(())

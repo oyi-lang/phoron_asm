@@ -24,6 +24,12 @@ pub trait PhoronAstVisitor<'a> {
 
     fn visit_super_def(&mut self, super_def: &PhoronSuperDef, input: Self::Input) -> Self::Result;
 
+    fn visit_implements_def(
+        &mut self,
+        impl_def: &PhoronImplementsDef,
+        input: Self::Input,
+    ) -> Self::Result;
+
     fn visit_body(&mut self, body: &PhoronBody, input: Self::Input) -> Self::Result;
     fn visit_field_def(&mut self, field_def: &PhoronFieldDef, input: Self::Input) -> Self::Result;
 
@@ -90,10 +96,16 @@ pub struct PhoronSuperDef {
 }
 
 #[derive(PartialEq, Debug)]
+pub struct PhoronImplementsDef {
+    pub class_name: String,
+}
+
+#[derive(PartialEq, Debug)]
 pub struct PhoronHeader {
     pub sourcefile_def: PhoronSourceFileDef,
     pub class_or_interface_def: PhoronClassOrInterface,
     pub super_def: PhoronSuperDef,
+    pub implements_defs: Vec<PhoronImplementsDef>,
 }
 
 // Descriptors

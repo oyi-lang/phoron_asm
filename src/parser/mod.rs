@@ -282,6 +282,33 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// ImplementsDef <- IMPLEMENTS_keyword ClassName newline
+    fn parse_implements_def(&mut self) -> ParserResult<PhoronImplementsDef> {
+        self.advance()?;
+
+        if let Token::TIdent(ident) = self.see() {
+            let class_name = ident.to_string();
+            self.advance()?;
+
+            Ok(PhoronImplementsDef { class_name })
+        } else {
+            Err(ParserError::Missing {
+                instr: "parsing implements defintiion",
+                component: "implements class name",
+            })
+        }
+    }
+
+    fn parse_implements_defs(&mut self) -> ParserResult<Vec<PhoronImplementsDef>> {
+        let mut impl_defs = Vec::new();
+
+        while let Token::TImplements = self.see() {
+            impl_defs.push(self.parse_implements_def()?);
+        }
+
+        Ok(impl_defs)
+    }
+
     /// SuperDef <- SUPER_keyword ClassName newline
     fn parse_super_def(&mut self) -> ParserResult<PhoronSuperDef> {
         self.advance()?;
@@ -2967,11 +2994,13 @@ impl<'a> Parser<'a> {
                 };
 
                 let super_def = self.parse_super_def()?;
+                let implements_defs = self.parse_implements_defs()?;
 
                 PhoronHeader {
                     sourcefile_def,
                     class_or_interface_def,
                     super_def,
+                    implements_defs,
                 }
             }
 
@@ -2982,11 +3011,13 @@ impl<'a> Parser<'a> {
 
                 let class_or_interface_def = PhoronClassOrInterface::Class(self.parse_class_def()?);
                 let super_def = self.parse_super_def()?;
+                let implements_defs = self.parse_implements_defs()?;
 
                 PhoronHeader {
                     sourcefile_def,
                     class_or_interface_def,
                     super_def,
+                    implements_defs,
                 }
             }
 
@@ -2998,11 +3029,13 @@ impl<'a> Parser<'a> {
                 let class_or_interface_def =
                     PhoronClassOrInterface::Interface(self.parse_interface_def()?);
                 let super_def = self.parse_super_def()?;
+                let implements_defs = self.parse_implements_defs()?;
 
                 PhoronHeader {
                     sourcefile_def,
                     class_or_interface_def,
                     super_def,
+                    implements_defs,
                 }
             }
 
