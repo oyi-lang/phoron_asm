@@ -4,10 +4,7 @@ pub mod constant_pool;
 
 use constant_pool::*;
 
-use std::{
-    collections::{hash_map::Iter, HashMap},
-    fmt,
-};
+use std::fmt;
 
 #[derive(Debug)]
 pub enum ConstantPoolAnalyzerError {
@@ -488,20 +485,9 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 self.analyze_class_or_interface_type_descriptor(component_type, cp)?
             }
 
-            Aload { ref varnum } => {}
-            Arraylength => {}
-            Astore { ref varnum } => {}
-            Bipush(ref sb) => {}
-            Caload => {}
-
             Checkcast { ref cast_type } => {
                 self.analyze_class_or_interface_type_descriptor(&cast_type, cp)?
             }
-
-            Dload { ref varnum } => {}
-            Dstore { ref varnum } => {}
-            Fload { ref varnum } => {}
-            Fstore { ref varnum } => {}
 
             Getstatic {
                 ref class_name,
@@ -539,30 +525,6 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 self.analyze_field_ref(class_index, field_name_and_type_index, cp)?;
             }
 
-            Goto { ref label } => {}
-            Gotow { ref label } => {}
-            Ifacmpeq { ref label } => {}
-            Ifacmpne { ref label } => {}
-            Ificmpeq { ref label } => {}
-            Ificmpge { ref label } => {}
-            Ificmpgt { ref label } => {}
-            Ificmple { ref label } => {}
-            Ificmplt { ref label } => {}
-            Ificmpne { ref label } => {}
-            Ifeq { ref label } => {}
-            Ifge { ref label } => {}
-            Ifgt { ref label } => {}
-            Ifle { ref label } => {}
-            Iflt { ref label } => {}
-            Ifne { ref label } => {}
-            Ifnonnull { ref label } => {}
-            Ifnull { ref label } => {}
-            Iinc {
-                ref varnum,
-                ref delta,
-            } => {}
-            Iload { ref varnum } => {}
-
             Instanceof { ref check_type } => {
                 self.analyze_class_or_interface_type_descriptor(check_type, cp)?;
             }
@@ -572,7 +534,9 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref method_name,
                 ref method_descriptor,
                 ref ub,
-            } => {}
+            } => {
+                todo!()
+            }
 
             Invokespecial {
                 ref class_name,
@@ -628,10 +592,6 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 self.analyze_method_ref(class_index, method_name_and_type_index, cp)?;
             }
 
-            Istore { ref varnum } => {}
-            Jsrw { ref label } => {}
-            Jsr { ref label } => {}
-
             Ldc(ref ldc_val) => match ldc_val {
                 LdcValue::Integer(int) => {
                     self.analyze_integer(*int, cp)?;
@@ -671,42 +631,34 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 }
             },
 
-            Ldiv => {}
-            Lload { ref varnum } => {}
-
-            Lookupswitch {
-                ref switches,
-                ref default,
-            } => {}
-
-            Lstore { ref varnum } => {}
-
             Multianewarray {
                 ref component_type,
                 ref dimensions,
             } => self.analyze_field_descriptor(component_type, cp)?,
 
-            Newarray { ref component_type } => {}
-            New { ref class_name } => {}
+            Newarray { ref component_type } => {
+                todo!()
+            }
+
+            New { ref class_name } => {
+                todo!()
+            }
+
             Putfield {
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
-            } => {}
+            } => {
+                todo!()
+            }
+
             Putstatic {
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
-            } => {}
-            Ret { ref varnum } => {}
-            Sipush(ref ss) => {}
-
-            Tableswitch {
-                ref low,
-                ref high,
-                ref switches,
-                ref default,
-            } => {}
+            } => {
+                todo!()
+            }
 
             _ => {}
         }

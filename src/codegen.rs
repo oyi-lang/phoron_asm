@@ -1,8 +1,4 @@
-use crate::{
-    ast::*,
-    attributes::*,
-    cp_analyzer::{constant_pool::*, *},
-};
+use crate::{ast::*, attributes::*, cp_analyzer::constant_pool::*};
 use phoron_core::{
     error::SerializeError,
     model::{
@@ -313,12 +309,6 @@ where
         Ok(())
     }
 
-    fn gen_wide_offset_for_label(&self, label_offset: i16) -> [u8; 4] {
-        let label_offset = label_offset as i32;
-
-        todo!()
-    }
-
     fn gen_label_mappings(&mut self, instructions: &[PhoronInstruction]) -> CodegenResult<()> {
         use JvmInstruction::*;
 
@@ -327,7 +317,7 @@ where
 
         for instr in instructions {
             match instr {
-                PhoronInstruction::PhoronDirective(ref directive) => {}
+                PhoronInstruction::PhoronDirective(ref _directive) => {}
 
                 PhoronInstruction::PhoronLabel(ref label) => {
                     self.label_mapping
@@ -335,7 +325,6 @@ where
                 }
 
                 PhoronInstruction::JvmInstruction(ref jvm_instr) => {
-                    //println!("code offset before {jvm_instr:#?} = {}", curr_code_offset);
                     curr_code_offset += match jvm_instr {
                         // 1-byte instructions
                         Aaload | Aastore | Aconstnull | Aload0 | Aload1 | Aload2 | Aload3
@@ -411,15 +400,10 @@ where
 
                         Jsrw { .. } | Gotow { .. } => 5,
 
-                        Lookupswitch {
-                            ref switches,
-                            ref default,
-                        } => {
-                            println!("curr code offset = {}", curr_code_offset);
+                        Lookupswitch { ref switches, .. } => {
                             let mut opcode_len = 1i16; // for the opcode
 
                             let default_offset_padding = (4 - (curr_code_offset + 1) % 4) % 4;
-                            println!("default_offset_padding = {default_offset_padding}");
                             opcode_len += default_offset_padding;
 
                             opcode_len += std::mem::size_of::<i32>() as i16; // for the number of switch pairs
@@ -428,7 +412,6 @@ where
                                 switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16; // for the switch pairs
 
                             opcode_len += std::mem::size_of::<u32>() as i16; // for the default case
-                            println!("opcode_len = {opcode_len}");
                             opcode_len
                         }
 
@@ -509,7 +492,6 @@ where
         self.gen_constant_pool(&cp)?;
 
         self.visit_program(&program, cp)?;
-        println!("classfile = {:#?}", self.classfile);
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())
@@ -730,7 +712,7 @@ where
                                 details: "missing attribute name index for `Execptions` attribute in method info"
                             })?;
 
-                            let mut attribute_length = 2; // excluding the initial 6 bytes, as per the spec
+                            let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
                             let number_of_exceptions = 0;
                             let exception_index_table = Vec::new();
 
@@ -785,7 +767,7 @@ where
                                 details: "missing attribute name index for line number table in Code attribute",
                             })?;
 
-                            let mut attribute_length = 2; // excluding the initial 6 bytes, as per the spec
+                            let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
                             let line_number_table_length = 0;
                             let line_number_table = Vec::new();
 
@@ -851,7 +833,7 @@ where
 
                             })?;
 
-                            let mut attribute_length = 2;
+                            let attribute_length = 2;
                             let local_variable_table_length = 0;
                             let local_variable_table = Vec::new();
 

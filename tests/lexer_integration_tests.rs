@@ -2068,7 +2068,7 @@ fn test_lex_array_demo() -> Result<(), Box<dyn Error>> {
 fn test_lex_all_in_one() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
         TSource,
-        TIdent("AllInOne.j".to_string()),
+        TIdent("AllInOne.pho".to_string()),
         TClass,
         TPublic,
         TIdent("AllInOne".to_string()),
