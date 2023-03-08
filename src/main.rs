@@ -15,9 +15,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         usage();
     } else {
         // todo: pass the source file name to the lexer for the default SourceFile attribute.
-        let src = fs::read_to_string(&args[0])?;
+        let src_file = &args[0];
+        let src = fs::read_to_string(src_file)?;
 
-        let mut parser = Parser::new(Lexer::new(&src));
+        let mut parser = Parser::new(Lexer::new(src_file, &src));
         let ast = parser.parse()?;
 
         let mut cp_analyzer = ConstantPoolAnalyzer::new();

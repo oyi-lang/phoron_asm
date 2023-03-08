@@ -2967,30 +2967,38 @@ impl<'a> Parser<'a> {
                 let super_def = self.parse_super_def()?;
 
                 PhoronHeader {
-                    sourcefile_def: Some(sourcefile_def),
+                    sourcefile_def,
                     class_or_interface_def,
                     super_def,
                 }
             }
 
             Token::TClass => {
+                let sourcefile_def = PhoronSourceFileDef {
+                    source_file: self.lexer.src_file()?.to_owned(),
+                };
+
                 let class_or_interface_def = PhoronClassOrInterface::Class(self.parse_class_def()?);
                 let super_def = self.parse_super_def()?;
 
                 PhoronHeader {
-                    sourcefile_def: None,
+                    sourcefile_def,
                     class_or_interface_def,
                     super_def,
                 }
             }
 
             Token::TInterface => {
+                let sourcefile_def = PhoronSourceFileDef {
+                    source_file: self.lexer.src_file()?.to_owned(),
+                };
+
                 let class_or_interface_def =
                     PhoronClassOrInterface::Interface(self.parse_interface_def()?);
                 let super_def = self.parse_super_def()?;
 
                 PhoronHeader {
-                    sourcefile_def: None,
+                    sourcefile_def,
                     class_or_interface_def,
                     super_def,
                 }

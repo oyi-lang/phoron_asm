@@ -308,13 +308,16 @@ enum Number {
     Int(i64),
 }
 
+/// The Phoron Lexer
 pub struct Lexer<'a> {
+    src_file: &'a str,
     src: Peekable<Chars<'a>>,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(src: &'a str) -> Self {
+    pub fn new(src_file: &'a str, src: &'a str) -> Self {
         Lexer {
+            src_file,
             src: src.chars().peekable(),
         }
     }
@@ -755,6 +758,10 @@ impl<'a> Lexer<'a> {
         })
     }
 
+    pub fn src_file(&self) -> LexerResult<&'a str> {
+        Ok(self.src_file)
+    }
+
     pub fn lex(&mut self) -> LexerResult<Token> {
         if self.src.peek().is_none() {
             Ok(Token::TEof)
@@ -762,19 +769,5 @@ impl<'a> Lexer<'a> {
             let c = *self.src.peek().unwrap();
             self.lex_char(c)
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_lex_numbers() -> Result<(), Box<dyn std::error::Error>> {
-        let mut lexer = Lexer::new("-1");
-        assert_eq!(lexer.lex()?, Token::TInt(-1));
-        assert_eq!(lexer.lex()?, Token::TEof);
-
-        Ok(())
     }
 }

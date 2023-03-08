@@ -91,7 +91,7 @@ pub struct PhoronSuperDef {
 
 #[derive(PartialEq, Debug)]
 pub struct PhoronHeader {
-    pub sourcefile_def: Option<PhoronSourceFileDef>,
+    pub sourcefile_def: PhoronSourceFileDef,
     pub class_or_interface_def: PhoronClassOrInterface,
     pub super_def: PhoronSuperDef,
 }

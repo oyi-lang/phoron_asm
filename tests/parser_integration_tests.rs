@@ -11,10 +11,10 @@ use std::{error::Error, fs, path::Path};
 
 fn parse<P>(testfile: P) -> Result<PhoronProgram, Box<dyn Error>>
 where
-    P: AsRef<Path>,
+    P: AsRef<Path> + Copy,
 {
     let src = fs::read_to_string(testfile)?;
-    let mut parser = Parser::new(Lexer::new(&src));
+    let mut parser = Parser::new(Lexer::new(&testfile.as_ref().to_str().unwrap(), &src));
     let program = parser.parse()?;
     Ok(program)
 }
@@ -23,7 +23,9 @@ where
 fn test_parse_malign() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/Malign.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Malign".to_string(),
                 access_flags: vec![
@@ -102,7 +104,9 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
 fn test_parse_fields() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/FieldsDemo.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FieldsDemo".to_string(),
                 access_flags: vec![
@@ -202,7 +206,9 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
 fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/HolaMundo.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "HolaMundo".to_string(),
                 access_flags: vec![
@@ -288,7 +294,9 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
 fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/HelloWorld.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "HelloWorld".to_string(),
                 access_flags: vec![
@@ -374,7 +382,9 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
 fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/MalignJasmin.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "MalignJasmin".to_string(),
                 access_flags: vec![
@@ -454,7 +464,9 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
 fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/PrivetMir.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "PrivetMir".to_string(),
                 access_flags: vec![
@@ -540,7 +552,9 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
 fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/Areturn.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Areturn".to_string(),
                 access_flags: vec![
@@ -642,7 +656,9 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
 fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/CreateArrayOfThreads.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CreateArrayOfThreads".to_string(),
                 access_flags: vec![
@@ -740,7 +756,9 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
 fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/SwapTopTwoItems.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "SwapTopTwoItems".to_string(),
                 access_flags: vec![
@@ -827,7 +845,9 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
 fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/CreateMatrixOfInt.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CreateMatrixOfInt".to_string(),
                 access_flags: vec![
@@ -937,7 +957,9 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
 fn test_parse_count() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/Count.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Count".to_string(),
                 access_flags: vec![
@@ -1051,7 +1073,9 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
 fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/Catcher.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Catcher".to_string(),
                 access_flags: vec![
@@ -1161,7 +1185,9 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
 fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/Anewarray.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Anewarray".to_string(),
                 access_flags: vec![
@@ -1263,7 +1289,9 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
 fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/ArgsToMain.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "ArgsToMain".to_string(),
                 access_flags: vec![
@@ -1348,7 +1376,9 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
 fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/CountJasmin2.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CountJasmin2".to_string(),
                 access_flags: vec![
@@ -1446,7 +1476,9 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
 fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/AddNumsJasmin.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AddNumsJasmin".to_string(),
                 access_flags: vec![
@@ -1558,7 +1590,9 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
 fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/StackPushJasmin.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "StackPushJasmin".to_string(),
                 access_flags: vec![
@@ -1645,7 +1679,9 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
 fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/FactorialGoto.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FactorialGoto".to_string(),
                 access_flags: vec![
@@ -1777,7 +1813,9 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
 fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/FactorialJasmin.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FactorialJasmin".to_string(),
                 access_flags: vec![
@@ -1895,7 +1933,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/FactorialJasmin.pho".to_string())?;
+    let actual_ast = parse("doc/grammar/FactorialJasmin.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1905,7 +1943,9 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
 fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/CheckArrayType.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CheckArrayType".to_string(),
                 access_flags: vec![
@@ -2026,7 +2066,9 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
 fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/PrintHello10Times.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "PrintHello10Times".to_string(),
                 access_flags: vec![
@@ -2148,7 +2190,9 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
 fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/AddNums.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AddNums".to_string(),
                 access_flags: vec![
@@ -2303,7 +2347,9 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
 fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/CountJasmin.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CountJasmin".to_string(),
                 access_flags: vec![
@@ -2416,7 +2462,9 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
 fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/StringBufferDemo.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "StringBufferDemo".to_string(),
                 access_flags: vec![
@@ -2573,7 +2621,9 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
 fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: None,
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "doc/grammar/ArrayDemo.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "ArrayDemo".to_string(),
                 access_flags: vec![
@@ -2850,9 +2900,9 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
 fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
-            sourcefile_def: Some(PhoronSourceFileDef {
-                source_file: "AllInOne.j".to_string(),
-            }),
+            sourcefile_def: PhoronSourceFileDef {
+                source_file: "AllInOne.pho".to_string(),
+            },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AllInOne".to_string(),
                 access_flags: vec![

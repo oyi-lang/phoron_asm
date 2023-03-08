@@ -519,9 +519,7 @@ where
     }
 
     fn visit_header(&mut self, header: &PhoronHeader, cp: Self::Input) -> Self::Result {
-        if let Some(sourcefile_def) = &header.sourcefile_def {
-            self.visit_sourcefile_def(sourcefile_def, cp)?;
-        }
+        self.visit_sourcefile_def(&header.sourcefile_def, cp)?;
 
         match header.class_or_interface_def {
             PhoronClassOrInterface::Class(ref class_def) => self.visit_class_def(class_def, cp)?,

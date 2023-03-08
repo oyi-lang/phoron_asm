@@ -7,10 +7,10 @@ use std::{error::Error, fs, path::Path};
 
 fn lex<P>(testfile: P) -> Result<Vec<Token>, Box<dyn Error>>
 where
-    P: AsRef<Path>,
+    P: AsRef<Path> + Copy,
 {
     let src = fs::read_to_string(testfile)?;
-    let mut lexer = Lexer::new(&src);
+    let mut lexer = Lexer::new(&testfile.as_ref().to_str().unwrap(), &src);
     let mut tokens = Vec::new();
 
     loop {
