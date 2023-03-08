@@ -434,6 +434,32 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
 
     fn visit_directive(&mut self, directive: &PhoronDirective, cp: Self::Input) -> Self::Result {
         match directive {
+            PhoronDirective::LimitStack(..) => {} // do nothing
+
+            PhoronDirective::LimitLocals(..) => {} // do nothing
+
+            PhoronDirective::Throws { ref class_name } => {
+                let name_index = self.analyze_name(class_name, cp)?;
+                self.analyze_class(name_index, cp)?;
+            }
+
+            PhoronDirective::LineNumber(linum) => {
+                self.analyze_name(PHORON_LINE_NUMBER_TABLE, cp)?;
+            }
+
+            PhoronDirective::Var {
+                ref varnum,
+                ref name,
+                ref field_descriptor,
+                ref from_label,
+                ref to_label,
+            } => {
+                self.analyze_name(PHORON_LOCAL_VARIABLE_TABLE, cp)?;
+                self.analyze_name(name, cp)?;
+                self.analyze_name(&field_descriptor.to_string(), cp)?;
+                self.analyze_field_descriptor(field_descriptor, cp)?;
+            }
+
             PhoronDirective::Catch {
                 ref class_name,
                 ref from_label,
@@ -443,10 +469,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 let name_index = self.analyze_name(class_name, cp)?;
                 self.analyze_class(name_index, cp)?;
             }
-
-            _ => {}
         }
-
         Ok(())
     }
 

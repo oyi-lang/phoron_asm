@@ -1,5 +1,6 @@
 use crate::{
     ast::*,
+    attributes::*,
     cp_analyzer::{constant_pool::*, *},
 };
 use phoron_core::{
@@ -551,9 +552,11 @@ where
     ) -> Self::Result {
         self.classfile.attributes_count += 1;
 
-        let attribute_name_index = *cp.get_name("SourceFile").ok_or(CodegenError::Missing {
-            component: "`SourceFile` name attribute",
-        })?;
+        let attribute_name_index =
+            *cp.get_name(PHORON_SOURCE_FILE)
+                .ok_or(CodegenError::Missing {
+                    component: "`SourceFile` name attribute",
+                })?;
         let attribute_length = 2; // as per the spec
         let sourcefile_index =
             *cp.get_name(&sourcefile_def.source_file)
@@ -664,23 +667,7 @@ where
                 component: "method descriptor",
             })?;
 
-        // todo - attributes
-
-        //Code {
-        //    attribute_name_index: u16,
-        //    attribute_length: u32,
-        //    max_stack: u16,
-        //    max_locals: u16,
-        //    code_length: u32,
-        //    code: Vec<u8>,
-        //    exception_table_length: u16,
-        //    exception_table: Vec<ExceptionHandler>,
-        //    code_attributes_count: u16,
-        //    code_attributes: Vec<AttributeInfo>,
-        //},
-
-        method_info.attributes_count = 1;
-        //let mut attrs = Vec::new();
+        method_info.attributes_count = 1; // for the Code attribute
 
         // Visit all the JVM instructions first to collect metadata about all the
         // labels used in the Code section. This will be used to calculate the branch
@@ -701,7 +688,7 @@ where
             component: "`Code` attribute name",
         })?;
 
-        let mut attribute_length = 12; // default minimum (as per the spec)
+        let mut code_attributes_length = 12; // default minimum (as per the spec)
         let mut max_stack = 1; // default
         let mut max_locals = 1; // default
 
@@ -709,8 +696,8 @@ where
 
         let mut exception_table_length = 0;
         let mut exception_table = vec![];
-        let code_attributes_count = 0;
-        let code_attributes = vec![];
+        let mut code_attributes_count = 0;
+        let mut code_attributes = vec![];
 
         self.curr_code_offset = 0;
         for instr in &method_def.instructions {
@@ -724,14 +711,94 @@ where
                         max_locals = *locals;
                     }
 
+                    // this is a top-level attribute inside Methhodnfo, ot the same level as the
+                    // Code attribute. Just like the Code attribute, there may be at most only one
+                    // entry in the method attributes.
                     PhoronDirective::Throws { ref class_name } => {
-                        todo!()
+                        // TODO - create test file for this attribute
+                        //Exceptions {
+                        //    attribute_name_index: u16,
+                        //    attribute_length: u32,
+                        //    number_of_exceptions: u16,
+                        //    exception_index_table: Vec<u16>,
+                        //},
+
+                        //#[derive(Default, Debug)]
+                        //pub struct LineNumber {
+                        //    pub start_pc: u16,
+                        //    pub line_number: u16,
+                        //}
+
+                        method_info.attributes_count += 1;
+                        // TODO
                     }
 
+                    // this goes in the `code_attributes` field of the `Code` attribute of the method
                     PhoronDirective::LineNumber(ref linum) => {
-                        todo!()
+                        //LineNumberTable {
+                        //    attribute_name_index: u16,
+                        //    attribute_length: u32,
+                        //    line_number_table_length: u16,
+                        //    line_number_table: Vec<LineNumber>,
+                        //},
+
+                        // even though we can have multiple LineNumberTable attributes, we restrict
+                        // ourselves to one LineNumberTable attribute per method, adding the line
+                        // numbers for that method into the same entry, as in the case of the `.var` directive
+                        let line_num_table_index = if code_attributes.is_empty() {
+                            code_attributes_count += 1;
+                            code_attributes_length += 8;
+
+                            let attribute_name_index = *cp.get_name(PHORON_LINE_NUMBER_TABLE).ok_or(CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing attribute name index for line number table in Code attribute",
+                            })?;
+
+                            let mut attribute_length = 2; // excluding the initial 5 bytes, as per the spec
+                            let line_number_table_length = 0;
+                            let line_number_table = Vec::new();
+
+                            code_attributes.push(AttributeInfo::LineNumberTable {
+                                attribute_name_index,
+                                attribute_length,
+                                line_number_table_length,
+                                line_number_table,
+                            });
+                            0
+                        } else {
+                            let mut lntindex = 0;
+                            for (index, attr) in code_attributes.iter().enumerate() {
+                                if let AttributeInfo::LineNumberTable { .. } = attr {
+                                    lntindex = index;
+                                    break;
+                                }
+                            }
+                            lntindex
+                        };
+
+                        let start_pc = self.curr_code_offset as u16;
+
+                        if let AttributeInfo::LineNumberTable {
+                            ref mut attribute_length,
+                            ref mut line_number_table_length,
+                            ref mut line_number_table,
+                            ..
+                        } = code_attributes[line_num_table_index]
+                        {
+                            *line_number_table_length += 1;
+
+                            line_number_table.push(LineNumber {
+                                start_pc,
+                                line_number: *linum,
+                            });
+
+                            *attribute_length += 4;
+                            code_attributes_length += 4;
+                        }
                     }
 
+                    // this goes in the `code_attributes` field of the `Code` attribute of the
+                    // method
                     PhoronDirective::Var {
                         ref varnum,
                         ref name,
@@ -739,21 +806,99 @@ where
                         ref from_label,
                         ref to_label,
                     } => {
-                        todo!()
-                    }
+                        // there should be only one (at most) LocalVariableTable attribute in the
+                        // code_attributes vector (per method). If empty, create a new entry, and fill local
+                        // vars in it as and when encountered.
+                        // If not empty, find the index of the vector which contains the
+                        // LocalVariableTable, and enter the local vars there.
+                        let local_var_table_index = if code_attributes.is_empty() {
+                            code_attributes_count += 1;
+                            code_attributes_length += 8;
 
-                    //Code {
-                    //    attribute_name_index: u16,
-                    //    attribute_length: u32,
-                    //    max_stack: u16,
-                    //    max_locals: u16,
-                    //    code_length: u32,
-                    //    code: Vec<u8>,
-                    //    exception_table_length: u16,
-                    //    exception_table: Vec<ExceptionHandler>,
-                    //    code_attributes_count: u16,
-                    //    code_attributes: Vec<AttributeInfo>,
-                    //},
+                            let attribute_name_index = *cp.get_name(PHORON_LOCAL_VARIABLE_TABLE).ok_or(CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "misisng attribute name index for local variable table in Code attribute"
+
+                            })?;
+
+                            let mut attribute_length = 2;
+                            let local_variable_table_length = 0;
+                            let local_variable_table = Vec::new();
+
+                            code_attributes.push(AttributeInfo::LocalVariableTable {
+                                attribute_name_index,
+                                attribute_length,
+                                local_variable_table_length,
+                                local_variable_table,
+                            });
+                            0
+                        } else {
+                            let mut lvtindex = 0;
+                            for (index, attr) in code_attributes.iter().enumerate() {
+                                if let AttributeInfo::LocalVariableTable { .. } = attr {
+                                    lvtindex = index;
+                                    break;
+                                }
+                            }
+                            lvtindex
+                        };
+
+                        let start_pc = *self.label_mapping.get(from_label).ok_or(
+                            CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing start_pc for local var for code attribute",
+                            },
+                        )?;
+
+                        if let AttributeInfo::LocalVariableTable {
+                            ref mut attribute_length,
+                            ref mut local_variable_table_length,
+                            ref mut local_variable_table,
+                            ..
+                        } = code_attributes[local_var_table_index]
+                        {
+                            *local_variable_table_length += 1;
+
+                            let start_pc = *self.label_mapping.get(from_label).ok_or(CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing start pc for local var for local variable table for Code attribute",
+                            })? as u16;
+
+                            let end_pc = *self.label_mapping.get(to_label).ok_or(CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing length for local var for local vaiable table for Code attribute",
+                            })? as u16;
+
+                            let length = end_pc - start_pc;
+
+                            let name_index = *cp.get_name(&name).ok_or(CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing name index for local var for local variable table for Code attribute",
+                            })?;
+
+                            let descriptor_index = *cp.get_name(&field_descriptor.to_string()).ok_or(CodegenError::AttributeError {
+                                attr: "Code",
+                                details: "missing descriptor index for local var for local variable table for Code attribute",
+                            })?;
+
+                            let index = if local_variable_table.is_empty() {
+                                0
+                            } else {
+                                local_variable_table.len() as u16
+                            };
+
+                            local_variable_table.push(LocalVariable {
+                                start_pc,
+                                length,
+                                name_index,
+                                descriptor_index,
+                                index,
+                            });
+
+                            *attribute_length += 10; // 10 bytes per LocalVariable struct
+                            code_attributes_length += 10;
+                        }
+                    }
 
                     // this goes in the exception_table field of the Code attribute
                     PhoronDirective::Catch {
@@ -765,12 +910,6 @@ where
                         exception_table_length += 1;
 
                         let mut exc_handler = ExceptionHandler::default();
-                        //pub struct ExceptionHandler {
-                        //    pub start_pc: u16,
-                        //    pub end_pc: u16,
-                        //    pub handler_pc: u16,
-                        //    pub catch_type: u16,
-                        //}
                         exc_handler.start_pc = *self.label_mapping.get(from_label).ok_or(
                             CodegenError::AttributeError {
                                 attr: "Code",
@@ -803,9 +942,8 @@ where
                         exception_table.push(exc_handler);
 
                         // update attribute length for `Code` attribute
-                        attribute_length += 4 * std::mem::size_of::<u16>() as u32;
+                        code_attributes_length += 4 * std::mem::size_of::<u16>() as u32;
                     }
-                    _ => todo!(),
                 },
 
                 PhoronInstruction::PhoronLabel(ref label) => {}
@@ -824,14 +962,12 @@ where
             }
         }
 
-        // todo: backpatch offsets for forward labels
-
         let code_length = code.len() as u32;
-        attribute_length += code_length; // need to add sizes of all attributes
+        code_attributes_length += code_length; // need to add sizes of all attributes
 
         method_info.attributes.push(AttributeInfo::Code {
             attribute_name_index,
-            attribute_length,
+            attribute_length: code_attributes_length,
             max_stack,
             max_locals,
             code_length,

@@ -1,0 +1,33 @@
+.source ThrowsDemo.pho
+.class public ThrowsDemo
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method private demo()V
+  .limit stack 1
+  .limit locals 1
+  .throws java/lang/RuntimeException
+  .throws java/io/IOException
+  .throws java/lang/Throwable
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 2
+  .limit locals 2
+
+  new ThrowsDemo
+  dup
+  invokespecial ThrowsDemo/<init>()V
+  astore_1
+
+  aload_1
+  invokevirtual ThrowsDemo/demo()V
+
+  return
+.end method

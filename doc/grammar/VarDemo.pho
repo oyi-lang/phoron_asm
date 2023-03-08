@@ -1,0 +1,58 @@
+.source VarDemo.pho
+.class public VarDemo
+.super java/lang/Object
+
+.method public <init>()V
+  aload_0
+  invokespecial java/lang/Object/<init>()V
+  return
+.end method
+
+.method private demo()V
+  .limit stack 3
+  .limit locals 8
+  .var 0 is Foo I from Label1 to Label2
+  .var 1 is Bar D from Label3 to Label4
+  .var 2 is Baz Ljava/lang/String; from Label5 to Label6
+
+Label1:
+  bipush 10
+  istore_1
+
+Label2:
+  bipush 20
+  istore_2
+
+Label3:
+  bipush 30
+  istore_3
+
+Label4:
+  bipush 40
+  istore 4
+
+Label5:
+  bipush 50
+  istore 5
+
+Label6:
+  bipush 60
+  istore 7
+
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 2
+  .limit locals 2
+
+  new VarDemo
+  dup
+  invokespecial VarDemo/<init>()V
+  astore_1
+
+  aload_1
+  invokevirtual VarDemo/demo()V
+
+  return
+.end method
