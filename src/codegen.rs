@@ -712,39 +712,63 @@ where
                     }
 
                     // this is a top-level attribute inside Methhodnfo, ot the same level as the
-                    // Code attribute. Just like the Code attribute, there may be at most only one
-                    // entry in the method attributes.
+                    // `Code` attribute. Just like the `Code` attribute, there may be at most one
+                    // such entry in the method attributes.
                     PhoronDirective::Throws { ref class_name } => {
-                        // TODO - create test file for this attribute
-                        //Exceptions {
-                        //    attribute_name_index: u16,
-                        //    attribute_length: u32,
-                        //    number_of_exceptions: u16,
-                        //    exception_index_table: Vec<u16>,
-                        //},
+                        let exceptions_index = if method_info.attributes.is_empty() {
+                            method_info.attributes_count += 1;
 
-                        //#[derive(Default, Debug)]
-                        //pub struct LineNumber {
-                        //    pub start_pc: u16,
-                        //    pub line_number: u16,
-                        //}
+                            let attribute_name_index = *cp.get_name(PHORON_EXCEPTIONS).ok_or(CodegenError::AttributeError {
+                                attr: "Exceptions",
+                                details: "missing attribute name index for `Execptions` attribute in method info"
+                            })?;
 
-                        method_info.attributes_count += 1;
-                        // TODO
+                            let mut attribute_length = 2; // excluding the initial 6 bytes, as per the spec
+                            let number_of_exceptions = 0;
+                            let exception_index_table = Vec::new();
+
+                            method_info.attributes.push(AttributeInfo::Exceptions {
+                                attribute_name_index,
+                                attribute_length,
+                                number_of_exceptions,
+                                exception_index_table,
+                            });
+
+                            0
+                        } else {
+                            let mut excindex = 0;
+                            for (index, attr) in method_info.attributes.iter().enumerate() {
+                                if let AttributeInfo::Exceptions { .. } = attr {
+                                    excindex = index;
+                                    break;
+                                }
+                            }
+                            excindex
+                        };
+
+                        let exc_cp_index = *cp.get_class(class_name).ok_or(CodegenError::AttributeError {
+                            attr: "Exceptions",
+                            details: "missing exception class index for `Exceptions` attribute in method info"
+                        })? - 1; // one-off here as well
+
+                        if let AttributeInfo::Exceptions {
+                            ref mut attribute_length,
+                            ref mut number_of_exceptions,
+                            ref mut exception_index_table,
+                            ..
+                        } = method_info.attributes[exceptions_index]
+                        {
+                            *attribute_length += 2;
+                            *number_of_exceptions += 1;
+                            exception_index_table.push(exc_cp_index);
+                        }
                     }
 
                     // this goes in the `code_attributes` field of the `Code` attribute of the method
+                    // even though we can have multiple LineNumberTable attributes, we restrict
+                    // ourselves to one LineNumberTable attribute per method, adding the line
+                    // numbers for that method into the same entry, as in the case of the `.var` directive
                     PhoronDirective::LineNumber(ref linum) => {
-                        //LineNumberTable {
-                        //    attribute_name_index: u16,
-                        //    attribute_length: u32,
-                        //    line_number_table_length: u16,
-                        //    line_number_table: Vec<LineNumber>,
-                        //},
-
-                        // even though we can have multiple LineNumberTable attributes, we restrict
-                        // ourselves to one LineNumberTable attribute per method, adding the line
-                        // numbers for that method into the same entry, as in the case of the `.var` directive
                         let line_num_table_index = if code_attributes.is_empty() {
                             code_attributes_count += 1;
                             code_attributes_length += 8;
@@ -754,7 +778,7 @@ where
                                 details: "missing attribute name index for line number table in Code attribute",
                             })?;
 
-                            let mut attribute_length = 2; // excluding the initial 5 bytes, as per the spec
+                            let mut attribute_length = 2; // excluding the initial 6 bytes, as per the spec
                             let line_number_table_length = 0;
                             let line_number_table = Vec::new();
 
@@ -798,7 +822,11 @@ where
                     }
 
                     // this goes in the `code_attributes` field of the `Code` attribute of the
-                    // method
+                    // method there should be only one (at most) LocalVariableTable attribute in the
+                    // code_attributes vector (per method). If empty, create a new entry, and fill local
+                    // vars in it as and when encountered.
+                    // If not empty, find the index of the vector which contains the
+                    // LocalVariableTable, and enter the local vars there.
                     PhoronDirective::Var {
                         ref varnum,
                         ref name,
@@ -806,11 +834,6 @@ where
                         ref from_label,
                         ref to_label,
                     } => {
-                        // there should be only one (at most) LocalVariableTable attribute in the
-                        // code_attributes vector (per method). If empty, create a new entry, and fill local
-                        // vars in it as and when encountered.
-                        // If not empty, find the index of the vector which contains the
-                        // LocalVariableTable, and enter the local vars there.
                         let local_var_table_index = if code_attributes.is_empty() {
                             code_attributes_count += 1;
                             code_attributes_length += 8;

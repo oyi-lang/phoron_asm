@@ -439,6 +439,8 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             PhoronDirective::LimitLocals(..) => {} // do nothing
 
             PhoronDirective::Throws { ref class_name } => {
+                self.analyze_name(PHORON_EXCEPTIONS, cp)?;
+
                 let name_index = self.analyze_name(class_name, cp)?;
                 self.analyze_class(name_index, cp)?;
             }
