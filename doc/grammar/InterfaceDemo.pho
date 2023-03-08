@@ -1,0 +1,12 @@
+.interface public InterfaceDemo
+.super java/lang/Object
+
+.method public abstract foo()V
+  .throws java/lang/RuntimeException
+.end method
+
+.method public abstract bar(IIIF)V
+.end method
+
+.method public abstract baz(DJZ)Ljava/lang/String;
+.end method

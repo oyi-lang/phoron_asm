@@ -23,10 +23,17 @@ pub enum CodegenError {
     Missing {
         component: &'static str,
     },
+
+    Invalid {
+        component: &'static str,
+        details: &'static str,
+    },
+
     ConstantPoolError {
         cp_entry: &'static str,
         details: &'static str,
     },
+
     OpcodeError {
         opcode: &'static str,
         details: &'static str,
@@ -50,6 +57,10 @@ impl fmt::Display for CodegenError {
                     ref details,
                 } => format!("{attr}: {details}"),
                 Missing { ref component } => format!("Missing : {component}"),
+                Invalid {
+                    ref component,
+                    ref details,
+                } => format!("Invalid {component}: {details}"),
                 ConstantPoolError {
                     ref cp_entry,
                     ref details,
@@ -149,24 +160,6 @@ where
             curr_code_offset: 0,
         }
     }
-    //pub const CONSTANT_INVALID_DEFAULT: u8 = 255;
-    //pub const CONSTANT_CLASS: u8 = 7;
-    //pub const CONSTANT_FIELD_REF: u8 = 9;
-    //pub const CONSTANT_METHOD_REF: u8 = 10;
-    //pub const CONSTANT_INTERFACE_METHOD_REF: u8 = 11;
-    //pub const CONSTANT_STRING: u8 = 8;
-    //pub const CONSTANT_INTEGER: u8 = 3;
-    //pub const CONSTANT_FLOAT: u8 = 4;
-    //pub const CONSTANT_LONG: u8 = 5;
-    //pub const CONSTANT_DOUBLE: u8 = 6;
-    //pub const CONSTANT_NAME_AND_TYPE: u8 = 12;
-    //pub const CONSTANT_UTF8: u8 = 1;
-    //pub const CONSTANT_METHOD_HANDLE: u8 = 15;
-    //pub const CONSTANT_METHOD_TYPE: u8 = 16;
-    //pub const CONSTANT_DYNAMIC: u8 = 17;
-    //pub const CONSTANT_INVOKE_DYNAMIC: u8 = 18;
-    //pub const CONSTANT_MODULE: u8 = 19;
-    //pub const CONSTANT_PACKAGE: u8 = 20;
 
     fn gen_constant_pool(&mut self, cp: &PhoronConstantPool) -> CodegenResult<()> {
         let constant_pool_count = cp.len();
@@ -302,6 +295,10 @@ where
                     })
                 }
             }
+        }
+
+        for (idx, p) in constant_pool.iter().enumerate() {
+            println!("{idx} => {p:?}");
         }
 
         self.classfile.constant_pool = constant_pool;
@@ -492,6 +489,7 @@ where
         self.gen_constant_pool(&cp)?;
 
         self.visit_program(&program, cp)?;
+        println!("classfile = {:#?}", self.classfile);
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())
@@ -575,7 +573,14 @@ where
         class_def: &PhoronInterfaceDef,
         cp: Self::Input,
     ) -> Self::Result {
-        todo!()
+        self.gen_class_or_interface_access_flags(&class_def.access_flags)?;
+
+        self.classfile.this_class =
+            *cp.get_class(&class_def.name).ok_or(CodegenError::Missing {
+                component: "`this` class",
+            })?;
+
+        Ok(CodegenResultType::Empty)
     }
 
     fn visit_super_def(&mut self, super_def: &PhoronSuperDef, cp: Self::Input) -> Self::Result {
@@ -624,7 +629,6 @@ where
                     component: "field descriptor",
                 })?;
 
-        // todo - attributes
         field_info.attributes_count = 0;
 
         self.classfile.fields.push(field_info);
@@ -641,7 +645,6 @@ where
     fn visit_method_def(&mut self, method_def: &PhoronMethodDef, cp: Self::Input) -> Self::Result {
         let mut method_info = MethodInfo::default();
 
-        // todo
         self.gen_method_access_flags(&mut method_info, &method_def.access_flags)?;
 
         method_info.name_index = *cp.get_name(&method_def.name).ok_or(CodegenError::Missing {
@@ -654,342 +657,426 @@ where
                 component: "method descriptor",
             })?;
 
-        method_info.attributes_count = 1; // for the Code attribute
+        match cp.get_name(PHORON_CODE) {
+            // possibly an interface
+            None => {
+                for instr in &method_def.instructions {
+                    match instr {
+                        PhoronInstruction::PhoronDirective(ref dir) => match dir {
+                            // this is a top-level attribute inside Methhodnfo, ot the same level as the
+                            // `Code` attribute. Just like the `Code` attribute, there may be at most one
+                            // such entry in the method attributes.
+                            PhoronDirective::Throws { ref class_name } => {
+                                let exceptions_index = if method_info.attributes.is_empty() {
+                                    method_info.attributes_count += 1;
 
-        // Visit all the JVM instructions first to collect metadata about all the
-        // labels used in the Code section. This will be used to calculate the branch
-        // offsets of the labels in the actual instructions in the next iteration
-        // using the following algorithm:
-        //
-        // s: i16 = label_offset - curr_code_offset
-        // b1: u8 = (s >> 8) as u8
-        // b2: u8 = (s ^ (b1 as i16) << 8) as u8
-        //
-        // This also offsets the need to performa complicated "backpatching" of the
-        // offsets after the Code vector/array has already beem generated (as would have
-        // been the case in a more traditional compiler).
-        self.gen_label_mappings(&method_def.instructions)?;
-
-        // code attributes
-        let attribute_name_index = *cp.get_name("Code").ok_or(CodegenError::Missing {
-            component: "`Code` attribute name",
-        })?;
-
-        let mut code_attributes_length = 12; // default minimum (as per the spec)
-        let mut max_stack = 1; // default
-        let mut max_locals = 1; // default
-
-        let mut code = Vec::new();
-
-        let mut exception_table_length = 0;
-        let mut exception_table = vec![];
-        let mut code_attributes_count = 0;
-        let mut code_attributes = vec![];
-
-        self.curr_code_offset = 0;
-        for instr in &method_def.instructions {
-            match instr {
-                PhoronInstruction::PhoronDirective(ref dir) => match dir {
-                    PhoronDirective::LimitStack(stack) => {
-                        max_stack = *stack;
-                    }
-
-                    PhoronDirective::LimitLocals(locals) => {
-                        max_locals = *locals;
-                    }
-
-                    // this is a top-level attribute inside Methhodnfo, ot the same level as the
-                    // `Code` attribute. Just like the `Code` attribute, there may be at most one
-                    // such entry in the method attributes.
-                    PhoronDirective::Throws { ref class_name } => {
-                        let exceptions_index = if method_info.attributes.is_empty() {
-                            method_info.attributes_count += 1;
-
-                            let attribute_name_index = *cp.get_name(PHORON_EXCEPTIONS).ok_or(CodegenError::AttributeError {
+                                    let attribute_name_index = *cp.get_name(PHORON_EXCEPTIONS).ok_or(CodegenError::AttributeError {
                                 attr: "Exceptions",
                                 details: "missing attribute name index for `Execptions` attribute in method info"
                             })?;
 
-                            let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
-                            let number_of_exceptions = 0;
-                            let exception_index_table = Vec::new();
+                                    let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
+                                    let number_of_exceptions = 0;
+                                    let exception_index_table = Vec::new();
 
-                            method_info.attributes.push(AttributeInfo::Exceptions {
-                                attribute_name_index,
-                                attribute_length,
-                                number_of_exceptions,
-                                exception_index_table,
-                            });
+                                    method_info.attributes.push(AttributeInfo::Exceptions {
+                                        attribute_name_index,
+                                        attribute_length,
+                                        number_of_exceptions,
+                                        exception_index_table,
+                                    });
 
-                            0
-                        } else {
-                            let mut excindex = 0;
-                            for (index, attr) in method_info.attributes.iter().enumerate() {
-                                if let AttributeInfo::Exceptions { .. } = attr {
-                                    excindex = index;
-                                    break;
-                                }
-                            }
-                            excindex
-                        };
+                                    0
+                                } else {
+                                    let mut excindex = 0;
+                                    for (index, attr) in method_info.attributes.iter().enumerate() {
+                                        if let AttributeInfo::Exceptions { .. } = attr {
+                                            excindex = index;
+                                            break;
+                                        }
+                                    }
+                                    excindex
+                                };
 
-                        let exc_cp_index = *cp.get_class(class_name).ok_or(CodegenError::AttributeError {
+                                let exc_cp_index = *cp.get_class(class_name).ok_or(CodegenError::AttributeError {
                             attr: "Exceptions",
                             details: "missing exception class index for `Exceptions` attribute in method info"
                         })? - 1; // one-off here as well
 
-                        if let AttributeInfo::Exceptions {
-                            ref mut attribute_length,
-                            ref mut number_of_exceptions,
-                            ref mut exception_index_table,
-                            ..
-                        } = method_info.attributes[exceptions_index]
-                        {
-                            *attribute_length += 2;
-                            *number_of_exceptions += 1;
-                            exception_index_table.push(exc_cp_index);
+                                if let AttributeInfo::Exceptions {
+                                    ref mut attribute_length,
+                                    ref mut number_of_exceptions,
+                                    ref mut exception_index_table,
+                                    ..
+                                } = method_info.attributes[exceptions_index]
+                                {
+                                    *attribute_length += 2;
+                                    *number_of_exceptions += 1;
+                                    exception_index_table.push(exc_cp_index);
+                                }
+                            }
+
+                            _ => {
+                                return Err(CodegenError::Invalid {
+                                    component: "interface",
+                                    details: "invalid directive for interface",
+                                })
+                            }
+                        },
+
+                        PhoronInstruction::PhoronLabel(ref label) => {
+                            return Err(CodegenError::Invalid {
+                                component: "interface",
+                                details: "labels are not suported for interfaces",
+                            })
+                        }
+
+                        PhoronInstruction::JvmInstruction(ref jvm_instr) => {
+                            return Err(CodegenError::Invalid {
+                                component: "interface",
+                                details: "jvm instructions are not supported for interfaces",
+                            })
                         }
                     }
+                }
+            }
 
-                    // this goes in the `code_attributes` field of the `Code` attribute of the method
-                    // even though we can have multiple LineNumberTable attributes, we restrict
-                    // ourselves to one LineNumberTable attribute per method, adding the line
-                    // numbers for that method into the same entry, as in the case of the `.var` directive
-                    PhoronDirective::LineNumber(ref linum) => {
-                        let line_num_table_index = if code_attributes.is_empty() {
-                            code_attributes_count += 1;
-                            code_attributes_length += 8;
+            Some(attribute_name_index) => {
+                // Visit all the JVM instructions first to collect metadata about all the
+                // labels used in the Code section. This will be used to calculate the branch
+                // offsets of the labels in the actual instructions in the next iteration
+                // using the following algorithm:
+                //
+                // s: i16 = label_offset - curr_code_offset
+                // b1: u8 = (s >> 8) as u8
+                // b2: u8 = (s ^ (b1 as i16) << 8) as u8
+                //
+                // This also offsets the need to performa complicated "backpatching" of the
+                // offsets after the Code vector/array has already beem generated (as would have
+                // been the case in a more traditional compiler).
 
-                            let attribute_name_index = *cp.get_name(PHORON_LINE_NUMBER_TABLE).ok_or(CodegenError::AttributeError {
+                self.gen_label_mappings(&method_def.instructions)?;
+                method_info.attributes_count += 1; // for the Code attribute
+
+                let mut code_attributes_length = 12; // default minimum (as per the spec)
+                let mut max_stack = 1; // default
+                let mut max_locals = 1; // default
+
+                let mut code = Vec::new();
+
+                let mut exception_table_length = 0;
+                let mut exception_table = vec![];
+                let mut code_attributes_count = 0;
+                let mut code_attributes = vec![];
+
+                self.curr_code_offset = 0;
+                for instr in &method_def.instructions {
+                    match instr {
+                        PhoronInstruction::PhoronDirective(ref dir) => match dir {
+                            PhoronDirective::LimitStack(stack) => {
+                                max_stack = *stack;
+                            }
+
+                            PhoronDirective::LimitLocals(locals) => {
+                                max_locals = *locals;
+                            }
+
+                            // this is a top-level attribute inside Methhodnfo, ot the same level as the
+                            // `Code` attribute. Just like the `Code` attribute, there may be at most one
+                            // such entry in the method attributes.
+                            PhoronDirective::Throws { ref class_name } => {
+                                let exceptions_index = if method_info.attributes.is_empty() {
+                                    method_info.attributes_count += 1;
+
+                                    let attribute_name_index = *cp.get_name(PHORON_EXCEPTIONS).ok_or(CodegenError::AttributeError {
+                                attr: "Exceptions",
+                                details: "missing attribute name index for `Execptions` attribute in method info"
+                            })?;
+
+                                    let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
+                                    let number_of_exceptions = 0;
+                                    let exception_index_table = Vec::new();
+
+                                    method_info.attributes.push(AttributeInfo::Exceptions {
+                                        attribute_name_index,
+                                        attribute_length,
+                                        number_of_exceptions,
+                                        exception_index_table,
+                                    });
+
+                                    0
+                                } else {
+                                    let mut excindex = 0;
+                                    for (index, attr) in method_info.attributes.iter().enumerate() {
+                                        if let AttributeInfo::Exceptions { .. } = attr {
+                                            excindex = index;
+                                            break;
+                                        }
+                                    }
+                                    excindex
+                                };
+
+                                let exc_cp_index = *cp.get_class(class_name).ok_or(CodegenError::AttributeError {
+                            attr: "Exceptions",
+                            details: "missing exception class index for `Exceptions` attribute in method info"
+                        })? - 1; // one-off here as well
+
+                                if let AttributeInfo::Exceptions {
+                                    ref mut attribute_length,
+                                    ref mut number_of_exceptions,
+                                    ref mut exception_index_table,
+                                    ..
+                                } = method_info.attributes[exceptions_index]
+                                {
+                                    *attribute_length += 2;
+                                    *number_of_exceptions += 1;
+                                    exception_index_table.push(exc_cp_index);
+                                }
+                            }
+
+                            // this goes in the `code_attributes` field of the `Code` attribute of the method
+                            // even though we can have multiple LineNumberTable attributes, we restrict
+                            // ourselves to one LineNumberTable attribute per method, adding the line
+                            // numbers for that method into the same entry, as in the case of the `.var` directive
+                            PhoronDirective::LineNumber(ref linum) => {
+                                let line_num_table_index = if code_attributes.is_empty() {
+                                    code_attributes_count += 1;
+                                    code_attributes_length += 8;
+
+                                    let attribute_name_index = *cp.get_name(PHORON_LINE_NUMBER_TABLE).ok_or(CodegenError::AttributeError {
                                 attr: "Code",
                                 details: "missing attribute name index for line number table in Code attribute",
                             })?;
 
-                            let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
-                            let line_number_table_length = 0;
-                            let line_number_table = Vec::new();
+                                    let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
+                                    let line_number_table_length = 0;
+                                    let line_number_table = Vec::new();
 
-                            code_attributes.push(AttributeInfo::LineNumberTable {
-                                attribute_name_index,
-                                attribute_length,
-                                line_number_table_length,
-                                line_number_table,
-                            });
-                            0
-                        } else {
-                            let mut lntindex = 0;
-                            for (index, attr) in code_attributes.iter().enumerate() {
-                                if let AttributeInfo::LineNumberTable { .. } = attr {
-                                    lntindex = index;
-                                    break;
+                                    code_attributes.push(AttributeInfo::LineNumberTable {
+                                        attribute_name_index,
+                                        attribute_length,
+                                        line_number_table_length,
+                                        line_number_table,
+                                    });
+                                    0
+                                } else {
+                                    let mut lntindex = 0;
+                                    for (index, attr) in code_attributes.iter().enumerate() {
+                                        if let AttributeInfo::LineNumberTable { .. } = attr {
+                                            lntindex = index;
+                                            break;
+                                        }
+                                    }
+                                    lntindex
+                                };
+
+                                let start_pc = self.curr_code_offset as u16;
+
+                                if let AttributeInfo::LineNumberTable {
+                                    ref mut attribute_length,
+                                    ref mut line_number_table_length,
+                                    ref mut line_number_table,
+                                    ..
+                                } = code_attributes[line_num_table_index]
+                                {
+                                    *line_number_table_length += 1;
+
+                                    line_number_table.push(LineNumber {
+                                        start_pc,
+                                        line_number: *linum,
+                                    });
+
+                                    *attribute_length += 4;
+                                    code_attributes_length += 4;
                                 }
                             }
-                            lntindex
-                        };
 
-                        let start_pc = self.curr_code_offset as u16;
+                            // this goes in the `code_attributes` field of the `Code` attribute of the
+                            // method there should be only one (at most) LocalVariableTable attribute in the
+                            // code_attributes vector (per method). If empty, create a new entry, and fill local
+                            // vars in it as and when encountered.
+                            // If not empty, find the index of the vector which contains the
+                            // LocalVariableTable, and enter the local vars there.
+                            PhoronDirective::Var {
+                                ref varnum,
+                                ref name,
+                                ref field_descriptor,
+                                ref from_label,
+                                ref to_label,
+                            } => {
+                                let local_var_table_index = if code_attributes.is_empty() {
+                                    code_attributes_count += 1;
+                                    code_attributes_length += 8;
 
-                        if let AttributeInfo::LineNumberTable {
-                            ref mut attribute_length,
-                            ref mut line_number_table_length,
-                            ref mut line_number_table,
-                            ..
-                        } = code_attributes[line_num_table_index]
-                        {
-                            *line_number_table_length += 1;
-
-                            line_number_table.push(LineNumber {
-                                start_pc,
-                                line_number: *linum,
-                            });
-
-                            *attribute_length += 4;
-                            code_attributes_length += 4;
-                        }
-                    }
-
-                    // this goes in the `code_attributes` field of the `Code` attribute of the
-                    // method there should be only one (at most) LocalVariableTable attribute in the
-                    // code_attributes vector (per method). If empty, create a new entry, and fill local
-                    // vars in it as and when encountered.
-                    // If not empty, find the index of the vector which contains the
-                    // LocalVariableTable, and enter the local vars there.
-                    PhoronDirective::Var {
-                        ref varnum,
-                        ref name,
-                        ref field_descriptor,
-                        ref from_label,
-                        ref to_label,
-                    } => {
-                        let local_var_table_index = if code_attributes.is_empty() {
-                            code_attributes_count += 1;
-                            code_attributes_length += 8;
-
-                            let attribute_name_index = *cp.get_name(PHORON_LOCAL_VARIABLE_TABLE).ok_or(CodegenError::AttributeError {
+                                    let attribute_name_index = *cp.get_name(PHORON_LOCAL_VARIABLE_TABLE).ok_or(CodegenError::AttributeError {
                                 attr: "Code",
                                 details: "misisng attribute name index for local variable table in Code attribute"
 
                             })?;
 
-                            let attribute_length = 2;
-                            let local_variable_table_length = 0;
-                            let local_variable_table = Vec::new();
+                                    let attribute_length = 2;
+                                    let local_variable_table_length = 0;
+                                    let local_variable_table = Vec::new();
 
-                            code_attributes.push(AttributeInfo::LocalVariableTable {
-                                attribute_name_index,
-                                attribute_length,
-                                local_variable_table_length,
-                                local_variable_table,
-                            });
-                            0
-                        } else {
-                            let mut lvtindex = 0;
-                            for (index, attr) in code_attributes.iter().enumerate() {
-                                if let AttributeInfo::LocalVariableTable { .. } = attr {
-                                    lvtindex = index;
-                                    break;
-                                }
-                            }
-                            lvtindex
-                        };
+                                    code_attributes.push(AttributeInfo::LocalVariableTable {
+                                        attribute_name_index,
+                                        attribute_length,
+                                        local_variable_table_length,
+                                        local_variable_table,
+                                    });
+                                    0
+                                } else {
+                                    let mut lvtindex = 0;
+                                    for (index, attr) in code_attributes.iter().enumerate() {
+                                        if let AttributeInfo::LocalVariableTable { .. } = attr {
+                                            lvtindex = index;
+                                            break;
+                                        }
+                                    }
+                                    lvtindex
+                                };
 
-                        let start_pc = *self.label_mapping.get(from_label).ok_or(
-                            CodegenError::AttributeError {
-                                attr: "Code",
-                                details: "missing start_pc for local var for code attribute",
-                            },
-                        )?;
+                                let start_pc = *self.label_mapping.get(from_label).ok_or(
+                                    CodegenError::AttributeError {
+                                        attr: "Code",
+                                        details:
+                                            "missing start_pc for local var for code attribute",
+                                    },
+                                )?;
 
-                        if let AttributeInfo::LocalVariableTable {
-                            ref mut attribute_length,
-                            ref mut local_variable_table_length,
-                            ref mut local_variable_table,
-                            ..
-                        } = code_attributes[local_var_table_index]
-                        {
-                            *local_variable_table_length += 1;
+                                if let AttributeInfo::LocalVariableTable {
+                                    ref mut attribute_length,
+                                    ref mut local_variable_table_length,
+                                    ref mut local_variable_table,
+                                    ..
+                                } = code_attributes[local_var_table_index]
+                                {
+                                    *local_variable_table_length += 1;
 
-                            let start_pc = *self.label_mapping.get(from_label).ok_or(CodegenError::AttributeError {
+                                    let start_pc = *self.label_mapping.get(from_label).ok_or(CodegenError::AttributeError {
                                 attr: "Code",
                                 details: "missing start pc for local var for local variable table for Code attribute",
                             })? as u16;
 
-                            let end_pc = *self.label_mapping.get(to_label).ok_or(CodegenError::AttributeError {
+                                    let end_pc = *self.label_mapping.get(to_label).ok_or(CodegenError::AttributeError {
                                 attr: "Code",
                                 details: "missing length for local var for local vaiable table for Code attribute",
                             })? as u16;
 
-                            let length = end_pc - start_pc;
+                                    let length = end_pc - start_pc;
 
-                            let name_index = *cp.get_name(&name).ok_or(CodegenError::AttributeError {
+                                    let name_index = *cp.get_name(&name).ok_or(CodegenError::AttributeError {
                                 attr: "Code",
                                 details: "missing name index for local var for local variable table for Code attribute",
                             })?;
 
-                            let descriptor_index = *cp.get_name(&field_descriptor.to_string()).ok_or(CodegenError::AttributeError {
+                                    let descriptor_index = *cp.get_name(&field_descriptor.to_string()).ok_or(CodegenError::AttributeError {
                                 attr: "Code",
                                 details: "missing descriptor index for local var for local variable table for Code attribute",
                             })?;
 
-                            let index = if local_variable_table.is_empty() {
-                                0
+                                    let index = if local_variable_table.is_empty() {
+                                        0
+                                    } else {
+                                        local_variable_table.len() as u16
+                                    };
+
+                                    local_variable_table.push(LocalVariable {
+                                        start_pc,
+                                        length,
+                                        name_index,
+                                        descriptor_index,
+                                        index,
+                                    });
+
+                                    *attribute_length += 10; // 10 bytes per LocalVariable struct
+                                    code_attributes_length += 10;
+                                }
+                            }
+
+                            // this goes in the exception_table field of the Code attribute
+                            PhoronDirective::Catch {
+                                ref class_name,
+                                ref from_label,
+                                ref to_label,
+                                ref handler_label,
+                            } => {
+                                exception_table_length += 1;
+
+                                let mut exc_handler = ExceptionHandler::default();
+                                exc_handler.start_pc = *self.label_mapping.get(from_label).ok_or(
+                                    CodegenError::AttributeError {
+                                        attr: "Code",
+                                        details: "missing start_pc for exception handler",
+                                    },
+                                )? as u16;
+
+                                exc_handler.end_pc = *self.label_mapping.get(to_label).ok_or(
+                                    CodegenError::AttributeError {
+                                        attr: "Code",
+                                        details: "missing end_pc for exception handler",
+                                    },
+                                )? as u16;
+
+                                exc_handler.handler_pc =
+                                    *self.label_mapping.get(handler_label).ok_or(
+                                        CodegenError::AttributeError {
+                                            attr: "Code",
+                                            details: "missing handler_pc for exception handler",
+                                        },
+                                    )? as u16;
+
+                                exc_handler.catch_type = if class_name == "all" {
+                                    0 // catch any exception
+                                } else {
+                                    *cp.get_class(class_name).ok_or(
+                                        CodegenError::AttributeError {
+                                            attr: "Code",
+                                            details: "missing catch_type in exception handler",
+                                        },
+                                    )? - 1 // fixme: see why this doesn't work evern though the idx in the cp is correct
+                                };
+
+                                exception_table.push(exc_handler);
+
+                                // update attribute length for `Code` attribute
+                                code_attributes_length += 4 * std::mem::size_of::<u16>() as u32;
+                            }
+                        },
+
+                        PhoronInstruction::PhoronLabel(ref label) => {}
+
+                        PhoronInstruction::JvmInstruction(ref jvm_instr) => {
+                            let opcodes = self.visit_jvm_instruction(jvm_instr, cp)?;
+
+                            if let CodegenResultType::ByteVec(instr_opcodes) = opcodes {
+                                let opcode_len = instr_opcodes.len() as i16;
+                                code.extend_from_slice(&instr_opcodes);
+                                self.curr_code_offset += opcode_len;
                             } else {
-                                local_variable_table.len() as u16
-                            };
-
-                            local_variable_table.push(LocalVariable {
-                                start_pc,
-                                length,
-                                name_index,
-                                descriptor_index,
-                                index,
-                            });
-
-                            *attribute_length += 10; // 10 bytes per LocalVariable struct
-                            code_attributes_length += 10;
+                                return Err(CodegenError::Unknown);
+                            }
                         }
                     }
-
-                    // this goes in the exception_table field of the Code attribute
-                    PhoronDirective::Catch {
-                        ref class_name,
-                        ref from_label,
-                        ref to_label,
-                        ref handler_label,
-                    } => {
-                        exception_table_length += 1;
-
-                        let mut exc_handler = ExceptionHandler::default();
-                        exc_handler.start_pc = *self.label_mapping.get(from_label).ok_or(
-                            CodegenError::AttributeError {
-                                attr: "Code",
-                                details: "missing start_pc for exception handler",
-                            },
-                        )? as u16;
-
-                        exc_handler.end_pc = *self.label_mapping.get(to_label).ok_or(
-                            CodegenError::AttributeError {
-                                attr: "Code",
-                                details: "missing end_pc for exception handler",
-                            },
-                        )? as u16;
-
-                        exc_handler.handler_pc = *self.label_mapping.get(handler_label).ok_or(
-                            CodegenError::AttributeError {
-                                attr: "Code",
-                                details: "missing handler_pc for exception handler",
-                            },
-                        )? as u16;
-
-                        exc_handler.catch_type = if class_name == "all" {
-                            0 // catch any exception
-                        } else {
-                            *cp.get_class(class_name)
-                                .ok_or(CodegenError::AttributeError {
-                                    attr: "Code",
-                                    details: "missing catch_type in exception handler",
-                                })?
-                                - 1 // fixme: see why this doesn't work evern though the idx in the cp is correct
-                        };
-
-                        exception_table.push(exc_handler);
-
-                        // update attribute length for `Code` attribute
-                        code_attributes_length += 4 * std::mem::size_of::<u16>() as u32;
-                    }
-                },
-
-                PhoronInstruction::PhoronLabel(ref label) => {}
-
-                PhoronInstruction::JvmInstruction(ref jvm_instr) => {
-                    let opcodes = self.visit_jvm_instruction(jvm_instr, cp)?;
-
-                    if let CodegenResultType::ByteVec(instr_opcodes) = opcodes {
-                        let opcode_len = instr_opcodes.len() as i16;
-                        code.extend_from_slice(&instr_opcodes);
-                        self.curr_code_offset += opcode_len;
-                    } else {
-                        return Err(CodegenError::Unknown);
-                    }
                 }
+
+                let code_length = code.len() as u32;
+                code_attributes_length += code_length; // need to add sizes of all attributes
+
+                method_info.attributes.push(AttributeInfo::Code {
+                    attribute_name_index: *attribute_name_index,
+                    attribute_length: code_attributes_length,
+                    max_stack,
+                    max_locals,
+                    code_length,
+                    code,
+                    exception_table_length,
+                    exception_table,
+                    code_attributes_count,
+                    code_attributes,
+                });
             }
         }
-
-        let code_length = code.len() as u32;
-        code_attributes_length += code_length; // need to add sizes of all attributes
-
-        method_info.attributes.push(AttributeInfo::Code {
-            attribute_name_index,
-            attribute_length: code_attributes_length,
-            max_stack,
-            max_locals,
-            code_length,
-            code,
-            exception_table_length,
-            exception_table,
-            code_attributes_count,
-            code_attributes,
-        });
 
         self.classfile.methods.push(method_info);
 
@@ -1224,6 +1311,7 @@ where
                 ref field_descriptor,
             } => {
                 let mut opcodes = vec![0xb4];
+
                 let fieldref = *cp
                     .get_fieldref(class_name, field_name, &field_descriptor.to_string())
                     .ok_or(CodegenError::OpcodeError {
@@ -1289,10 +1377,37 @@ where
             Idiv => CodegenResultType::ByteVec(vec![0x6c]),
 
             Ifacmpeq { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xa5];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_acmpeq",
+                            details: "invalid label ",
+                        })?;
+
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
             }
+
             Ifacmpne { ref label } => {
-                todo!()
+                let mut opcodes = vec![0xa6];
+
+                let label_offset =
+                    self.label_mapping
+                        .get(label)
+                        .ok_or(CodegenError::OpcodeError {
+                            opcode: "if_acmpne",
+                            details: "invalid label ",
+                        })?;
+
+                let offset = label_offset - self.curr_code_offset;
+                opcodes.extend_from_slice(&offset.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Ificmpeq { ref label } => {
@@ -1969,7 +2084,17 @@ where
                 ref field_name,
                 ref field_descriptor,
             } => {
-                todo!()
+                let mut opcodes = vec![0xb5];
+
+                let fieldref = *cp
+                    .get_fieldref(class_name, field_name, &field_descriptor.to_string())
+                    .ok_or(CodegenError::OpcodeError {
+                        opcode: "putfield",
+                        details: "missing field reference",
+                    })?;
+                opcodes.extend_from_slice(&fieldref.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Putstatic {
@@ -1977,7 +2102,17 @@ where
                 ref field_name,
                 ref field_descriptor,
             } => {
-                todo!()
+                let mut opcodes = vec![0xb3];
+
+                let fieldref = *cp
+                    .get_fieldref(class_name, field_name, &field_descriptor.to_string())
+                    .ok_or(CodegenError::OpcodeError {
+                        opcode: "putstatic",
+                        details: "missing field reference",
+                    })?;
+                opcodes.extend_from_slice(&fieldref.to_be_bytes());
+
+                CodegenResultType::ByteVec(opcodes)
             }
 
             Return => CodegenResultType::ByteVec(vec![0xb1]),

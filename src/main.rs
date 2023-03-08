@@ -14,7 +14,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() != 1 {
         usage();
     } else {
-        // todo: pass the source file name to the lexer for the default SourceFile attribute.
         let src_file = &args[0];
         let src = fs::read_to_string(src_file)?;
 

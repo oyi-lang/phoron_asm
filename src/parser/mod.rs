@@ -1905,8 +1905,10 @@ impl<'a> Parser<'a> {
                 JvmInstruction::Ishl
             }
 
+            // lshr
             Token::TIshr => {
-                todo!()
+                self.advance()?;
+                JvmInstruction::Ishr
             }
 
             // istore <varnum>

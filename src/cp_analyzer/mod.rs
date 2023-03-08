@@ -380,10 +380,6 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         Ok(())
     }
 
-    // pub name: String,
-    // pub access_flags: Vec<PhoronFieldAccessFlag>,
-    // pub field_descriptor: PhoronFieldDescriptor,
-    // pub init_val: Option<PhoronFieldInitValue>,
     fn visit_field_def(&mut self, field_def: &PhoronFieldDef, cp: Self::Input) -> Self::Result {
         self.analyze_name(&field_def.name, cp)?;
         self.analyze_name(&field_def.field_descriptor.to_string(), cp)?;
@@ -531,9 +527,19 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref interface_name,
                 ref method_name,
                 ref method_descriptor,
-                ref ub,
+                ..
             } => {
-                todo!()
+                let class_name_index = self.analyze_name(interface_name, cp)?;
+                let class_index = self.analyze_class(class_name_index, cp)?;
+
+                let method_name_index = self.analyze_name(method_name, cp)?;
+                let method_descriptor_index =
+                    self.analyze_name(&method_descriptor.to_string(), cp)?;
+
+                let method_name_and_type_index =
+                    self.analyze_name_and_type(method_name_index, method_descriptor_index, cp)?;
+
+                self.analyze_method_ref(class_index, method_name_and_type_index, cp)?;
             }
 
             Invokespecial {
@@ -630,16 +636,16 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
             },
 
             Multianewarray {
-                ref component_type,
-                ref dimensions,
+                ref component_type, ..
             } => self.analyze_field_descriptor(component_type, cp)?,
 
             Newarray { ref component_type } => {
-                todo!()
+                self.analyze_name(&component_type.to_string(), cp)?;
             }
 
             New { ref class_name } => {
-                todo!()
+                let name_index = self.analyze_name(class_name, cp)?;
+                self.analyze_class(name_index, cp)?;
             }
 
             Putfield {
@@ -647,7 +653,17 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref field_name,
                 ref field_descriptor,
             } => {
-                todo!()
+                let class_name_index = self.analyze_name(class_name, cp)?;
+                let class_index = self.analyze_class(class_name_index, cp)?;
+
+                let field_name_index = self.analyze_name(field_name, cp)?;
+                let field_descriptor_index =
+                    self.analyze_name(&field_descriptor.to_string(), cp)?;
+
+                let field_name_and_type_index =
+                    self.analyze_name_and_type(field_name_index, field_descriptor_index, cp)?;
+
+                self.analyze_field_ref(class_index, field_name_and_type_index, cp)?;
             }
 
             Putstatic {
@@ -655,10 +671,20 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref field_name,
                 ref field_descriptor,
             } => {
-                todo!()
+                let class_name_index = self.analyze_name(class_name, cp)?;
+                let class_index = self.analyze_class(class_name_index, cp)?;
+
+                let field_name_index = self.analyze_name(field_name, cp)?;
+                let field_descriptor_index =
+                    self.analyze_name(&field_descriptor.to_string(), cp)?;
+
+                let field_name_and_type_index =
+                    self.analyze_name_and_type(field_name_index, field_descriptor_index, cp)?;
+
+                self.analyze_field_ref(class_index, field_name_and_type_index, cp)?;
             }
 
-            _ => {}
+            _ => {} // no analysis needed
         }
 
         Ok(())
