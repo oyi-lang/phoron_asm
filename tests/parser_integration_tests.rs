@@ -36,6 +36,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -117,6 +118,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![
@@ -219,6 +221,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -307,6 +310,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -395,6 +399,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -477,6 +482,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -565,6 +571,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -669,6 +676,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -769,6 +777,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -858,6 +867,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -970,6 +980,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1086,6 +1097,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1198,6 +1210,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1302,6 +1315,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1389,6 +1403,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1489,6 +1504,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1603,6 +1619,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1692,6 +1709,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1826,6 +1844,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -1956,6 +1975,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -2079,6 +2099,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -2203,6 +2224,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -2360,6 +2382,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -2475,6 +2498,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -2634,6 +2658,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Object".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![],
@@ -2913,6 +2938,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
             super_def: PhoronSuperDef {
                 super_class_name: "java/lang/Thread".to_string(),
             },
+            implements_defs: vec![],
         },
         body: PhoronBody {
             field_defs: vec![
