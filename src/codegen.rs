@@ -335,6 +335,7 @@ where
                 }
 
                 PhoronInstruction::JvmInstruction(ref jvm_instr) => {
+                    //println!("code offset before {jvm_instr:#?} = {}", curr_code_offset);
                     curr_code_offset += match jvm_instr {
                         // 1-byte instructions
                         Aaload | Aastore | Aconstnull | Aload0 | Aload1 | Aload2 | Aload3
@@ -414,14 +415,20 @@ where
                             ref switches,
                             ref default,
                         } => {
+                            println!("curr code offset = {}", curr_code_offset);
                             let mut opcode_len = 1i16; // for the opcode
+
+                            let default_offset_padding = (4 - (curr_code_offset + 1) % 4) % 4;
+                            println!("default_offset_padding = {default_offset_padding}");
+                            opcode_len += default_offset_padding;
+
+                            opcode_len += std::mem::size_of::<i32>() as i16; // for the number of switch pairs
+
                             opcode_len +=
                                 switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16; // for the switch pairs
 
-                            let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
-                            opcode_len += default_offset_padding;
-                            opcode_len += 2i16 * std::mem::size_of::<u32>() as i16; // for the default pair
-
+                            opcode_len += std::mem::size_of::<u32>() as i16; // for the default case
+                            println!("opcode_len = {opcode_len}");
                             opcode_len
                         }
 
@@ -433,17 +440,17 @@ where
                         } => {
                             let mut opcode_len = 1i16; // for the opcode
 
+                            let default_offset_padding = (4 - (curr_code_offset + 1) % 4) % 4;
+                            opcode_len += default_offset_padding;
+
                             // for `low` and `high`
                             opcode_len += 2i16 * std::mem::size_of::<i32>() as i16;
                             // for the switch offsets
                             opcode_len +=
                                 (high - low + 1) as i16 * std::mem::size_of::<i32>() as i16;
 
-                            let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
-                            opcode_len += default_offset_padding;
                             // for the default pair
                             opcode_len += 2i16 & std::mem::size_of::<i32>() as i16;
-
                             opcode_len
                         }
 
@@ -954,13 +961,16 @@ where
                             },
                         )? as u16;
 
-                        exc_handler.catch_type =
+                        exc_handler.catch_type = if class_name == "all" {
+                            0 // catch any exception
+                        } else {
                             *cp.get_class(class_name)
                                 .ok_or(CodegenError::AttributeError {
                                     attr: "Code",
                                     details: "missing catch_type in exception handler",
                                 })?
-                                - 1; // fixme: see why this doesn't work evern though the idx in the cp is correct
+                                - 1 // fixme: see why this doesn't work evern though the idx in the cp is correct
+                        };
 
                         exception_table.push(exc_handler);
 
@@ -1861,10 +1871,7 @@ where
             } => {
                 let mut opcodes = vec![0xab];
 
-                // default offset padding with zerees
-                let opcode_len =
-                    1i16 + switches.len() as i16 * 2i16 * std::mem::size_of::<u32>() as i16;
-                let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
+                let default_offset_padding = (4 - (self.curr_code_offset + 1) % 4) % 4;
 
                 for _ in 0..default_offset_padding {
                     opcodes.push(0);
@@ -2020,13 +2027,7 @@ where
             } => {
                 let mut opcodes = vec![0xaa];
 
-                // default offset padding with zerees
-                let opcode_len = 1i16
-                    + 2i16 * std::mem::size_of::<i32>() as i16
-                    + (high - low + 1) as i16 * std::mem::size_of::<i32>() as i16;
-
-                let default_offset_padding = (self.curr_code_offset + opcode_len) % 4;
-
+                let default_offset_padding = (4 - (self.curr_code_offset + 1) % 4) % 4;
                 for _ in 0..default_offset_padding {
                     opcodes.push(0);
                 }

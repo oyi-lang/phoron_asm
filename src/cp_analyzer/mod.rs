@@ -468,8 +468,10 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref to_label,
                 ref handler_label,
             } => {
-                let name_index = self.analyze_name(class_name, cp)?;
-                self.analyze_class(name_index, cp)?;
+                if class_name != "all" {
+                    let name_index = self.analyze_name(class_name, cp)?;
+                    self.analyze_class(name_index, cp)?;
+                }
             }
         }
         Ok(())

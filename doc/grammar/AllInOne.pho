@@ -1,6 +1,6 @@
 ;; Showcasing all the salient features of Jasmin's assembly format.
 
-.source AllInOne.j
+.source AllInOne.pho
 .class public AllInOne
 .super java/lang/Thread
 

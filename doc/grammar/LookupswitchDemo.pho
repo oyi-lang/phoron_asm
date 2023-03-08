@@ -17,6 +17,7 @@
   .limit stack 3
   .limit locals 3
 
+  ldc "Hello, world"
   iload_1
   
   lookupswitch 
