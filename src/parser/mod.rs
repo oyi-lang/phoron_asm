@@ -3006,7 +3006,7 @@ impl<'a> Parser<'a> {
 
             Token::TClass => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.src_file()?.to_owned(),
+                    source_file: self.lexer.src_file()?.display().to_string(),
                 };
 
                 let class_or_interface_def = PhoronClassOrInterface::Class(self.parse_class_def()?);
@@ -3023,7 +3023,7 @@ impl<'a> Parser<'a> {
 
             Token::TInterface => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.src_file()?.to_owned(),
+                    source_file: self.lexer.src_file()?.display().to_string(),
                 };
 
                 let class_or_interface_def =

@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::{fmt, iter::Peekable, str::Chars};
+use std::{error::Error, fmt, iter::Peekable, path, str::Chars};
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
@@ -311,12 +310,12 @@ enum Number {
 
 /// The Phoron Lexer
 pub struct Lexer<'a> {
-    src_file: &'a str,
+    src_file: path::PathBuf,
     src: Peekable<Chars<'a>>,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(src_file: &'a str, src: &'a str) -> Self {
+    pub fn new(src_file: path::PathBuf, src: &'a str) -> Self {
         Lexer {
             src_file,
             src: src.chars().peekable(),
@@ -760,8 +759,8 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    pub fn src_file(&self) -> LexerResult<&'a str> {
-        Ok(self.src_file)
+    pub fn src_file(&self) -> LexerResult<&path::PathBuf> {
+        Ok(&self.src_file)
     }
 
     pub fn lex(&mut self) -> LexerResult<Token> {

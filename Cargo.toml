@@ -12,6 +12,11 @@ keywords = ["jvm", "bytecode", "assembler", "disassembler"]
 categories = ["compilers", "parser-implementations"]
 edition = "2021"
 
+[[ bin ]]
+
+name = "phoron"
+path = "src/main.rs"
+
 [dependencies]
 
-phoron_core = "0.5.2"
+phoron_core = "0.5.3"
