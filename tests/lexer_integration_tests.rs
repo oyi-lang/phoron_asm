@@ -10,7 +10,7 @@ where
     P: AsRef<Path> + Copy,
 {
     let src = fs::read_to_string(testfile)?;
-    let mut lexer = Lexer::new(&testfile.as_ref().to_str().unwrap(), &src);
+    let mut lexer = Lexer::new(testfile.as_ref().to_path_buf(), &src);
     let mut tokens = Vec::new();
 
     loop {

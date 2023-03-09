@@ -14,7 +14,7 @@ where
     P: AsRef<Path> + Copy,
 {
     let src = fs::read_to_string(testfile)?;
-    let mut parser = Parser::new(Lexer::new(&testfile.as_ref().to_str().unwrap(), &src));
+    let mut parser = Parser::new(Lexer::new(testfile.as_ref().to_path_buf(), &src));
     let program = parser.parse()?;
     Ok(program)
 }
