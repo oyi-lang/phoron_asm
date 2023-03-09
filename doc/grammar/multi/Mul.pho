@@ -1,0 +1,13 @@
+.class Mul
+.super java/lang/Object
+
+.method public static mul(II)I
+  .limit locals 2
+  .limit stack 2
+  
+  iload_0
+  iload_1
+  imul
+  ireturn
+.end method
+

@@ -9,4 +9,4 @@ fi
 sourcefile="$1"
 classfile=${sourcefile%.*}
 
-cargo run --release ${sourcefile} && java -cp . ${classfile}
+cargo run --release -- -f ${sourcefile} && java -cp . ${classfile}

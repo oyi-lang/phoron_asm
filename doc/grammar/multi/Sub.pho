@@ -1,0 +1,12 @@
+.class Sub
+.super java/lang/Object
+
+.method public static sub(II)I
+  .limit locals 2
+  .limit stack 2
+  
+  iload_0
+  iload_1
+  isub
+  ireturn
+.end method

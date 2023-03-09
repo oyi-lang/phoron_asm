@@ -1,0 +1,12 @@
+.class Div
+.super java/lang/Object
+
+.method public static div(II)I
+  .limit locals 2
+  .limit stack 2
+  
+  iload_0
+  iload_1
+  idiv
+  ireturn
+.end method
