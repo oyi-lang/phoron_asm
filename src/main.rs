@@ -63,8 +63,6 @@ fn usage() {
 fn process_file(output_dir: &Path, srcfile: &PathBuf) -> PhoronResult<()> {
     let outfile = output_dir.join(srcfile.with_extension("class"));
 
-    println!("srcfile = {srcfile:#?}, outfile = {outfile:#?}");
-
     let src = fs::read_to_string(srcfile)?;
     let mut parser = Parser::new(Lexer::new(srcfile.clone(), &src));
     let ast = parser.parse()?;

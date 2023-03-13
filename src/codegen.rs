@@ -1,4 +1,4 @@
-use crate::{ast::*, attributes::*, cp_analyzer::constant_pool::*};
+use crate::{ast::attributes::*, ast::*, cp_analyzer::constant_pool::*};
 use phoron_core::{
     error::SerializeError,
     model::{
@@ -297,10 +297,6 @@ where
             }
         }
 
-        for (idx, p) in constant_pool.iter().enumerate() {
-            println!("{idx} => {p:?}");
-        }
-
         self.classfile.constant_pool = constant_pool;
 
         Ok(())
@@ -489,7 +485,6 @@ where
         self.gen_constant_pool(&cp)?;
 
         self.visit_program(&program, cp)?;
-        println!("classfile = {:#?}", self.classfile);
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())

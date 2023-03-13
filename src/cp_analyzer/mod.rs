@@ -1,4 +1,4 @@
-use crate::{ast::*, attributes::*};
+use crate::ast::{attributes::*, *};
 
 pub mod constant_pool;
 

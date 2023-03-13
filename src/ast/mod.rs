@@ -1,3 +1,5 @@
+pub mod attributes;
+
 /// Trait to visit the nodes of the AST.
 ///
 /// `Input` is the expected input to the visitor methods.
