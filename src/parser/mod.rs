@@ -1,6 +1,9 @@
+#![cfg(target_of = "linux")]
+
 use crate::{
     ast::*,
-    lexer::{Lexer, LexerError, Token},
+    lexer::{Lexer, LexerError, Token, TokenKind},
+    sourcefile::{Pos, Span},
 };
 
 mod type_descriptor_parser;
@@ -75,7 +78,7 @@ impl From<LexerError> for ParserError {
 
 pub type ParserResult<T> = Result<T, ParserError>;
 
-use Token::*;
+use TokenKind::*;
 
 /// The Phoron parser
 pub struct Parser<'a> {
@@ -87,7 +90,10 @@ impl<'a> Parser<'a> {
     pub fn new(lexer: Lexer<'a>) -> Self {
         Parser {
             lexer,
-            curr_tok: Token::TEof,
+            curr_tok: Token {
+                kind: TokenKind::TEof,
+                span: Span::default(),
+            },
         }
     }
 
@@ -96,7 +102,7 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn advance_if(&mut self, expected_token: &Token) -> ParserResult<()> {
+    fn advance_if(&mut self, expected_token: &TokenKind) -> ParserResult<()> {
         if self.see() != expected_token {
             Err(ParserError::IncorrectTypeOrValue {
                 instr: "parsing tokens",
@@ -112,7 +118,7 @@ impl<'a> Parser<'a> {
         &self.curr_tok
     }
 
-    fn is_class_or_interface_access_flag(&self, tok: &Token) -> bool {
+    fn is_class_or_interface_access_flag(&self, tok: &TokenKind) -> bool {
         match tok {
             TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
             | TEnum | TModule => true,
@@ -120,7 +126,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn is_field_access_flag(&self, tok: &Token) -> bool {
+    fn is_field_access_flag(&self, tok: &TokenKind) -> bool {
         match tok {
             TPublic | TPrivate | TProtected | TStatic | TFinal | TVolatile | TTransient
             | TSynthetic | TEnum => true,
@@ -128,7 +134,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn is_method_access_flag(&self, tok: &Token) -> bool {
+    fn is_method_access_flag(&self, tok: &TokenKind) -> bool {
         match tok {
             TPublic | TPrivate | TProtected | TStatic | TFinal | TSynthetic | TSynchronized
             | TBridge | TVarargs | TNative | TAbstract | TStrict => true,
@@ -138,7 +144,7 @@ impl<'a> Parser<'a> {
 
     fn get_class_or_interface_access_flag(
         &self,
-        tok: &Token,
+        tok: &TokenKind,
     ) -> ParserResult<PhoronClassOrInterfaceAccessFlag> {
         Ok(match tok {
             TPublic => PhoronClassOrInterfaceAccessFlag::AccPublic,
@@ -158,7 +164,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn get_field_access_flags(&self, tok: &Token) -> ParserResult<PhoronFieldAccessFlag> {
+    fn get_field_access_flags(&self, tok: &TokenKind) -> ParserResult<PhoronFieldAccessFlag> {
         Ok(match tok {
             TPublic => PhoronFieldAccessFlag::AccPublic,
             TPrivate => PhoronFieldAccessFlag::AccPrivate,
@@ -177,7 +183,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn get_method_acess_flags(&self, tok: &Token) -> ParserResult<PhoronMethodAccessFlag> {
+    fn get_method_acess_flags(&self, tok: &TokenKind) -> ParserResult<PhoronMethodAccessFlag> {
         Ok(match tok {
             TPublic => PhoronMethodAccessFlag::AccPublic,
             TPrivate => PhoronMethodAccessFlag::AccPrivate,
@@ -212,7 +218,7 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                 }
 
-                if let Token::TIdent(name) = self.see() {
+                if let TokenKind::TIdent(name) = self.see() {
                     let name = name.to_string();
                     self.advance()?;
 
@@ -225,7 +231,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TIdent(name) => {
+            TokenKind::TIdent(name) => {
                 let name = name.to_string();
                 self.advance()?;
 
@@ -255,7 +261,7 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                 }
 
-                if let Token::TIdent(ident) = self.see() {
+                if let TokenKind::TIdent(ident) = self.see() {
                     let name = ident.to_string();
                     self.advance()?;
 
@@ -268,7 +274,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TIdent(ident) => {
+            TokenKind::TIdent(ident) => {
                 let name = ident.to_string();
                 PhoronInterfaceDef { name, access_flags }
             }
@@ -286,7 +292,7 @@ impl<'a> Parser<'a> {
     fn parse_implements_def(&mut self) -> ParserResult<PhoronImplementsDef> {
         self.advance()?;
 
-        if let Token::TIdent(ident) = self.see() {
+        if let TokenKind::TIdent(ident) = self.see() {
             let class_name = ident.to_string();
             self.advance()?;
 
@@ -302,7 +308,7 @@ impl<'a> Parser<'a> {
     fn parse_implements_defs(&mut self) -> ParserResult<Vec<PhoronImplementsDef>> {
         let mut impl_defs = Vec::new();
 
-        while let Token::TImplements = self.see() {
+        while let TokenKind::TImplements = self.see() {
             impl_defs.push(self.parse_implements_def()?);
         }
 
@@ -313,7 +319,7 @@ impl<'a> Parser<'a> {
     fn parse_super_def(&mut self) -> ParserResult<PhoronSuperDef> {
         self.advance()?;
 
-        if let Token::TIdent(ident) = self.see() {
+        if let TokenKind::TIdent(ident) = self.see() {
             let super_class_name = ident.to_string();
             self.advance()?;
 
@@ -328,18 +334,18 @@ impl<'a> Parser<'a> {
 
     /// FieldIniValue <- Double / Integer / QuotedString
     fn parse_field_init_value(&mut self) -> ParserResult<Option<PhoronFieldInitValue>> {
-        if let Token::TAssign = self.see() {
+        if let TokenKind::TAssign = self.see() {
             self.advance()?;
 
-            Ok(if let Token::TInt(int) = self.see() {
+            Ok(if let TokenKind::TInt(int) = self.see() {
                 let ival = *int;
                 self.advance()?;
                 Some(PhoronFieldInitValue::Integer(ival))
-            } else if let Token::TFloat(float) = self.see() {
+            } else if let TokenKind::TFloat(float) = self.see() {
                 let fval = *float;
                 self.advance()?;
                 Some(PhoronFieldInitValue::Double(fval))
-            } else if let Token::TString(s) = self.see() {
+            } else if let TokenKind::TString(s) = self.see() {
                 let sval = s.to_owned();
                 self.advance()?;
                 Some(PhoronFieldInitValue::QuotedString(sval))
@@ -355,7 +361,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_field_descriptor(&mut self) -> ParserResult<PhoronFieldDescriptor> {
-        if let Token::TIdent(ident) = self.see() {
+        if let TokenKind::TIdent(ident) = self.see() {
             let mut field_desc_parser = tdp::TypeParser::new(&ident);
             let field_desc = field_desc_parser.parse_field_descriptor().map_err(|err| {
                 ParserError::Malformed {
@@ -384,7 +390,7 @@ impl<'a> Parser<'a> {
             self.advance()?;
         }
 
-        if let Token::TIdent(ident) = self.see() {
+        if let TokenKind::TIdent(ident) = self.see() {
             let name = ident.to_string();
             self.advance()?;
 
@@ -407,7 +413,7 @@ impl<'a> Parser<'a> {
 
     fn parse_field_defs(&mut self) -> ParserResult<Vec<PhoronFieldDef>> {
         let mut field_defs = Vec::new();
-        while let Token::TField = self.see() {
+        while let TokenKind::TField = self.see() {
             field_defs.push(self.parse_field_def()?);
         }
 
@@ -415,7 +421,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_class_name(&mut self) -> ParserResult<String> {
-        if let Token::TIdent(classname) = self.see() {
+        if let TokenKind::TIdent(classname) = self.see() {
             let classname = classname.to_owned();
             self.advance()?;
 
@@ -429,7 +435,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_label(&mut self) -> ParserResult<String> {
-        if let Token::TIdent(label) = self.see() {
+        if let TokenKind::TIdent(label) = self.see() {
             let label = label.to_owned();
             self.advance()?;
 
@@ -451,14 +457,14 @@ impl<'a> Parser<'a> {
     /// CatchDirective <- CATCH_keyword ClassName FROM_keyword Label TO_keyword Label USING_keyword Label
     fn parse_directive(&mut self) -> ParserResult<PhoronDirective> {
         Ok(match self.see() {
-            Token::TLimit => {
+            TokenKind::TLimit => {
                 self.advance()?;
 
                 match self.see() {
-                    Token::TStack => {
+                    TokenKind::TStack => {
                         self.advance()?;
 
-                        if let Token::TInt(n) = self.see() {
+                        if let TokenKind::TInt(n) = self.see() {
                             let max_stack = *n as u16;
                             self.advance()?;
                             PhoronDirective::LimitStack(max_stack)
@@ -470,10 +476,10 @@ impl<'a> Parser<'a> {
                         }
                     }
 
-                    Token::TLocals => {
+                    TokenKind::TLocals => {
                         self.advance()?;
 
-                        if let Token::TInt(n) = self.see() {
+                        if let TokenKind::TInt(n) = self.see() {
                             let max_locals = *n as u16;
                             self.advance()?;
                             PhoronDirective::LimitLocals(max_locals)
@@ -493,7 +499,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TThrows => {
+            TokenKind::TThrows => {
                 self.advance()?;
 
                 let class_name = self.parse_class_name().map_err(|_| ParserError::Missing {
@@ -504,7 +510,7 @@ impl<'a> Parser<'a> {
                 PhoronDirective::Throws { class_name }
             }
 
-            Token::TLine => {
+            TokenKind::TLine => {
                 self.advance()?;
 
                 let line_number = self.parse_us().map_err(|_| ParserError::Missing {
@@ -515,7 +521,7 @@ impl<'a> Parser<'a> {
                 PhoronDirective::LineNumber(line_number)
             }
 
-            Token::TVar => {
+            TokenKind::TVar => {
                 self.advance()?;
 
                 let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -523,7 +529,7 @@ impl<'a> Parser<'a> {
                     component: "var num",
                 })?;
 
-                self.advance_if(&Token::TIs)
+                self.advance_if(&TokenKind::TIs)
                     .map_err(|_| ParserError::Missing {
                         instr: ".var",
                         component: "`is` keyword",
@@ -541,7 +547,7 @@ impl<'a> Parser<'a> {
                             component: "field descriptor",
                         })?;
 
-                self.advance_if(&Token::TFrom)
+                self.advance_if(&TokenKind::TFrom)
                     .map_err(|_| ParserError::Missing {
                         instr: ".var",
                         component: "`from` keyword",
@@ -552,7 +558,7 @@ impl<'a> Parser<'a> {
                     component: "from label",
                 })?;
 
-                self.advance_if(&Token::TTo)
+                self.advance_if(&TokenKind::TTo)
                     .map_err(|_| ParserError::Missing {
                         instr: ".var",
                         component: "`to` keyword",
@@ -572,15 +578,15 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TCatch => {
+            TokenKind::TCatch => {
                 self.advance()?;
 
                 let class_name = self.parse_class_name()?;
-                self.advance_if(&Token::TFrom)?;
+                self.advance_if(&TokenKind::TFrom)?;
                 let from_label = self.parse_label()?;
-                self.advance_if(&Token::TTo)?;
+                self.advance_if(&TokenKind::TTo)?;
                 let to_label = self.parse_label()?;
-                self.advance_if(&Token::TUsing)?;
+                self.advance_if(&TokenKind::TUsing)?;
                 let handler_label = self.parse_label()?;
 
                 PhoronDirective::Catch {
@@ -600,7 +606,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_ub(&mut self) -> ParserResult<u8> {
-        if let Token::TInt(n) = self.see() {
+        if let TokenKind::TInt(n) = self.see() {
             let n = *n as u8;
             self.advance()?;
 
@@ -614,7 +620,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_sb(&mut self) -> ParserResult<i8> {
-        if let Token::TInt(n) = self.see() {
+        if let TokenKind::TInt(n) = self.see() {
             let n = *n as i8;
             self.advance()?;
 
@@ -628,7 +634,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_us(&mut self) -> ParserResult<u16> {
-        if let Token::TInt(n) = self.see() {
+        if let TokenKind::TInt(n) = self.see() {
             let n = *n as u16;
             self.advance()?;
 
@@ -642,7 +648,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_ss(&mut self) -> ParserResult<i16> {
-        if let Token::TInt(n) = self.see() {
+        if let TokenKind::TInt(n) = self.see() {
             let n = *n as i16;
             self.advance()?;
 
@@ -656,7 +662,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_si(&mut self) -> ParserResult<i32> {
-        if let Token::TInt(n) = self.see() {
+        if let TokenKind::TInt(n) = self.see() {
             let n = *n as i32;
             self.advance()?;
 
@@ -672,7 +678,7 @@ impl<'a> Parser<'a> {
     fn parse_table_switches(&mut self) -> ParserResult<Vec<String>> {
         let mut switches = Vec::new();
 
-        while let Token::TIdent(label) = self.see() {
+        while let TokenKind::TIdent(label) = self.see() {
             let label = label.to_string();
             self.advance()?;
 
@@ -685,11 +691,11 @@ impl<'a> Parser<'a> {
     fn parse_lookup_switches(&mut self) -> ParserResult<Vec<LookupSwitchPair>> {
         let mut switches = Vec::new();
 
-        while let Token::TInt(key) = self.see() {
+        while let TokenKind::TInt(key) = self.see() {
             let key = *key as i32;
             self.advance()?;
 
-            if let Token::TColon = self.see() {
+            if let TokenKind::TColon = self.see() {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -709,10 +715,10 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_default_switch_pair(&mut self) -> ParserResult<String> {
-        if let Token::TDefault = self.see() {
+        if let TokenKind::TDefault = self.see() {
             self.advance()?;
 
-            if let Token::TColon = self.see() {
+            if let TokenKind::TColon = self.see() {
                 self.advance()?;
 
                 let label = self.parse_label()?;
@@ -734,25 +740,25 @@ impl<'a> Parser<'a> {
     fn parse_jvm_instruction(&mut self) -> ParserResult<JvmInstruction> {
         Ok(match self.see() {
             // aaload
-            Token::TAaload => {
+            TokenKind::TAaload => {
                 self.advance()?;
                 JvmInstruction::Aaload
             }
 
             // aastore
-            Token::TAastore => {
+            TokenKind::TAastore => {
                 self.advance()?;
                 JvmInstruction::Aastore
             }
 
             // aconst_null
-            Token::TAconstnull => {
+            TokenKind::TAconstnull => {
                 self.advance()?;
                 JvmInstruction::Aconstnull
             }
 
             // aload <varnum>
-            Token::TAload => {
+            TokenKind::TAload => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -763,32 +769,32 @@ impl<'a> Parser<'a> {
             }
 
             // aload_0
-            Token::TAload0 => {
+            TokenKind::TAload0 => {
                 self.advance()?;
                 JvmInstruction::Aload0
             }
 
             // aload_1
-            Token::TAload1 => {
+            TokenKind::TAload1 => {
                 self.advance()?;
                 JvmInstruction::Aload1
             }
 
             // aload_2
-            Token::TAload2 => {
+            TokenKind::TAload2 => {
                 self.advance()?;
                 JvmInstruction::Aload2
             }
 
             // aload_3
-            Token::TAload3 => {
+            TokenKind::TAload3 => {
                 self.advance()?;
                 JvmInstruction::Aload3
             }
 
             // anewarray <type>
             // AnewarrayTypeDescriptor <- ClassType / ArrayType
-            Token::TAnewarray => {
+            TokenKind::TAnewarray => {
                 self.advance()?;
 
                 let component_type =
@@ -801,19 +807,19 @@ impl<'a> Parser<'a> {
             }
 
             // areturn
-            Token::TAreturn => {
+            TokenKind::TAreturn => {
                 self.advance()?;
                 JvmInstruction::Areturn
             }
 
             // arraylength
-            Token::TArraylength => {
+            TokenKind::TArraylength => {
                 self.advance()?;
                 JvmInstruction::Arraylength
             }
 
             // astore <varnum>
-            Token::TAstore => {
+            TokenKind::TAstore => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -824,49 +830,49 @@ impl<'a> Parser<'a> {
             }
 
             // astore_0
-            Token::TAstore0 => {
+            TokenKind::TAstore0 => {
                 self.advance()?;
                 JvmInstruction::Astore0
             }
 
             // astore_1
-            Token::TAstore1 => {
+            TokenKind::TAstore1 => {
                 self.advance()?;
                 JvmInstruction::Astore1
             }
 
             // astore_2
-            Token::TAstore2 => {
+            TokenKind::TAstore2 => {
                 self.advance()?;
                 JvmInstruction::Astore2
             }
 
             // astore_3
-            Token::TAstore3 => {
+            TokenKind::TAstore3 => {
                 self.advance()?;
                 JvmInstruction::Astore3
             }
 
             // athrow
-            Token::TAthrow => {
+            TokenKind::TAthrow => {
                 self.advance()?;
                 JvmInstruction::Athrow
             }
 
             // baload
-            Token::TBaload => {
+            TokenKind::TBaload => {
                 self.advance()?;
                 JvmInstruction::Baload
             }
 
             // bastore
-            Token::TBastore => {
+            TokenKind::TBastore => {
                 self.advance()?;
                 JvmInstruction::Bastore
             }
 
             // bipush i8
-            Token::TBipush => {
+            TokenKind::TBipush => {
                 self.advance()?;
 
                 let sb = self.parse_sb().map_err(|_| ParserError::Missing {
@@ -878,19 +884,19 @@ impl<'a> Parser<'a> {
             }
 
             // caload
-            Token::TCaload => {
+            TokenKind::TCaload => {
                 self.advance()?;
                 JvmInstruction::Caload
             }
 
             // castore
-            Token::TCastore => {
+            TokenKind::TCastore => {
                 self.advance()?;
                 JvmInstruction::Castore
             }
 
             // checkcast <type>
-            Token::TCheckcast => {
+            TokenKind::TCheckcast => {
                 self.advance()?;
 
                 let cast_type =
@@ -903,73 +909,73 @@ impl<'a> Parser<'a> {
             }
 
             // d2f
-            Token::TD2f => {
+            TokenKind::TD2f => {
                 self.advance()?;
                 JvmInstruction::D2f
             }
 
             // d2i
-            Token::TD2i => {
+            TokenKind::TD2i => {
                 self.advance()?;
                 JvmInstruction::D2i
             }
 
             // d2l
-            Token::TD2l => {
+            TokenKind::TD2l => {
                 self.advance()?;
                 JvmInstruction::D2l
             }
 
             // dadd
-            Token::TDadd => {
+            TokenKind::TDadd => {
                 self.advance()?;
                 JvmInstruction::Dadd
             }
 
             // daload
-            Token::TDaload => {
+            TokenKind::TDaload => {
                 self.advance()?;
                 JvmInstruction::Daload
             }
 
             // dastore
-            Token::TDastore => {
+            TokenKind::TDastore => {
                 self.advance()?;
                 JvmInstruction::Dastore
             }
 
             // dcmpg
-            Token::TDcmpg => {
+            TokenKind::TDcmpg => {
                 self.advance()?;
                 JvmInstruction::Dcmpg
             }
 
             // dcmpl
-            Token::TDcmpl => {
+            TokenKind::TDcmpl => {
                 self.advance()?;
                 JvmInstruction::Dcmpl
             }
 
             // dconst_0
-            Token::TDconst0 => {
+            TokenKind::TDconst0 => {
                 self.advance()?;
                 JvmInstruction::Dconst0
             }
 
             // dconst_1
-            Token::TDconst1 => {
+            TokenKind::TDconst1 => {
                 self.advance()?;
                 JvmInstruction::Dconst1
             }
 
             // ddiv
-            Token::TDdiv => {
+            TokenKind::TDdiv => {
                 self.advance()?;
                 JvmInstruction::Ddiv
             }
 
             // dload <arnum>
-            Token::TDload => {
+            TokenKind::TDload => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -981,55 +987,55 @@ impl<'a> Parser<'a> {
             }
 
             // dload_0
-            Token::TDload0 => {
+            TokenKind::TDload0 => {
                 self.advance()?;
                 JvmInstruction::Dload0
             }
 
             // dload_1
-            Token::TDload1 => {
+            TokenKind::TDload1 => {
                 self.advance()?;
                 JvmInstruction::Dload1
             }
 
             // dload_2
-            Token::TDload2 => {
+            TokenKind::TDload2 => {
                 self.advance()?;
                 JvmInstruction::Dload2
             }
 
             // dload_3
-            Token::TDload3 => {
+            TokenKind::TDload3 => {
                 self.advance()?;
                 JvmInstruction::Dload3
             }
 
             // dmul
-            Token::TDmul => {
+            TokenKind::TDmul => {
                 self.advance()?;
                 JvmInstruction::Dmul
             }
 
             // dneg
-            Token::TDneg => {
+            TokenKind::TDneg => {
                 self.advance()?;
                 JvmInstruction::Dneg
             }
 
             // drem
-            Token::TDrem => {
+            TokenKind::TDrem => {
                 self.advance()?;
                 JvmInstruction::Drem
             }
 
             // dreturn
-            Token::TDreturn => {
+            TokenKind::TDreturn => {
                 self.advance()?;
                 JvmInstruction::Dreturn
             }
 
             // dstore< <varnum>
-            Token::TDstore => {
+            TokenKind::TDstore => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -1041,145 +1047,145 @@ impl<'a> Parser<'a> {
             }
 
             // dstore_0
-            Token::TDstore0 => {
+            TokenKind::TDstore0 => {
                 self.advance()?;
                 JvmInstruction::Dstore0
             }
 
             // dstore_1
-            Token::TDstore1 => {
+            TokenKind::TDstore1 => {
                 self.advance()?;
                 JvmInstruction::Dstore1
             }
 
             // dstore_2
-            Token::TDstore2 => {
+            TokenKind::TDstore2 => {
                 self.advance()?;
                 JvmInstruction::Dstore2
             }
 
             // dstore_3
-            Token::TDstore3 => {
+            TokenKind::TDstore3 => {
                 self.advance()?;
                 JvmInstruction::Dstore3
             }
 
             // dsub
-            Token::TDsub => {
+            TokenKind::TDsub => {
                 self.advance()?;
                 JvmInstruction::Dsub
             }
 
             // dup
-            Token::TDup => {
+            TokenKind::TDup => {
                 self.advance()?;
                 JvmInstruction::Dup
             }
 
             // dup2
-            Token::TDup2 => {
+            TokenKind::TDup2 => {
                 self.advance()?;
                 JvmInstruction::Dup2
             }
 
             // dup2_x1
-            Token::TDup2x1 => {
+            TokenKind::TDup2x1 => {
                 self.advance()?;
                 JvmInstruction::Dup2x1
             }
 
             // dup2_x2
-            Token::TDup2x2 => {
+            TokenKind::TDup2x2 => {
                 self.advance()?;
                 JvmInstruction::Dup2x2
             }
 
             // dup_x1
-            Token::TDupx1 => {
+            TokenKind::TDupx1 => {
                 self.advance()?;
                 JvmInstruction::Dupx1
             }
 
             // dup_x2
-            Token::TDupx2 => {
+            TokenKind::TDupx2 => {
                 self.advance()?;
                 JvmInstruction::Dupx2
             }
 
             // f2d
-            Token::TF2d => {
+            TokenKind::TF2d => {
                 self.advance()?;
                 JvmInstruction::F2d
             }
 
             // f2i
-            Token::TF2i => {
+            TokenKind::TF2i => {
                 self.advance()?;
                 JvmInstruction::F2i
             }
 
             // f2l
-            Token::TF2l => {
+            TokenKind::TF2l => {
                 self.advance()?;
                 JvmInstruction::F2l
             }
 
             // fadd
-            Token::TFadd => {
+            TokenKind::TFadd => {
                 self.advance()?;
                 JvmInstruction::Fadd
             }
 
             // faload
-            Token::TFaload => {
+            TokenKind::TFaload => {
                 self.advance()?;
                 JvmInstruction::Faload
             }
 
             // fastore
-            Token::TFastore => {
+            TokenKind::TFastore => {
                 self.advance()?;
                 JvmInstruction::Fastore
             }
 
             // fcmpg
-            Token::TFcmpg => {
+            TokenKind::TFcmpg => {
                 self.advance()?;
                 JvmInstruction::Fcmpg
             }
 
             // fcmpl
-            Token::TFcmpl => {
+            TokenKind::TFcmpl => {
                 self.advance()?;
                 JvmInstruction::Fcmpl
             }
 
             // fconst_0
-            Token::TFconst0 => {
+            TokenKind::TFconst0 => {
                 self.advance()?;
                 JvmInstruction::Fconst0
             }
 
             // fconst_1
-            Token::TFconst1 => {
+            TokenKind::TFconst1 => {
                 self.advance()?;
                 JvmInstruction::Fconst1
             }
 
             // fconst_2
-            Token::TFconst2 => {
+            TokenKind::TFconst2 => {
                 self.advance()?;
                 JvmInstruction::Fconst2
             }
 
             // fdiv
-            Token::TFdiv => {
+            TokenKind::TFdiv => {
                 self.advance()?;
                 JvmInstruction::Fdiv
             }
 
             // fload <varnum>
-            Token::TFload => {
+            TokenKind::TFload => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -1190,55 +1196,55 @@ impl<'a> Parser<'a> {
             }
 
             // fload_0
-            Token::TFload0 => {
+            TokenKind::TFload0 => {
                 self.advance()?;
                 JvmInstruction::Fload0
             }
 
             // fload_1
-            Token::TFload1 => {
+            TokenKind::TFload1 => {
                 self.advance()?;
                 JvmInstruction::Fload1
             }
 
             // fload_2
-            Token::TFload2 => {
+            TokenKind::TFload2 => {
                 self.advance()?;
                 JvmInstruction::Fload2
             }
 
             // fload_3
-            Token::TFload3 => {
+            TokenKind::TFload3 => {
                 self.advance()?;
                 JvmInstruction::Fload3
             }
 
             // fmul
-            Token::TFmul => {
+            TokenKind::TFmul => {
                 self.advance()?;
                 JvmInstruction::Fmul
             }
 
             // fneg
-            Token::TFneg => {
+            TokenKind::TFneg => {
                 self.advance()?;
                 JvmInstruction::Fneg
             }
 
             // frem
-            Token::TFrem => {
+            TokenKind::TFrem => {
                 self.advance()?;
                 JvmInstruction::Frem
             }
 
             // freturn
-            Token::TFreturn => {
+            TokenKind::TFreturn => {
                 self.advance()?;
                 JvmInstruction::Freturn
             }
 
             // fstore <varnum>
-            Token::TFstore => {
+            TokenKind::TFstore => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -1249,40 +1255,40 @@ impl<'a> Parser<'a> {
             }
 
             // fstore_0
-            Token::TFstore0 => {
+            TokenKind::TFstore0 => {
                 self.advance()?;
                 JvmInstruction::Fstore0
             }
 
             // fstore_1
-            Token::TFstore1 => {
+            TokenKind::TFstore1 => {
                 self.advance()?;
                 JvmInstruction::Fstore1
             }
 
             // fstore_2
-            Token::TFstore2 => {
+            TokenKind::TFstore2 => {
                 self.advance()?;
                 JvmInstruction::Fstore2
             }
 
             // fstore_3
-            Token::TFstore3 => {
+            TokenKind::TFstore3 => {
                 self.advance()?;
                 JvmInstruction::Fstore3
             }
 
             // fsub
-            Token::TFsub => {
+            TokenKind::TFsub => {
                 self.advance()?;
                 JvmInstruction::Fsub
             }
 
             // getfield <field-spec> <descriptor>
-            Token::TGetfield => {
+            TokenKind::TGetfield => {
                 self.advance()?;
 
-                if let Token::TIdent(gf_str) = self.see() {
+                if let TokenKind::TIdent(gf_str) = self.see() {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
@@ -1316,10 +1322,10 @@ impl<'a> Parser<'a> {
             }
 
             // getstatic <field-spec> <descriptor>
-            Token::TGetstatic => {
+            TokenKind::TGetstatic => {
                 self.advance()?;
 
-                if let Token::TIdent(gs_str) = self.see() {
+                if let TokenKind::TIdent(gs_str) = self.see() {
                     if let Some(pos) = gs_str.rfind('/') {
                         let class_name = gs_str[..pos].to_owned();
                         let field_name = gs_str[pos + 1..].to_owned();
@@ -1353,7 +1359,7 @@ impl<'a> Parser<'a> {
             }
 
             // goto <label>
-            Token::TGoto => {
+            TokenKind::TGoto => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1364,7 +1370,7 @@ impl<'a> Parser<'a> {
             }
 
             // goto_w <label>
-            Token::TGotow => {
+            TokenKind::TGotow => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1375,115 +1381,115 @@ impl<'a> Parser<'a> {
             }
 
             // i2b
-            Token::TI2b => {
+            TokenKind::TI2b => {
                 self.advance()?;
                 JvmInstruction::I2b
             }
 
             // i2c
-            Token::TI2c => {
+            TokenKind::TI2c => {
                 self.advance()?;
                 JvmInstruction::I2c
             }
 
             // i2d
-            Token::TI2d => {
+            TokenKind::TI2d => {
                 self.advance()?;
                 JvmInstruction::I2c
             }
 
             // i2f
-            Token::TI2f => {
+            TokenKind::TI2f => {
                 self.advance()?;
                 JvmInstruction::I2f
             }
 
             // i2l
-            Token::TI2l => {
+            TokenKind::TI2l => {
                 self.advance()?;
                 JvmInstruction::I2l
             }
 
             // i2s
-            Token::TI2s => {
+            TokenKind::TI2s => {
                 self.advance()?;
                 JvmInstruction::I2s
             }
 
             // iadd
-            Token::TIadd => {
+            TokenKind::TIadd => {
                 self.advance()?;
                 JvmInstruction::Iadd
             }
 
             // iaload
-            Token::TIaload => {
+            TokenKind::TIaload => {
                 self.advance()?;
                 JvmInstruction::Iaload
             }
 
             // iand
-            Token::TIand => {
+            TokenKind::TIand => {
                 self.advance()?;
                 JvmInstruction::Iand
             }
 
             // iastore
-            Token::TIastore => {
+            TokenKind::TIastore => {
                 self.advance()?;
                 JvmInstruction::Iastore
             }
 
             // iconst_m1
-            Token::TIconstm1 => {
+            TokenKind::TIconstm1 => {
                 self.advance()?;
                 JvmInstruction::Iconstm1
             }
 
             // iconst_0
-            Token::TIconst0 => {
+            TokenKind::TIconst0 => {
                 self.advance()?;
                 JvmInstruction::Iconst0
             }
 
             // iconst_1
-            Token::TIconst1 => {
+            TokenKind::TIconst1 => {
                 self.advance()?;
                 JvmInstruction::Iconst1
             }
 
             // iconst_2
-            Token::TIconst2 => {
+            TokenKind::TIconst2 => {
                 self.advance()?;
                 JvmInstruction::Iconst2
             }
 
             // iconst-3
-            Token::TIconst3 => {
+            TokenKind::TIconst3 => {
                 self.advance()?;
                 JvmInstruction::Iconst3
             }
 
             // iconst_4
-            Token::TIconst4 => {
+            TokenKind::TIconst4 => {
                 self.advance()?;
                 JvmInstruction::Iconst4
             }
 
             // iconst_5
-            Token::TIconst5 => {
+            TokenKind::TIconst5 => {
                 self.advance()?;
                 JvmInstruction::Iconst5
             }
 
             // idiv
-            Token::TIdiv => {
+            TokenKind::TIdiv => {
                 self.advance()?;
                 JvmInstruction::Idiv
             }
 
             // if_acmpeq <label>
-            Token::TIfacmpeq => {
+            TokenKind::TIfacmpeq => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1495,7 +1501,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_acmpne <label>
-            Token::TIfacmpne => {
+            TokenKind::TIfacmpne => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1507,7 +1513,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_icmpeq <label>
-            Token::TIficmpeq => {
+            TokenKind::TIficmpeq => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1519,7 +1525,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_icmpge <label>
-            Token::TIficmpge => {
+            TokenKind::TIficmpge => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1531,7 +1537,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_icmpgt <label>
-            Token::TIficmpgt => {
+            TokenKind::TIficmpgt => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1542,7 +1548,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_icmple <label>
-            Token::TIficmple => {
+            TokenKind::TIficmple => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1553,7 +1559,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_icmplt <label>
-            Token::TIficmplt => {
+            TokenKind::TIficmplt => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1564,10 +1570,10 @@ impl<'a> Parser<'a> {
             }
 
             // ifne <label>
-            Token::TIfne => {
+            TokenKind::TIfne => {
                 self.advance()?;
 
-                if let Token::TIdent(label) = self.see() {
+                if let TokenKind::TIdent(label) = self.see() {
                     let label = label.to_string();
                     self.advance()?;
 
@@ -1581,7 +1587,7 @@ impl<'a> Parser<'a> {
             }
 
             // if_icmpne <label>
-            Token::TIficmpne => {
+            TokenKind::TIficmpne => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1593,7 +1599,7 @@ impl<'a> Parser<'a> {
             }
 
             // ifeq <label>
-            Token::TIfeq => {
+            TokenKind::TIfeq => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1605,7 +1611,7 @@ impl<'a> Parser<'a> {
             }
 
             // ifge <label>
-            Token::TIfge => {
+            TokenKind::TIfge => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1617,7 +1623,7 @@ impl<'a> Parser<'a> {
             }
 
             // ifgt <label>
-            Token::TIfgt => {
+            TokenKind::TIfgt => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1629,7 +1635,7 @@ impl<'a> Parser<'a> {
             }
 
             // ifle <label>
-            Token::TIfle => {
+            TokenKind::TIfle => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1641,7 +1647,7 @@ impl<'a> Parser<'a> {
             }
 
             // iflt <label>
-            Token::TIflt => {
+            TokenKind::TIflt => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1653,7 +1659,7 @@ impl<'a> Parser<'a> {
             }
 
             // ifnonnull <label>
-            Token::TIfnonnull => {
+            TokenKind::TIfnonnull => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1665,7 +1671,7 @@ impl<'a> Parser<'a> {
             }
 
             // ifnull <label>
-            Token::TIfnull => {
+            TokenKind::TIfnull => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -1677,7 +1683,7 @@ impl<'a> Parser<'a> {
             }
 
             // iinc <varnum> <n>
-            Token::TIinc => {
+            TokenKind::TIinc => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -1694,7 +1700,7 @@ impl<'a> Parser<'a> {
             }
 
             // iload <varnum>
-            Token::TIload => {
+            TokenKind::TIload => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -1706,43 +1712,43 @@ impl<'a> Parser<'a> {
             }
 
             // iload_0
-            Token::TIload0 => {
+            TokenKind::TIload0 => {
                 self.advance()?;
                 JvmInstruction::Iload0
             }
 
             // iload_1
-            Token::TIload1 => {
+            TokenKind::TIload1 => {
                 self.advance()?;
                 JvmInstruction::Iload1
             }
 
             // iload_2
-            Token::TIload2 => {
+            TokenKind::TIload2 => {
                 self.advance()?;
                 JvmInstruction::Iload2
             }
 
             // iload_3
-            Token::TIload3 => {
+            TokenKind::TIload3 => {
                 self.advance()?;
                 JvmInstruction::Iload3
             }
 
             // imul
-            Token::TImul => {
+            TokenKind::TImul => {
                 self.advance()?;
                 JvmInstruction::Imul
             }
 
             // ineg
-            Token::TIneg => {
+            TokenKind::TIneg => {
                 self.advance()?;
                 JvmInstruction::Ineg
             }
 
             // instanceof
-            Token::TInstanceof => {
+            TokenKind::TInstanceof => {
                 self.advance()?;
 
                 let check_type =
@@ -1755,10 +1761,10 @@ impl<'a> Parser<'a> {
             }
 
             // invokeinterface <method-spec> <n>
-            Token::TInvokeinterface => {
+            TokenKind::TInvokeinterface => {
                 self.advance()?;
 
-                if let Token::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(is_str) = self.see() {
                     if let Some(pos) = is_str.rfind('/') {
                         let interface_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
@@ -1798,10 +1804,10 @@ impl<'a> Parser<'a> {
             }
 
             // invokespecial <method-spec>
-            Token::TInvokespecial => {
+            TokenKind::TInvokespecial => {
                 self.advance()?;
 
-                if let Token::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(is_str) = self.see() {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
@@ -1835,10 +1841,10 @@ impl<'a> Parser<'a> {
             }
 
             // invokestatic <method-spec>
-            Token::TInvokestatic => {
+            TokenKind::TInvokestatic => {
                 self.advance()?;
 
-                if let Token::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(is_str) = self.see() {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
@@ -1872,10 +1878,10 @@ impl<'a> Parser<'a> {
             }
 
             // invokevirtual <method-spec>
-            Token::TInvokevirtual => {
+            TokenKind::TInvokevirtual => {
                 self.advance()?;
 
-                if let Token::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(is_str) = self.see() {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
@@ -1909,37 +1915,37 @@ impl<'a> Parser<'a> {
             }
 
             // ior
-            Token::TIor => {
+            TokenKind::TIor => {
                 self.advance()?;
                 JvmInstruction::Ior
             }
 
             // irem
-            Token::TIrem => {
+            TokenKind::TIrem => {
                 self.advance()?;
                 JvmInstruction::Irem
             }
 
             // ireturn
-            Token::TIreturn => {
+            TokenKind::TIreturn => {
                 self.advance()?;
                 JvmInstruction::Ireturn
             }
 
             // ishl
-            Token::TIshl => {
+            TokenKind::TIshl => {
                 self.advance()?;
                 JvmInstruction::Ishl
             }
 
             // lshr
-            Token::TIshr => {
+            TokenKind::TIshr => {
                 self.advance()?;
                 JvmInstruction::Ishr
             }
 
             // istore <varnum>
-            Token::TIstore => {
+            TokenKind::TIstore => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -1951,49 +1957,49 @@ impl<'a> Parser<'a> {
             }
 
             // istore_0
-            Token::TIstore0 => {
+            TokenKind::TIstore0 => {
                 self.advance()?;
                 JvmInstruction::Istore0
             }
 
             // istore_1
-            Token::TIstore1 => {
+            TokenKind::TIstore1 => {
                 self.advance()?;
                 JvmInstruction::Istore1
             }
 
             // istore_2
-            Token::TIstore2 => {
+            TokenKind::TIstore2 => {
                 self.advance()?;
                 JvmInstruction::Istore2
             }
 
             // istore_3
-            Token::TIstore3 => {
+            TokenKind::TIstore3 => {
                 self.advance()?;
                 JvmInstruction::Istore3
             }
 
             // isub
-            Token::TIsub => {
+            TokenKind::TIsub => {
                 self.advance()?;
                 JvmInstruction::Isub
             }
 
             // iushr
-            Token::TIushr => {
+            TokenKind::TIushr => {
                 self.advance()?;
                 JvmInstruction::Iushr
             }
 
             // ixor
-            Token::TIxor => {
+            TokenKind::TIxor => {
                 self.advance()?;
                 JvmInstruction::Ixor
             }
 
             // jsr <label>
-            Token::TJsr => {
+            TokenKind::TJsr => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -2004,7 +2010,7 @@ impl<'a> Parser<'a> {
             }
 
             // jsr_w <label>
-            Token::TJsrw => {
+            TokenKind::TJsrw => {
                 self.advance()?;
 
                 let label = self.parse_label().map_err(|_| ParserError::Missing {
@@ -2015,83 +2021,83 @@ impl<'a> Parser<'a> {
             }
 
             // l2d
-            Token::TL2d => {
+            TokenKind::TL2d => {
                 self.advance()?;
                 JvmInstruction::L2d
             }
 
             // l2f
-            Token::TL2f => {
+            TokenKind::TL2f => {
                 self.advance()?;
                 JvmInstruction::L2f
             }
 
             // l2i
-            Token::TL2i => {
+            TokenKind::TL2i => {
                 self.advance()?;
                 JvmInstruction::L2i
             }
 
             // ladd
-            Token::TLadd => {
+            TokenKind::TLadd => {
                 self.advance()?;
                 JvmInstruction::Ladd
             }
 
             // laload
-            Token::TLaload => {
+            TokenKind::TLaload => {
                 self.advance()?;
                 JvmInstruction::Laload
             }
 
             // land
-            Token::TLand => {
+            TokenKind::TLand => {
                 self.advance()?;
                 JvmInstruction::Land
             }
 
             // lastore
-            Token::TLastore => {
+            TokenKind::TLastore => {
                 self.advance()?;
                 JvmInstruction::Lastore
             }
 
             // lcmp
-            Token::TLcmp => {
+            TokenKind::TLcmp => {
                 self.advance()?;
                 JvmInstruction::Lcmp
             }
 
             // locaonst_0
-            Token::TLconst0 => {
+            TokenKind::TLconst0 => {
                 self.advance()?;
                 JvmInstruction::Lconst0
             }
 
             // lconst_1
-            Token::TLconst1 => {
+            TokenKind::TLconst1 => {
                 self.advance()?;
                 JvmInstruction::Lconst1
             }
 
             // ldc <integer / float / quoted string>
-            Token::TLdc => {
+            TokenKind::TLdc => {
                 self.advance()?;
 
                 match self.see() {
-                    Token::TInt(n) => {
+                    TokenKind::TInt(n) => {
                         let ival = *n as i32;
                         self.advance()?;
                         JvmInstruction::Ldc(LdcValue::Integer(ival))
                     }
 
-                    Token::TFloat(f) => {
+                    TokenKind::TFloat(f) => {
                         let fval = *f as f32;
                         self.advance()?;
                         JvmInstruction::Ldc(LdcValue::Float(fval))
                     }
 
-                    Token::TString(s) => {
+                    TokenKind::TString(s) => {
                         let sval = s.to_owned();
                         self.advance()?;
                         JvmInstruction::Ldc(LdcValue::QuotedString(sval))
@@ -2107,23 +2113,23 @@ impl<'a> Parser<'a> {
             }
 
             // ldcw <integer / float / quoted string>
-            Token::TLdcw => {
+            TokenKind::TLdcw => {
                 self.advance()?;
 
                 match self.see() {
-                    Token::TInt(n) => {
+                    TokenKind::TInt(n) => {
                         let ival = *n as i32;
                         self.advance()?;
                         JvmInstruction::Ldcw(LdcwValue::Integer(ival))
                     }
 
-                    Token::TFloat(f) => {
+                    TokenKind::TFloat(f) => {
                         let fval = *f as f32;
                         self.advance()?;
                         JvmInstruction::Ldcw(LdcwValue::Float(fval))
                     }
 
-                    Token::TString(s) => {
+                    TokenKind::TString(s) => {
                         let sval = s.to_owned();
                         self.advance()?;
                         JvmInstruction::Ldcw(LdcwValue::QuotedString(sval))
@@ -2139,17 +2145,17 @@ impl<'a> Parser<'a> {
             }
 
             // ldc2_w <Long / Double>
-            Token::TLdc2w => {
+            TokenKind::TLdc2w => {
                 self.advance()?;
 
                 match self.see() {
-                    Token::TInt(n) => {
+                    TokenKind::TInt(n) => {
                         let lval = *n as i64;
                         self.advance()?;
                         JvmInstruction::Ldc2w(Ldc2wValue::Long(lval))
                     }
 
-                    Token::TFloat(f) => {
+                    TokenKind::TFloat(f) => {
                         let dval = *f as f64;
                         self.advance()?;
                         JvmInstruction::Ldc2w(Ldc2wValue::Double(dval))
@@ -2165,13 +2171,13 @@ impl<'a> Parser<'a> {
             }
 
             // ldiv
-            Token::TLdiv => {
+            TokenKind::TLdiv => {
                 self.advance()?;
                 JvmInstruction::Ldiv
             }
 
             // lload <varnum>
-            Token::TLload => {
+            TokenKind::TLload => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -2183,37 +2189,37 @@ impl<'a> Parser<'a> {
             }
 
             // lload_0
-            Token::TLload0 => {
+            TokenKind::TLload0 => {
                 self.advance()?;
                 JvmInstruction::Lload0
             }
 
             // lload_1
-            Token::TLload1 => {
+            TokenKind::TLload1 => {
                 self.advance()?;
                 JvmInstruction::Lload1
             }
 
             // lload_2
-            Token::TLload2 => {
+            TokenKind::TLload2 => {
                 self.advance()?;
                 JvmInstruction::Lload2
             }
 
             //lload_3
-            Token::TLload3 => {
+            TokenKind::TLload3 => {
                 self.advance()?;
                 JvmInstruction::Lload3
             }
 
             // lmul
-            Token::TLmul => {
+            TokenKind::TLmul => {
                 self.advance()?;
                 JvmInstruction::Lmul
             }
 
             // lneg
-            Token::TLneg => {
+            TokenKind::TLneg => {
                 self.advance()?;
                 JvmInstruction::Lneg
             }
@@ -2221,7 +2227,7 @@ impl<'a> Parser<'a> {
             // lookupswitch          <-  'lookupswitch'   LookupSwitchPair*  DefaultSwitchPair
             // LookupSwitchPair      <-  Integer          COLON_symbol       Label
             // DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label
-            Token::TLookupswitch => {
+            TokenKind::TLookupswitch => {
                 self.advance()?;
 
                 let mut switches = self.parse_lookup_switches()?;
@@ -2234,37 +2240,37 @@ impl<'a> Parser<'a> {
             }
 
             // lor
-            Token::TLor => {
+            TokenKind::TLor => {
                 self.advance()?;
                 JvmInstruction::Lor
             }
 
             // lrem
-            Token::TLrem => {
+            TokenKind::TLrem => {
                 self.advance()?;
                 JvmInstruction::Lrem
             }
 
             // lreturn
-            Token::TLreturn => {
+            TokenKind::TLreturn => {
                 self.advance()?;
                 JvmInstruction::Lreturn
             }
 
             // lshl
-            Token::TLshl => {
+            TokenKind::TLshl => {
                 self.advance()?;
                 JvmInstruction::Lshl
             }
 
             // lshr
-            Token::TLshr => {
+            TokenKind::TLshr => {
                 self.advance()?;
                 JvmInstruction::Lshr
             }
 
             // lstore <varnum>
-            Token::TLstore => {
+            TokenKind::TLstore => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -2276,60 +2282,60 @@ impl<'a> Parser<'a> {
             }
 
             // lstore_0
-            Token::TLstore0 => {
+            TokenKind::TLstore0 => {
                 self.advance()?;
                 JvmInstruction::Lstore0
             }
 
             // lstore_1
-            Token::TLstore1 => {
+            TokenKind::TLstore1 => {
                 self.advance()?;
                 JvmInstruction::Lstore1
             }
 
             // lstore_2
-            Token::TLstore2 => {
+            TokenKind::TLstore2 => {
                 self.advance()?;
                 JvmInstruction::Lstore2
             }
 
             // lstore_3
-            Token::TLstore3 => {
+            TokenKind::TLstore3 => {
                 self.advance()?;
                 JvmInstruction::Lstore3
             }
 
             // lsub
-            Token::TLsub => {
+            TokenKind::TLsub => {
                 self.advance()?;
                 JvmInstruction::Lsub
             }
 
             // lushr
-            Token::TLushr => {
+            TokenKind::TLushr => {
                 self.advance()?;
                 JvmInstruction::Lushr
             }
 
             // lxor
-            Token::TLxor => {
+            TokenKind::TLxor => {
                 self.advance()?;
                 JvmInstruction::Lxor
             }
 
             // monitorenter
-            Token::TMonitorenter => {
+            TokenKind::TMonitorenter => {
                 self.advance()?;
                 JvmInstruction::Monitorenter
             }
 
             // monitorexit
-            Token::TMonitorexit => {
+            TokenKind::TMonitorexit => {
                 self.advance()?;
                 JvmInstruction::Monitorexit
             }
 
-            Token::TMultianewarray => {
+            TokenKind::TMultianewarray => {
                 self.advance()?;
 
                 let component_type =
@@ -2351,7 +2357,7 @@ impl<'a> Parser<'a> {
             }
 
             // new <class>
-            Token::TNew => {
+            TokenKind::TNew => {
                 self.advance()?;
 
                 let class_name = self.parse_class_name().map_err(|_| ParserError::Missing {
@@ -2363,10 +2369,10 @@ impl<'a> Parser<'a> {
             }
 
             // newarray <primitive_type>
-            Token::TNewarray => {
+            TokenKind::TNewarray => {
                 self.advance()?;
 
-                if let Token::TIdent(prim_type) = self.see() {
+                if let TokenKind::TIdent(prim_type) = self.see() {
                     match prim_type.as_str() {
                         "char" => {
                             self.advance()?;
@@ -2433,28 +2439,28 @@ impl<'a> Parser<'a> {
             }
 
             // nop
-            Token::TNop => {
+            TokenKind::TNop => {
                 self.advance()?;
                 JvmInstruction::Nop
             }
 
             // pop
-            Token::TPop => {
+            TokenKind::TPop => {
                 self.advance()?;
                 JvmInstruction::Pop
             }
 
             // pop2
-            Token::TPop2 => {
+            TokenKind::TPop2 => {
                 self.advance()?;
                 JvmInstruction::Pop2
             }
 
             // putfield <field-sepc> <descriptor>
-            Token::TPutfield => {
+            TokenKind::TPutfield => {
                 self.advance()?;
 
-                if let Token::TIdent(gf_str) = self.see() {
+                if let TokenKind::TIdent(gf_str) = self.see() {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
@@ -2488,10 +2494,10 @@ impl<'a> Parser<'a> {
             }
 
             // putstatic <field-spec> <descriptor>
-            Token::TPutstatic => {
+            TokenKind::TPutstatic => {
                 self.advance()?;
 
-                if let Token::TIdent(gf_str) = self.see() {
+                if let TokenKind::TIdent(gf_str) = self.see() {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
@@ -2525,7 +2531,7 @@ impl<'a> Parser<'a> {
             }
 
             // ret <varnum>
-            Token::TRet => {
+            TokenKind::TRet => {
                 self.advance()?;
 
                 let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
@@ -2537,25 +2543,25 @@ impl<'a> Parser<'a> {
             }
 
             // return
-            Token::TReturn => {
+            TokenKind::TReturn => {
                 self.advance()?;
                 JvmInstruction::Return
             }
 
             // saload
-            Token::TSaload => {
+            TokenKind::TSaload => {
                 self.advance()?;
                 JvmInstruction::Saload
             }
 
             // sastore
-            Token::TSastore => {
+            TokenKind::TSastore => {
                 self.advance()?;
                 JvmInstruction::Sastore
             }
 
             // sipush i16
-            Token::TSipush => {
+            TokenKind::TSipush => {
                 self.advance()?;
 
                 let ss = self.parse_ss().map_err(|_| ParserError::Missing {
@@ -2567,14 +2573,14 @@ impl<'a> Parser<'a> {
             }
 
             // swap
-            Token::TSwap => {
+            TokenKind::TSwap => {
                 self.advance()?;
                 JvmInstruction::Swap
             }
 
             // tableswitch    <-  'tableswitch'   Low   High  TableSwitchSingleton*  DefaultSwitchPair
             // TableSwitchSingleton  <-  Label
-            Token::TTableswitch => {
+            TokenKind::TTableswitch => {
                 self.advance()?;
 
                 let low = self.parse_si().map_err(|_| ParserError::Missing {
@@ -2607,11 +2613,11 @@ impl<'a> Parser<'a> {
             // following instructions:
             // iload, fload, aload, lload, dload, istore, fstore, astore,
             // lstore, dstore, or iinc.
-            Token::Twide => {
+            TokenKind::Twide => {
                 self.advance()?;
 
                 match self.see() {
-                    Token::TIload => {
+                    TokenKind::TIload => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2622,7 +2628,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Iload { varnum })
                     }
 
-                    Token::TFload => {
+                    TokenKind::TFload => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2633,7 +2639,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Fload { varnum })
                     }
 
-                    Token::TAload => {
+                    TokenKind::TAload => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2644,7 +2650,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Aload { varnum })
                     }
 
-                    Token::TLload => {
+                    TokenKind::TLload => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2655,7 +2661,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Lload { varnum })
                     }
 
-                    Token::TDload => {
+                    TokenKind::TDload => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2666,7 +2672,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Dload { varnum })
                     }
 
-                    Token::TIstore => {
+                    TokenKind::TIstore => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2677,7 +2683,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Istore { varnum })
                     }
 
-                    Token::TFstore => {
+                    TokenKind::TFstore => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2688,7 +2694,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Fstore { varnum })
                     }
 
-                    Token::TAstore => {
+                    TokenKind::TAstore => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2699,7 +2705,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Astore { varnum })
                     }
 
-                    Token::TLstore => {
+                    TokenKind::TLstore => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2710,7 +2716,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Lstore { varnum })
                     }
 
-                    Token::TDstore => {
+                    TokenKind::TDstore => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2721,7 +2727,7 @@ impl<'a> Parser<'a> {
                         JvmInstruction::Wide(WideInstruction::Dstore { varnum })
                     }
 
-                    Token::TIinc => {
+                    TokenKind::TIinc => {
                         self.advance()?;
 
                         let varnum = self.parse_us().map_err(|_| ParserError::Missing {
@@ -2790,11 +2796,11 @@ impl<'a> Parser<'a> {
                 PhoronInstruction::JvmInstruction(self.parse_jvm_instruction()?)
             }
 
-            Token::TIdent(label_str) => {
+            TokenKind::TIdent(label_str) => {
                 let label = label_str.to_string();
                 self.advance()?;
 
-                if let Token::TColon = self.see() {
+                if let TokenKind::TColon = self.see() {
                     self.advance()?;
                     PhoronInstruction::PhoronLabel(label)
                 } else {
@@ -2816,10 +2822,10 @@ impl<'a> Parser<'a> {
     fn parse_instructions(&mut self) -> ParserResult<Vec<PhoronInstruction>> {
         let mut instructions = Vec::new();
 
-        while self.see() != &Token::TEof {
-            if let Token::TEnd = self.see() {
+        while self.see() != &TokenKind::TEof {
+            if let TokenKind::TEnd = self.see() {
                 self.advance()?;
-                if let Token::TEndMethod = self.see() {
+                if let TokenKind::TEndMethod = self.see() {
                     self.advance()?;
                     break;
                 } else {
@@ -2841,11 +2847,11 @@ impl<'a> Parser<'a> {
     /// ReturnDescriptor <- FieldType / VoidType
     /// VoidType <- 'V'
     fn parse_method_descriptor(&mut self) -> ParserResult<PhoronMethodDescriptor> {
-        if let Token::TLeftParen = self.see() {
+        if let TokenKind::TLeftParen = self.see() {
             self.advance()?;
 
             let ident_tok = self.see();
-            let param_descriptor = if let Token::TIdent(ident) = ident_tok {
+            let param_descriptor = if let TokenKind::TIdent(ident) = ident_tok {
                 let mut param_parser = tdp::TypeParser::new(ident);
                 let param_desc =
                     param_parser
@@ -2861,11 +2867,11 @@ impl<'a> Parser<'a> {
                 vec![]
             };
 
-            if let Token::TRightParen = self.see() {
+            if let TokenKind::TRightParen = self.see() {
                 self.advance()?;
 
                 let ident_tok = self.see();
-                if let Token::TIdent(ret) = ident_tok {
+                if let TokenKind::TIdent(ret) = ident_tok {
                     let mut ret_parser = tdp::TypeParser::new(ret);
                     let return_descriptor =
                         ret_parser
@@ -2914,7 +2920,7 @@ impl<'a> Parser<'a> {
             self.advance()?;
         }
 
-        if let Token::TIdent(name_str) = self.see() {
+        if let TokenKind::TIdent(name_str) = self.see() {
             let name = name_str.to_string();
             self.advance()?;
 
@@ -2938,7 +2944,7 @@ impl<'a> Parser<'a> {
     fn parse_method_defs(&mut self) -> ParserResult<Vec<PhoronMethodDef>> {
         let mut method_defs = Vec::new();
 
-        while let Token::TMethod = self.see() {
+        while let TokenKind::TMethod = self.see() {
             method_defs.push(self.parse_method_def()?);
         }
 
@@ -2958,7 +2964,7 @@ impl<'a> Parser<'a> {
 
     /// SourceFileDef <- SOURCE_keyword FileName newline
     fn parse_sourcefile_def(&mut self) -> ParserResult<PhoronSourceFileDef> {
-        if let Token::TIdent(source_file_str) = self.see() {
+        if let TokenKind::TIdent(source_file_str) = self.see() {
             let source_file = source_file_str.to_string();
             self.advance()?;
 
@@ -2976,13 +2982,14 @@ impl<'a> Parser<'a> {
         self.advance()?;
 
         Ok(match self.see() {
-            Token::TSource => {
+            TokenKind::TSource => {
                 self.advance()?;
+
                 let sourcefile_def = self.parse_sourcefile_def()?;
 
                 let class_or_interface_def = match self.see() {
-                    Token::TClass => PhoronClassOrInterface::Class(self.parse_class_def()?),
-                    Token::TInterface => {
+                    TokenKind::TClass => PhoronClassOrInterface::Class(self.parse_class_def()?),
+                    TokenKind::TInterface => {
                         PhoronClassOrInterface::Interface(self.parse_interface_def()?)
                     }
                     _ => {
@@ -3004,9 +3011,9 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TClass => {
+            TokenKind::TClass => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.src_file()?.display().to_string(),
+                    source_file: self.lexer.src_file()?.to_string(),
                 };
 
                 let class_or_interface_def = PhoronClassOrInterface::Class(self.parse_class_def()?);
@@ -3021,9 +3028,9 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            Token::TInterface => {
+            TokenKind::TInterface => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.src_file()?.display().to_string(),
+                    source_file: self.lexer.src_file()?.to_string(),
                 };
 
                 let class_or_interface_def =

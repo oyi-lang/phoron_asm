@@ -1,4 +1,7 @@
-use crate::{ast::attributes::*, ast::*, cp_analyzer::constant_pool::*};
+use crate::{
+    ast::{attributes::*, *},
+    cp_analyzer::constant_pool::*,
+};
 use phoron_core::{
     error::SerializeError,
     model::{

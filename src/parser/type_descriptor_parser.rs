@@ -1,8 +1,6 @@
 //! A parser for type descriptors as per the JVM specification
 
-use crate::ast::{
-    PhoronBaseType, PhoronFieldDescriptor, PhoronMethodDescriptor, PhoronReturnDescriptor,
-};
+use crate::ast::{PhoronBaseType, PhoronFieldDescriptor, PhoronReturnDescriptor};
 use std::{error::Error, fmt, iter::Peekable, str::Chars};
 
 pub type TypeParseResult<T> = Result<T, Box<dyn Error + Send + Sync + 'static>>;

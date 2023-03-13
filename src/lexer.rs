@@ -1,7 +1,20 @@
-use std::{error::Error, fmt, iter::Peekable, path, str::Chars};
+use std::{
+    error::Error,
+    fmt,
+    iter::{Enumerate, Peekable},
+    str::Chars,
+};
+
+use crate::sourcefile::{Pos, SourceFile, Span};
+
+#[derive(Debug)]
+pub struct Token {
+    pub kind: TokenKind,
+    pub span: Span,
+}
 
 #[derive(Debug, PartialEq)]
-pub enum Token {
+pub enum TokenKind {
     TAaload,
     TAastore,
     TAbstract,
@@ -310,28 +323,28 @@ enum Number {
 
 /// The Phoron Lexer
 pub struct Lexer<'a> {
-    src_file: path::PathBuf,
-    src: Peekable<Chars<'a>>,
+    source_file: &'a SourceFile<'a>,
+    src: Peekable<Enumerate<Chars<'a>>>,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(src_file: path::PathBuf, src: &'a str) -> Self {
+    pub fn new(source_file: &'a SourceFile) -> Self {
         Lexer {
-            src_file,
-            src: src.chars().peekable(),
+            source_file,
+            src: source_file.src.chars().enumerate().peekable(),
         }
     }
 
-    fn next(&mut self) -> LexerResult<char> {
+    fn next(&mut self) -> LexerResult<(usize, char)> {
         Ok(self.src.next().ok_or(LexerError::OutOfCharacters)?)
     }
 
     fn extract_float_or_int(&mut self) -> LexerResult<Number> {
         let mut numbuf = String::new();
         loop {
-            if let Some(d) = self.src.peek() {
+            if let Some((_idx, d)) = self.src.peek() {
                 if d.is_digit(10) {
-                    numbuf.push(self.next()?);
+                    numbuf.push(self.next()?.1);
                 } else {
                     break;
                 }
@@ -340,13 +353,13 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        if let Some('.') = self.src.peek() {
-            numbuf.push(self.next()?);
+        if let Some((_idx, '.')) = self.src.peek() {
+            numbuf.push(self.next()?.1);
 
             loop {
-                if let Some(d) = self.src.peek() {
+                if let Some((_idx, d)) = self.src.peek() {
                     if d.is_digit(10) {
-                        numbuf.push(self.next()?);
+                        numbuf.push(self.next()?.1);
                     } else {
                         break;
                     }
@@ -371,9 +384,9 @@ impl<'a> Lexer<'a> {
 
         let mut identbuf = String::new();
         loop {
-            if let Some(c) = self.src.peek() {
+            if let Some((_idx, c)) = self.src.peek() {
                 if is_ident_char(*c) {
-                    identbuf.push(self.next()?);
+                    identbuf.push(self.next()?.1);
                 } else {
                     break;
                 }
@@ -385,8 +398,8 @@ impl<'a> Lexer<'a> {
         Ok(identbuf)
     }
 
-    fn extract_directive(&mut self, ident: &str) -> LexerResult<Token> {
-        use Token::*;
+    fn extract_directive(&mut self, ident: &str) -> LexerResult<TokenKind> {
+        use TokenKind::*;
 
         Ok(match ident {
             "catch" => TCatch,
@@ -406,8 +419,8 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    fn extract_kw_or_instr(&mut self, ident: &str) -> Option<Token> {
-        use Token::*;
+    fn extract_kw_or_instr(&mut self, ident: &str) -> Option<TokenKind> {
+        use TokenKind::*;
 
         Some(match ident {
             "aaload" => TAaload,
@@ -634,18 +647,19 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    fn lex_char(&mut self, c: char) -> LexerResult<Token> {
-        use Token::*;
+    fn lex_char(&mut self, c: char) -> LexerResult<TokenKind> {
+        use TokenKind::*;
 
         Ok(match c {
             c if c.is_whitespace() => {
                 self.next()?;
-                self.lex()?
+                let span_tok = self.lex()?;
+                span_tok.kind
             }
 
             ';' => {
                 loop {
-                    if let Some(c) = self.src.peek() {
+                    if let Some((_idx, c)) = self.src.peek() {
                         if *c != '\n' {
                             self.next()?;
                         } else {
@@ -654,13 +668,14 @@ impl<'a> Lexer<'a> {
                     }
                 }
 
-                self.lex()?
+                let span_tok = self.lex()?;
+                span_tok.kind
             }
 
             '.' => {
                 self.next()?;
 
-                if let Some(c) = self.src.peek() {
+                if let Some((_idx, c)) = self.src.peek() {
                     if c.is_alphabetic() {
                         let ident = self.extract_ident()?;
                         self.extract_directive(&ident)?
@@ -719,9 +734,9 @@ impl<'a> Lexer<'a> {
 
                 let mut strbuf = String::new();
                 loop {
-                    if let Some(c) = self.src.peek() {
+                    if let Some((_idx, c)) = self.src.peek() {
                         if *c != '"' {
-                            strbuf.push(self.next()?);
+                            strbuf.push(self.next()?.1);
                         } else {
                             break;
                         }
@@ -759,16 +774,46 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    pub fn src_file(&self) -> LexerResult<&path::PathBuf> {
-        Ok(&self.src_file)
+    pub fn src_file(&self) -> LexerResult<&str> {
+        Ok(self.source_file.src_file)
     }
 
     pub fn lex(&mut self) -> LexerResult<Token> {
         if self.src.peek().is_none() {
-            Ok(Token::TEof)
+            Ok(Token {
+                kind: TokenKind::TEof,
+                span: Span {
+                    low: Pos(0),
+                    high: Pos(0),
+                },
+            })
         } else {
-            let c = *self.src.peek().unwrap();
-            self.lex_char(c)
+            let (low, c) = self.src.peek().unwrap();
+            let low = if *low == 0 {
+                Pos(0)
+            } else {
+                Pos(*low as u32 + 1)
+            };
+
+            let c = *c;
+            let tok_kind = self.lex_char(c)?;
+
+            let high = self
+                .src
+                .peek()
+                .map(|(idx, _)| idx)
+                .map_or(0, |idx| *idx as u32);
+
+            let mut high = if high == 0 { Pos(0) } else { Pos(high - 1) };
+
+            if high < low {
+                high = low;
+            }
+
+            Ok(Token {
+                kind: tok_kind,
+                span: Span { low, high },
+            })
         }
     }
 }
