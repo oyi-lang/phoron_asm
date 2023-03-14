@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use crate::ast::{attributes::*, *};
 
 pub mod constant_pool;

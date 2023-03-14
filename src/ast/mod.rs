@@ -1,3 +1,5 @@
+use crate::sourcefile::Span;
+
 pub mod attributes;
 
 /// Trait to visit the nodes of the AST.
@@ -50,6 +52,7 @@ pub trait PhoronAstVisitor<'a> {
 pub struct PhoronProgram {
     pub header: PhoronHeader,
     pub body: PhoronBody,
+    pub span: Span,
 }
 
 // header
@@ -78,12 +81,14 @@ pub enum PhoronClassOrInterfaceAccessFlag {
 pub struct PhoronClassDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
+    pub span: Span,
 }
 
 #[derive(PartialEq, Debug)]
 pub struct PhoronInterfaceDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
+    pub span: Span,
 }
 
 #[derive(PartialEq, Debug)]
@@ -100,6 +105,7 @@ pub struct PhoronSuperDef {
 #[derive(PartialEq, Debug)]
 pub struct PhoronImplementsDef {
     pub class_name: String,
+    pub span: Span,
 }
 
 #[derive(PartialEq, Debug)]
@@ -108,6 +114,7 @@ pub struct PhoronHeader {
     pub class_or_interface_def: PhoronClassOrInterface,
     pub super_def: PhoronSuperDef,
     pub implements_defs: Vec<PhoronImplementsDef>,
+    pub span: Span,
 }
 
 // Descriptors
@@ -249,6 +256,7 @@ pub struct PhoronFieldDef {
     pub access_flags: Vec<PhoronFieldAccessFlag>,
     pub field_descriptor: PhoronFieldDescriptor,
     pub init_val: Option<PhoronFieldInitValue>,
+    pub span: Span,
 }
 
 // methods
@@ -672,6 +680,7 @@ pub struct PhoronMethodDef {
     pub access_flags: Vec<PhoronMethodAccessFlag>,
     pub method_descriptor: PhoronMethodDescriptor,
     pub instructions: Vec<PhoronInstruction>,
+    pub span: Span,
 }
 
 #[derive(PartialEq, Debug)]

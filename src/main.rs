@@ -1,8 +1,9 @@
 use phoron_asm::{
     codegen::{Codegen, CodegenError},
     cp_analyzer::{ConstantPoolAnalyzer, ConstantPoolAnalyzerError},
-    lexer::{Lexer, LexerError, Token, TokenKind},
-    sourcefile::{Pos, SourceFile},
+    lexer::Lexer,
+    parser::Parser,
+    sourcefile::SourceFile,
 };
 use std::{
     convert::From,
@@ -51,8 +52,7 @@ macro_rules! impl_from_err {
 impl_from_err!(io::Error);
 impl_from_err!(CodegenError);
 impl_from_err!(ConstantPoolAnalyzerError);
-impl_from_err!(LexerError);
-//impl_from_err!(ParserError);
+impl_from_err!(ParserError);
 
 pub type PhoronResult<T> = Result<T, PhoronError>;
 
@@ -78,26 +78,14 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
         beginnings,
     };
 
-    let mut lexer = Lexer::new(&source_file);
-    loop {
-        if let Some(tok) = lexer.lex() {
-            //println!("{tok:?}");
+    let mut parser = Parser::new(Lexer::new(&source_file));
+    let ast = parser.parse()?;
+    println!("{ast:#?}");
 
-            if tok.kind == TokenKind::TEof {
-                break;
-            }
-        }
+    if parser.errored {
+        println!("Detected errors while parsing. Aborting");
+        std::process::exit(1);
     }
-
-    if lexer.errored {
-        eprintln!("There were errors while processing the file. Aborting...");
-        return Ok(());
-    }
-
-    //let mut parser = Parser::new(Lexer::new(&source_file));
-    //let ast = parser.parse()?;
-
-    //println!("{ast:#?}");
 
     //let mut cp_analyzer = ConstantPoolAnalyzer::new();
     //let cp = cp_analyzer.analyze(&ast)?;

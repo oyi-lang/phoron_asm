@@ -43,7 +43,7 @@ pub struct SourceFile<'a> {
 }
 
 /// Abstract representation of a region of source code
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Span {
     pub low: Pos,
     pub high: Pos,

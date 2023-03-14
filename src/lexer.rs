@@ -278,8 +278,6 @@ pub struct LexerError {
 
 impl Error for LexerError {}
 
-use std::convert::From;
-
 impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}: {:?}", self.message, self.span)
@@ -295,7 +293,7 @@ enum Number {
 
 /// The Phoron Lexer
 pub struct Lexer<'a> {
-    source_file: &'a SourceFile<'a>,
+    pub source_file: &'a SourceFile<'a>,
     src: Peekable<Enumerate<Chars<'a>>>,
     pub errored: bool,
 }

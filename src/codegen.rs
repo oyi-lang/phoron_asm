@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use crate::{
     ast::{attributes::*, *},
     cp_analyzer::constant_pool::*,
