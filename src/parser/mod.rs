@@ -84,6 +84,7 @@ use TokenKind::*;
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     curr_tok: Token,
+    errored: bool,
 }
 
 impl<'a> Parser<'a> {

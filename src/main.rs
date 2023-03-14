@@ -65,27 +65,33 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
     let out_file = output_dir.join(src_file.with_extension(".class"));
 
     let src = fs::read_to_string(src_file)?;
-    let mut beginnings = vec![Pos(1)];
+    let mut beginnings = vec![Pos::new(1)];
     beginnings.extend_from_slice(
         &src.match_indices("\n")
-            .map(|(idx, _)| Pos(idx as u32 + 1))
+            .map(|(idx, _)| Pos::new(idx + 1))
             .collect::<Vec<_>>(),
     );
 
     let source_file = SourceFile {
         src_file: src_file.to_str().expect("no source file"),
-        src,
+        src: src.as_str(),
         beginnings,
     };
 
     let mut lexer = Lexer::new(&source_file);
     loop {
-        let tok = lexer.lex()?;
-        println!("{tok:?}");
+        if let Some(tok) = lexer.lex() {
+            //println!("{tok:?}");
 
-        if tok.kind == TokenKind::TEof {
-            break;
+            if tok.kind == TokenKind::TEof {
+                break;
+            }
         }
+    }
+
+    if lexer.errored {
+        eprintln!("There were errors while processing the file. Aborting...");
+        return Ok(());
     }
 
     //let mut parser = Parser::new(Lexer::new(&source_file));
