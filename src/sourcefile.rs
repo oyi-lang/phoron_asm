@@ -97,7 +97,7 @@ impl Span {
     /// Retrieve the entire line of source code corresponding to this span
     ///     - extract the whole line from the source file.
     pub fn source_line<'s>(&self, source_file: &'s SourceFile) -> &'s str {
-        let Location { line, col, .. } = self.location(&source_file);
+        let Location { line, .. } = self.location(&source_file);
 
         let start_pos = source_file.beginnings[line - 1];
         let end_pos = if line == source_file.beginnings.len() {

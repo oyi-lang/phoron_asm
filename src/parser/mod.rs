@@ -1,6 +1,6 @@
 use crate::{
     ast::*,
-    diagnostics::{DiagnosticManager, Level, Stage},
+    diagnostics::DiagnosticManager,
     lexer::{Lexer, LexerError, Token, TokenKind},
     sourcefile::Span,
 };
@@ -221,7 +221,7 @@ impl<'p> Parser<'p> {
 
                 if let Token {
                     kind: TokenKind::TIdent(name),
-                    span,
+                    ..
                 } = self.see()
                 {
                     let name = name.to_string();
@@ -236,8 +236,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing class name"),
                     );
@@ -261,8 +259,6 @@ impl<'p> Parser<'p> {
             tok => {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     self.curr_span(),
                     format!("invalid token {tok:?}"),
                 );
@@ -291,7 +287,7 @@ impl<'p> Parser<'p> {
 
                 if let Token {
                     kind: TokenKind::TIdent(ident),
-                    span,
+                    ..
                 } = self.see()
                 {
                     let name = ident.to_string();
@@ -307,8 +303,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing interface name"),
                     );
@@ -333,8 +327,6 @@ impl<'p> Parser<'p> {
             tok_kind => {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     self.curr_span(),
                     format!("invalid token {tok_kind:?}"),
                 );
@@ -350,7 +342,7 @@ impl<'p> Parser<'p> {
 
         if let Token {
             kind: TokenKind::TIdent(ident),
-            span,
+            ..
         } = self.see()
         {
             let class_name = ident.to_string();
@@ -363,8 +355,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 self.curr_span(),
                 format!("missing class name"),
             );
@@ -397,8 +387,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 self.curr_span(),
                 format!("missing super class name"),
             );
@@ -429,8 +417,6 @@ impl<'p> Parser<'p> {
             } else {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     self.curr_span(),
                     format!("invalid field init value"),
                 );
@@ -453,11 +439,9 @@ impl<'p> Parser<'p> {
             let mut field_desc_parser = tdp::TypeParser::new(&ident);
 
             let field_desc = match field_desc_parser.parse_field_descriptor() {
-                Err(err) => {
+                Err(_err) => {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         span.merge(&self.curr_span()),
                         format!("invalid or malfomed field type descriptor"),
                     );
@@ -477,8 +461,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 self.curr_span(),
                 format!("invalid token for field descriptor"),
             );
@@ -502,7 +484,7 @@ impl<'p> Parser<'p> {
 
         if let Token {
             kind: TokenKind::TIdent(ident),
-            span,
+            ..
         } = self.see()
         {
             let name = ident.to_string();
@@ -521,8 +503,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 start_span.merge(&self.curr_span()),
                 format!("malformed field definition"),
             );
@@ -544,7 +524,7 @@ impl<'p> Parser<'p> {
     fn parse_class_name(&mut self) -> Option<String> {
         if let Token {
             kind: TokenKind::TIdent(classname),
-            span,
+            ..
         } = self.see()
         {
             let classname = classname.to_owned();
@@ -554,8 +534,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 self.curr_span(),
                 format!("malformed class name"),
             );
@@ -568,7 +546,7 @@ impl<'p> Parser<'p> {
     fn parse_label(&mut self) -> Option<String> {
         if let Token {
             kind: TokenKind::TIdent(label),
-            span,
+            ..
         } = self.see()
         {
             let label = label.to_owned();
@@ -578,8 +556,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 self.curr_span(),
                 format!("malformed label"),
             );
@@ -607,7 +583,7 @@ impl<'p> Parser<'p> {
 
                         if let Token {
                             kind: TokenKind::TInt(n),
-                            span,
+                            ..
                         } = self.see()
                         {
                             let max_stack = *n as u16;
@@ -619,8 +595,6 @@ impl<'p> Parser<'p> {
                         } else {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing numeric value for `.limit stack` directive"),
                             );
@@ -637,7 +611,7 @@ impl<'p> Parser<'p> {
 
                         if let Token {
                             kind: TokenKind::TInt(n),
-                            span,
+                            ..
                         } = self.see()
                         {
                             let max_locals = *n as u16;
@@ -649,8 +623,6 @@ impl<'p> Parser<'p> {
                         } else {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing numeric value for `.limit locals` directive"),
                             );
@@ -663,8 +635,6 @@ impl<'p> Parser<'p> {
                     _ => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             self.curr_span(),
                             format!("invalid directive"),
                         );
@@ -691,8 +661,6 @@ impl<'p> Parser<'p> {
                 let line_number = self.parse_us().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing line number"),
                     );
@@ -715,8 +683,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_us().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing var num"),
                     );
@@ -728,8 +694,6 @@ impl<'p> Parser<'p> {
                 if !self.advance_if(&TokenKind::TIs) {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `is` keyword"),
                     );
@@ -738,8 +702,6 @@ impl<'p> Parser<'p> {
                 let name = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing name"),
                     );
@@ -751,8 +713,6 @@ impl<'p> Parser<'p> {
                 let field_descriptor = self.parse_field_descriptor().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing field descriptor"),
                     );
@@ -766,8 +726,6 @@ impl<'p> Parser<'p> {
                 if !self.advance_if(&TokenKind::TFrom) {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `from` keyword"),
                     );
@@ -777,8 +735,6 @@ impl<'p> Parser<'p> {
                 let from_label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `from` label"),
                     );
@@ -790,8 +746,6 @@ impl<'p> Parser<'p> {
                 if !self.advance_if(&TokenKind::TTo) {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `to` keyword"),
                     );
@@ -801,8 +755,6 @@ impl<'p> Parser<'p> {
                 let to_label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `to` label"),
                     );
@@ -829,8 +781,6 @@ impl<'p> Parser<'p> {
                 let class_name = self.parse_class_name().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -842,8 +792,6 @@ impl<'p> Parser<'p> {
                 if !self.advance_if(&TokenKind::TFrom) {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `from` keyword"),
                     );
@@ -853,8 +801,6 @@ impl<'p> Parser<'p> {
                 let from_label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `from` label"),
                     );
@@ -866,8 +812,6 @@ impl<'p> Parser<'p> {
                 if !self.advance_if(&TokenKind::TTo) {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `to` keyword"),
                     );
@@ -877,8 +821,6 @@ impl<'p> Parser<'p> {
                 let to_label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `to` label"),
                     );
@@ -890,8 +832,6 @@ impl<'p> Parser<'p> {
                 if !self.advance_if(&TokenKind::TUsing) {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `using` keyword"),
                     );
@@ -901,8 +841,6 @@ impl<'p> Parser<'p> {
                 let handler_label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing handler label"),
                     );
@@ -996,8 +934,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label for switch entry"),
                     );
@@ -1013,8 +949,6 @@ impl<'p> Parser<'p> {
             } else {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     self.curr_span(),
                     format!("missing : in lookupswitch pair"),
                 );
@@ -1037,8 +971,6 @@ impl<'p> Parser<'p> {
             } else {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     self.curr_span(),
                     format!("missing : in default switch pair"),
                 );
@@ -1049,8 +981,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 self.curr_span(),
                 format!("missing default keyword"),
             );
@@ -1087,8 +1017,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -1132,8 +1060,6 @@ impl<'p> Parser<'p> {
                 let component_type = self.parse_field_descriptor().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing component type"),
                     );
@@ -1164,8 +1090,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -1226,8 +1150,6 @@ impl<'p> Parser<'p> {
                 let sb = self.parse_sb().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing bute constant"),
                     );
@@ -1258,8 +1180,6 @@ impl<'p> Parser<'p> {
                 let cast_type = self.parse_field_descriptor().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing cast type"),
                     );
@@ -1344,8 +1264,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("misisng var num"),
                     );
@@ -1412,8 +1330,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -1570,8 +1486,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -1638,8 +1552,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -1697,8 +1609,6 @@ impl<'p> Parser<'p> {
                         let field_descriptor = self.parse_field_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing field descriptor"),
                             );
@@ -1716,8 +1626,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing field name"),
                         );
@@ -1733,8 +1641,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -1765,8 +1671,6 @@ impl<'p> Parser<'p> {
                         let field_descriptor = self.parse_field_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing field descriptor"),
                             );
@@ -1784,8 +1688,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing field name"),
                         );
@@ -1802,8 +1704,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -1825,8 +1725,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -1845,8 +1743,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -1973,8 +1869,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -1993,8 +1887,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2013,8 +1905,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2033,8 +1923,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2053,8 +1941,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2073,8 +1959,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2093,8 +1977,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2113,8 +1995,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2133,8 +2013,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2153,8 +2031,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2173,8 +2049,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2193,8 +2067,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2213,8 +2085,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2233,8 +2103,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2253,8 +2121,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2273,8 +2139,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2293,8 +2157,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -2306,8 +2168,6 @@ impl<'p> Parser<'p> {
                 let delta = self.parse_sb().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing delta"),
                     );
@@ -2326,8 +2186,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -2382,8 +2240,6 @@ impl<'p> Parser<'p> {
                 let check_type = self.parse_field_descriptor().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing check type"),
                     );
@@ -2411,8 +2267,6 @@ impl<'p> Parser<'p> {
                         let ub = self.parse_ub().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing unsigned byte constant"),
                             );
@@ -2424,8 +2278,6 @@ impl<'p> Parser<'p> {
                         let method_descriptor = self.parse_method_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing method descriptor"),
                             );
@@ -2444,8 +2296,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing method name"),
                         );
@@ -2462,8 +2312,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -2495,8 +2343,6 @@ impl<'p> Parser<'p> {
                         let method_descriptor = self.parse_method_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing method descriptor"),
                             );
@@ -2514,8 +2360,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing method name"),
                         );
@@ -2531,8 +2375,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -2563,8 +2405,6 @@ impl<'p> Parser<'p> {
                         let method_descriptor = self.parse_method_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing method descriptor"),
                             );
@@ -2582,8 +2422,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing method name"),
                         );
@@ -2599,8 +2437,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -2631,8 +2467,6 @@ impl<'p> Parser<'p> {
                         let method_descriptor = self.parse_method_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing method descriptor"),
                             );
@@ -2650,8 +2484,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing method name"),
                         );
@@ -2667,8 +2499,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -2721,8 +2551,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -2783,8 +2611,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2803,8 +2629,6 @@ impl<'p> Parser<'p> {
                 let label = self.parse_label().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing label"),
                     );
@@ -2902,8 +2726,6 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             self.curr_span(),
                             format!("found {tok_kind:?}, but I expected an int, float, or string value here")
                         );
@@ -2940,8 +2762,6 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             self.curr_span(),
                             format!(
                                 "found {tok_kind:?}, but I expected an int, float, or string here"
@@ -2974,8 +2794,6 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             self.curr_span(),
                             format!("found {tok_kind:?}, but I expected a long or double here"),
                         );
@@ -2999,8 +2817,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -3106,8 +2922,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -3181,8 +2995,6 @@ impl<'p> Parser<'p> {
                 let component_type = self.parse_field_descriptor().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing component type"),
                     );
@@ -3194,8 +3006,6 @@ impl<'p> Parser<'p> {
                 let dimensions = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing dimensions"),
                     );
@@ -3218,8 +3028,6 @@ impl<'p> Parser<'p> {
                 let class_name = self.parse_class_name().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing class name"),
                     );
@@ -3289,8 +3097,6 @@ impl<'p> Parser<'p> {
                         tok_kind => {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!(
                                     "{tok_kind:?} is not a primitive type, which I expected here"
@@ -3306,8 +3112,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("malformed instruction"),
                     );
@@ -3353,8 +3157,6 @@ impl<'p> Parser<'p> {
                         let field_descriptor = self.parse_field_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing field descriptor"),
                             );
@@ -3372,8 +3174,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing field name"),
                         );
@@ -3389,8 +3189,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -3421,8 +3219,6 @@ impl<'p> Parser<'p> {
                         let field_descriptor = self.parse_field_descriptor().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing field descriptor"),
                             );
@@ -3440,8 +3236,6 @@ impl<'p> Parser<'p> {
                     } else {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing field name"),
                         );
@@ -3457,8 +3251,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing class name"),
                     );
@@ -3480,8 +3272,6 @@ impl<'p> Parser<'p> {
                 let varnum = self.parse_ub().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing var num"),
                     );
@@ -3518,8 +3308,6 @@ impl<'p> Parser<'p> {
                 let ss = self.parse_ss().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing signed 16-byte constant"),
                     );
@@ -3547,8 +3335,6 @@ impl<'p> Parser<'p> {
                 let low = self.parse_si().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `low` value"),
                     );
@@ -3560,8 +3346,6 @@ impl<'p> Parser<'p> {
                 let high = self.parse_si().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing `high` value"),
                     );
@@ -3575,8 +3359,6 @@ impl<'p> Parser<'p> {
                 let default = self.parse_default_switch_pair().or_else(|| {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing default case"),
                     );
@@ -3608,8 +3390,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3627,8 +3407,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3646,8 +3424,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3665,8 +3441,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3684,8 +3458,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3703,8 +3475,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3722,8 +3492,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3741,8 +3509,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3760,8 +3526,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3779,8 +3543,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3798,8 +3560,6 @@ impl<'p> Parser<'p> {
                         let varnum = self.parse_us().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing var num"),
                             );
@@ -3811,8 +3571,6 @@ impl<'p> Parser<'p> {
                         let delta = self.parse_ss().or_else(|| {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 self.curr_span(),
                                 format!("missing delta"),
                             );
@@ -3827,8 +3585,6 @@ impl<'p> Parser<'p> {
                     instr => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             self.curr_span(),
                             format!(
                                 "{instr:?} - incorrect instruction following `wide` instruction"
@@ -3884,14 +3640,12 @@ impl<'p> Parser<'p> {
             }
 
             TokenKind::TIdent(label_str) => {
-                let start_span = self.curr_span();
-
                 let label = label_str.to_string();
                 self.advance();
 
                 if let Token {
                     kind: TokenKind::TColon,
-                    span,
+                    ..
                 } = self.see()
                 {
                     self.advance();
@@ -3899,8 +3653,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("unknown instruction or label"),
                     );
@@ -3921,8 +3673,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("{:?} unknown instruction", self.see().kind),
                     );
@@ -3942,7 +3692,7 @@ impl<'p> Parser<'p> {
         while self.see().kind != TokenKind::TEof {
             if let Token {
                 kind: TokenKind::TEnd,
-                span,
+                span: _,
             } = self.see()
             {
                 self.advance();
@@ -3953,8 +3703,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         self.curr_span(),
                         format!("missing end method marker"),
                     );
@@ -3985,17 +3733,15 @@ impl<'p> Parser<'p> {
             let ident_tok = self.see();
             let param_descriptor = if let Token {
                 kind: TokenKind::TIdent(ident),
-                span,
+                ..
             } = ident_tok
             {
                 let mut param_parser = tdp::TypeParser::new(ident);
 
                 let param_desc = match param_parser.parse_param_descriptor() {
-                    Err(err) => {
+                    Err(_err) => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             start_span.merge(&self.curr_span()),
                             format!("missing param descriptor"),
                         );
@@ -4016,7 +3762,7 @@ impl<'p> Parser<'p> {
 
             if let Token {
                 kind: TokenKind::TRightParen,
-                span,
+                ..
             } = self.see()
             {
                 self.advance();
@@ -4024,16 +3770,14 @@ impl<'p> Parser<'p> {
                 let ident_tok = self.see();
                 if let Token {
                     kind: TokenKind::TIdent(ret),
-                    span,
+                    ..
                 } = ident_tok
                 {
                     let mut ret_parser = tdp::TypeParser::new(ret);
                     let return_descriptor = match ret_parser.parse_return_descriptor() {
-                        Err(err) => {
+                        Err(_err) => {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
-                                Stage::Parser,
-                                Level::Error,
                                 start_span.merge(&self.curr_span()),
                                 format!("missing return descriptor"),
                             );
@@ -4054,8 +3798,6 @@ impl<'p> Parser<'p> {
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
-                        Stage::Parser,
-                        Level::Error,
                         start_span.merge(&self.curr_span()),
                         format!("missing return descriptor"),
                     );
@@ -4068,8 +3810,6 @@ impl<'p> Parser<'p> {
             } else {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     start_span.merge(&self.curr_span()),
                     format!("malformed return descriptorname"),
                 );
@@ -4082,8 +3822,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 start_span.merge(&self.curr_span()),
                 format!("malformed return descriptor name"),
             );
@@ -4112,7 +3850,7 @@ impl<'p> Parser<'p> {
 
         if let Token {
             kind: TokenKind::TIdent(name_str),
-            span,
+            span: _,
         } = self.see()
         {
             let name = name_str.to_string();
@@ -4134,8 +3872,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 start_span.merge(&self.curr_span()),
                 format!("missing method name in method definition"),
             );
@@ -4172,10 +3908,9 @@ impl<'p> Parser<'p> {
 
         if let Token {
             kind: TokenKind::TIdent(source_file_str),
-            span,
+            span: _,
         } = self.see()
         {
-            println!("[parser] source_file = {source_file_str:?}");
             let source_file = source_file_str.to_string();
             self.advance();
 
@@ -4186,8 +3921,6 @@ impl<'p> Parser<'p> {
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
-                Stage::Parser,
-                Level::Error,
                 start_span.merge(&self.curr_span()),
                 format!("missing source file name for source file definition"),
             );
@@ -4217,8 +3950,6 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
-                            Stage::Parser,
-                            Level::Error,
                             self.curr_span(),
                             format!(" found {tok_kind:?}, but I expected `.class` or `.interface`"),
                         );
@@ -4283,8 +4014,6 @@ impl<'p> Parser<'p> {
             tok => {
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
-                    Stage::Parser,
-                    Level::Error,
                     self.curr_span(),
                     format!("{tok:?} cannot start a Phoron header"),
                 );

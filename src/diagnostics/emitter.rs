@@ -20,14 +20,11 @@ impl Emitter {
             src_file,
             line,
             col,
-            stage,
-            level,
-            src,
             src_line,
             diag_str,
         } = diagnostic;
 
-        println!("{RED}{level}{RESET}: {diag_str}");
+        println!("{RED}error{RESET}: {diag_str}");
         println!("{BLUE}--->{RESET} {src_file}:{line}:{col}");
         println!("{BLUE}{:>10}{RESET}", "|");
         println!("{BLUE}{:>5}{:>5}{RESET}{:>10}", line, "|", src_line.trim());

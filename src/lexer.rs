@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    diagnostics::{DiagnosticManager, Level, Stage},
+    diagnostics::DiagnosticManager,
     sourcefile::{Pos, SourceFile, Span},
 };
 
@@ -829,13 +829,7 @@ impl<'a> Lexer<'a> {
             let c = *c;
             match self.lex_char(c) {
                 Err(err) => {
-                    DiagnosticManager::report_diagnostic(
-                        &self.source_file,
-                        Stage::Lexer,
-                        Level::Error,
-                        err.span,
-                        err.message,
-                    );
+                    DiagnosticManager::report_diagnostic(&self.source_file, err.span, err.message);
 
                     self.src.next();
                     return self.lex();
