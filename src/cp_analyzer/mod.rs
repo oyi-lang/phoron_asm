@@ -345,6 +345,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
         cp: Self::Input,
     ) -> Self::Result {
         self.analyze_name(PHORON_SOURCE_FILE, cp)?;
+        println!("about to insert {:?}", sourcefile_def.source_file);
         self.analyze_name(&sourcefile_def.source_file, cp)?;
 
         Ok(())

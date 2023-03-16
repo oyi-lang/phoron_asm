@@ -4175,6 +4175,7 @@ impl<'p> Parser<'p> {
             span,
         } = self.see()
         {
+            println!("[parser] source_file = {source_file_str:?}");
             let source_file = source_file_str.to_string();
             self.advance();
 
@@ -4240,7 +4241,7 @@ impl<'p> Parser<'p> {
 
             TokenKind::TClass => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.source_file.src.to_string(),
+                    source_file: self.lexer.src_file().to_string(),
                     span: self.curr_span(),
                 };
 
