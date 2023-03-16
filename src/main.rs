@@ -61,7 +61,7 @@ fn usage() {
 }
 
 fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
-    let outfile = output_dir.join(src_file.with_extension(".class"));
+    let outfile = output_dir.join(src_file.with_extension("class"));
 
     let src = fs::read_to_string(src_file)?;
     let mut beginnings = vec![Pos::new(1)];
@@ -79,7 +79,6 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
 
     let mut parser = Parser::new(Lexer::new(&source_file));
     let ast = parser.parse().unwrap();
-    println!("{ast:#?}");
 
     if parser.errored {
         println!("Detected errors while parsing. Aborting");

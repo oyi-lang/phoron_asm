@@ -2,7 +2,7 @@
  
 PhoronProgram <- line_comment* Header Body eof
 
-Header <- SourceFileDef? (ClassDef / InterfaceDef) SuperDef ImplementDef*
+Header <- SourceFileDef? (ClassDef / InterfaceDef) SuperDef ImplementsDef*
 
 SourceFileDef <- SOURCE_keyword FileName newline
 

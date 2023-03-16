@@ -462,13 +462,15 @@ impl<'p> Parser<'p> {
                         format!("invalid or malfomed field type descriptor"),
                     );
 
-                    self.advance();
                     self.errored |= true;
 
                     PhoronFieldDescriptor::default()
                 }
 
-                Ok(desc) => desc,
+                Ok(desc) => {
+                    self.advance();
+                    desc
+                }
             };
 
             Some(field_desc)
@@ -3899,7 +3901,7 @@ impl<'p> Parser<'p> {
                         &self.lexer.source_file,
                         Stage::Parser,
                         Level::Error,
-                        start_span,
+                        self.curr_span(),
                         format!("unknown instruction or label"),
                     );
 
