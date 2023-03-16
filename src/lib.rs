@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 pub mod ast;
 pub mod codegen;
 pub mod cp_analyzer;

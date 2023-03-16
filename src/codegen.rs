@@ -1,5 +1,3 @@
-#![cfg(target_os = "linux")]
-
 use crate::{
     ast::{attributes::*, *},
     cp_analyzer::constant_pool::*,
@@ -418,6 +416,7 @@ where
                             ref high,
                             ref switches,
                             ref default,
+                            ref span,
                         } => {
                             let mut opcode_len = 1i16; // for the opcode
 
@@ -686,7 +685,10 @@ where
                             // this is a top-level attribute inside Methhodnfo, ot the same level as the
                             // `Code` attribute. Just like the `Code` attribute, there may be at most one
                             // such entry in the method attributes.
-                            PhoronDirective::Throws { ref class_name } => {
+                            PhoronDirective::Throws {
+                                ref class_name,
+                                span,
+                            } => {
                                 let exceptions_index = if method_info.attributes.is_empty() {
                                     method_info.attributes_count += 1;
 
@@ -779,8 +781,8 @@ where
                 method_info.attributes_count += 1; // for the Code attribute
 
                 let mut code_attributes_length = 12; // default minimum (as per the spec)
-                let mut max_stack = 1; // default
-                let mut max_locals = 1; // default
+                let mut code_max_stack = 1; // default
+                let mut code_max_locals = 1; // default
 
                 let mut code = Vec::new();
 
@@ -793,24 +795,33 @@ where
                 for instr in &method_def.instructions {
                     match instr {
                         PhoronInstruction::PhoronDirective(ref dir) => match dir {
-                            PhoronDirective::LimitStack(stack) => {
-                                max_stack = *stack;
+                            PhoronDirective::LimitStack {
+                                max_stack,
+                                ref span,
+                            } => {
+                                code_max_stack = *max_stack;
                             }
 
-                            PhoronDirective::LimitLocals(locals) => {
-                                max_locals = *locals;
+                            PhoronDirective::LimitLocals {
+                                max_locals,
+                                ref span,
+                            } => {
+                                code_max_locals = *max_locals;
                             }
 
                             // this is a top-level attribute inside Methhodnfo, ot the same level as the
                             // `Code` attribute. Just like the `Code` attribute, there may be at most one
                             // such entry in the method attributes.
-                            PhoronDirective::Throws { ref class_name } => {
+                            PhoronDirective::Throws {
+                                ref class_name,
+                                span,
+                            } => {
                                 let exceptions_index = if method_info.attributes.is_empty() {
                                     method_info.attributes_count += 1;
 
                                     let attribute_name_index = *cp.get_name(PHORON_EXCEPTIONS).ok_or(CodegenError::AttributeError {
                                 attr: "Exceptions",
-                                details: "missing attribute name index for `Execptions` attribute in method info"
+                                details: "missing attribute name index for `Exceptions` attribute in method info"
                             })?;
 
                                     let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
@@ -858,7 +869,10 @@ where
                             // even though we can have multiple LineNumberTable attributes, we restrict
                             // ourselves to one LineNumberTable attribute per method, adding the line
                             // numbers for that method into the same entry, as in the case of the `.var` directive
-                            PhoronDirective::LineNumber(ref linum) => {
+                            PhoronDirective::LineNumber {
+                                ref line_number,
+                                span,
+                            } => {
                                 let line_num_table_index = if code_attributes.is_empty() {
                                     code_attributes_count += 1;
                                     code_attributes_length += 8;
@@ -903,7 +917,7 @@ where
 
                                     line_number_table.push(LineNumber {
                                         start_pc,
-                                        line_number: *linum,
+                                        line_number: *line_number,
                                     });
 
                                     *attribute_length += 4;
@@ -923,6 +937,7 @@ where
                                 ref field_descriptor,
                                 ref from_label,
                                 ref to_label,
+                                ref span,
                             } => {
                                 let local_var_table_index = if code_attributes.is_empty() {
                                     code_attributes_count += 1;
@@ -1020,6 +1035,7 @@ where
                                 ref from_label,
                                 ref to_label,
                                 ref handler_label,
+                                ref span,
                             } => {
                                 exception_table_length += 1;
 
@@ -1086,8 +1102,8 @@ where
                 method_info.attributes.push(AttributeInfo::Code {
                     attribute_name_index: *attribute_name_index,
                     attribute_length: code_attributes_length,
-                    max_stack,
-                    max_locals,
+                    max_stack: code_max_stack,
+                    max_locals: code_max_locals,
                     code_length,
                     code,
                     exception_table_length,
@@ -1311,6 +1327,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb2];
 
@@ -1329,6 +1346,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb4];
 
@@ -1733,6 +1751,7 @@ where
                 ref method_name,
                 ref method_descriptor,
                 ref ub,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb9];
 
@@ -1754,6 +1773,7 @@ where
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb7];
 
@@ -1772,6 +1792,7 @@ where
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb8];
 
@@ -1790,6 +1811,7 @@ where
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
             } => {
                 let mut opcodes = Vec::new();
                 opcodes.push(0xb6);
@@ -1983,6 +2005,7 @@ where
             Lookupswitch {
                 ref switches,
                 ref default,
+                ref span,
             } => {
                 let mut opcodes = vec![0xab];
 
@@ -2050,6 +2073,7 @@ where
             Multianewarray {
                 ref component_type,
                 ref dimensions,
+                ref span,
             } => {
                 let mut opcodes = vec![0xc5];
                 let class_ref = *cp.get_class(&component_type.to_string()).ok_or(
@@ -2103,6 +2127,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb5];
 
@@ -2121,6 +2146,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let mut opcodes = vec![0xb3];
 
@@ -2159,6 +2185,7 @@ where
                 ref high,
                 ref switches,
                 ref default,
+                ref span,
             } => {
                 let mut opcodes = vec![0xaa];
 

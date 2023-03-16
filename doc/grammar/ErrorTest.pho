@@ -1,17 +1,21 @@
 .source ErrorTest.pho
-.class public ErrorTest
+.class public ErrorTest!!
 .super java/lang/Object
 
-.method public <init>()V
+.method foobar bazfoo  <init>()V
   aload_0 
   invokespecial java/lang/Object/<init>()V ; super ()
   return
 .end method
 
-.method public static main([Ljava/lang/String;)V
-  .limit stack 2
-  getstatic java/lang/System/out Ljava/io/PrintStream;
+.method public static main([XLjava/lang/String;)V
+  .limit stack hello
+  .limit externs
+  getstatic java/lang/System/out Ljava/io/PrintStream
+  foobar
   ldc "Hello, world"
   invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  abcd
   return
-.end method
+  gagging
+;.end method

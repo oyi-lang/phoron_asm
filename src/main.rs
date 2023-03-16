@@ -3,7 +3,7 @@ use phoron_asm::{
     cp_analyzer::{ConstantPoolAnalyzer, ConstantPoolAnalyzerError},
     lexer::Lexer,
     parser::Parser,
-    sourcefile::SourceFile,
+    sourcefile::{Pos, SourceFile},
 };
 use std::{
     convert::From,
@@ -52,7 +52,6 @@ macro_rules! impl_from_err {
 impl_from_err!(io::Error);
 impl_from_err!(CodegenError);
 impl_from_err!(ConstantPoolAnalyzerError);
-impl_from_err!(ParserError);
 
 pub type PhoronResult<T> = Result<T, PhoronError>;
 
@@ -62,7 +61,7 @@ fn usage() {
 }
 
 fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
-    let out_file = output_dir.join(src_file.with_extension(".class"));
+    let outfile = output_dir.join(src_file.with_extension(".class"));
 
     let src = fs::read_to_string(src_file)?;
     let mut beginnings = vec![Pos::new(1)];
@@ -79,7 +78,7 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
     };
 
     let mut parser = Parser::new(Lexer::new(&source_file));
-    let ast = parser.parse()?;
+    let ast = parser.parse().unwrap();
     println!("{ast:#?}");
 
     if parser.errored {
@@ -87,14 +86,14 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
         std::process::exit(1);
     }
 
-    //let mut cp_analyzer = ConstantPoolAnalyzer::new();
-    //let cp = cp_analyzer.analyze(&ast)?;
+    let mut cp_analyzer = ConstantPoolAnalyzer::new();
+    let cp = cp_analyzer.analyze(&ast)?;
 
-    //let mut outfile_w = BufWriter::new(fs::File::create(&outfile)?);
-    //let mut codegen = Codegen::new(&mut outfile_w);
-    //codegen.gen_bytecode(&ast, &cp)?;
+    let mut outfile_w = BufWriter::new(fs::File::create(&outfile)?);
+    let mut codegen = Codegen::new(&mut outfile_w);
+    codegen.gen_bytecode(&ast, &cp)?;
 
-    //println!("Generated {}", outfile.display());
+    println!("Generated {}", outfile.display());
 
     Ok(())
 }

@@ -16,7 +16,7 @@ pub struct Token {
     pub span: Span,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     TAaload,
     TAastore,
@@ -648,6 +648,8 @@ impl<'a> Lexer<'a> {
                         } else {
                             break;
                         }
+                    } else {
+                        break;
                     }
                 }
 
@@ -797,14 +799,14 @@ impl<'a> Lexer<'a> {
 
                 return Err(LexerError {
                     span: Span { low, high },
-                    message: format!("Invalid character {c:?}"),
+                    message: format!("invalid character {c:?}"),
                 });
             }
         })
     }
 
-    pub fn src_file(&self) -> LexerResult<&str> {
-        Ok(self.source_file.src_file)
+    pub fn src_file(&self) -> &str {
+        &self.source_file.src_file
     }
 
     pub fn lex(&mut self) -> Option<Token> {

@@ -100,7 +100,11 @@ impl Span {
         let Location { line, col, .. } = self.location(&source_file);
 
         let start_pos = source_file.beginnings[line - 1];
-        let end_pos = source_file.beginnings[line];
+        let end_pos = if line == source_file.beginnings.len() {
+            source_file.beginnings[line - 1]
+        } else {
+            source_file.beginnings[line]
+        };
 
         &source_file.src[start_pos.into()..end_pos.into()]
     }

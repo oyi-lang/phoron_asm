@@ -1,5 +1,3 @@
-#![cfg(target_os = "linux")]
-
 use crate::ast::{attributes::*, *};
 
 pub mod constant_pool;
@@ -444,18 +442,21 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
 
     fn visit_directive(&mut self, directive: &PhoronDirective, cp: Self::Input) -> Self::Result {
         match directive {
-            PhoronDirective::LimitStack(..) => {} // do nothing
+            PhoronDirective::LimitStack { .. } => {} // do nothing
 
-            PhoronDirective::LimitLocals(..) => {} // do nothing
+            PhoronDirective::LimitLocals { .. } => {} // do nothing
 
-            PhoronDirective::Throws { ref class_name } => {
+            PhoronDirective::Throws {
+                ref class_name,
+                ref span,
+            } => {
                 self.analyze_name(PHORON_EXCEPTIONS, cp)?;
 
                 let name_index = self.analyze_name(class_name, cp)?;
                 self.analyze_class(name_index, cp)?;
             }
 
-            PhoronDirective::LineNumber(linum) => {
+            PhoronDirective::LineNumber { .. } => {
                 self.analyze_name(PHORON_LINE_NUMBER_TABLE, cp)?;
             }
 
@@ -465,6 +466,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref field_descriptor,
                 ref from_label,
                 ref to_label,
+                ref span,
             } => {
                 self.analyze_name(PHORON_LOCAL_VARIABLE_TABLE, cp)?;
                 self.analyze_name(name, cp)?;
@@ -477,6 +479,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref from_label,
                 ref to_label,
                 ref handler_label,
+                ref span,
             } => {
                 if class_name != "all" {
                     let name_index = self.analyze_name(class_name, cp)?;
@@ -506,6 +509,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;
@@ -524,6 +528,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;
@@ -546,6 +551,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref interface_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
                 ..
             } => {
                 let class_name_index = self.analyze_name(interface_name, cp)?;
@@ -565,6 +571,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;
@@ -583,6 +590,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;
@@ -601,6 +609,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;
@@ -671,6 +680,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;
@@ -689,6 +699,7 @@ impl<'a> PhoronAstVisitor<'a> for ConstantPoolAnalyzer {
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ref span,
             } => {
                 let class_name_index = self.analyze_name(class_name, cp)?;
                 let class_index = self.analyze_class(class_name_index, cp)?;

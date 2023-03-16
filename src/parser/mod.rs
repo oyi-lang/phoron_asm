@@ -211,7 +211,7 @@ impl<'p> Parser<'p> {
 
         let mut access_flags = vec![self.get_class_or_interface_access_flag(&TSuper)];
 
-        match self.see().kind {
+        match &self.see().kind {
             TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
             | TEnum | TModule => {
                 while self.is_class_or_interface_access_flag(&self.see().kind) {
@@ -227,10 +227,11 @@ impl<'p> Parser<'p> {
                     let name = name.to_string();
                     self.advance();
 
+                    let curr_span = self.curr_span();
                     Some(PhoronClassDef {
                         name,
                         access_flags,
-                        span: span.merge(&self.curr_span()),
+                        span: curr_span,
                     })
                 } else {
                     DiagnosticManager::report_diagnostic(
@@ -240,6 +241,7 @@ impl<'p> Parser<'p> {
                         self.curr_span(),
                         format!("missing class name"),
                     );
+                    self.errored = true;
                     None
                 }
             }
@@ -265,6 +267,8 @@ impl<'p> Parser<'p> {
                     format!("invalid token {tok:?}"),
                 );
 
+                self.errored = true;
+
                 None
             }
         }
@@ -277,7 +281,7 @@ impl<'p> Parser<'p> {
         let curr_tok = self.see();
         let mut access_flags = vec![self.get_class_or_interface_access_flag(&TAbstract)];
 
-        match curr_tok.kind {
+        match &curr_tok.kind {
             TPublic | TFinal | TSuper | TInterface | TAbstract | TSynthetic | TAnnotation
             | TEnum | TModule => {
                 while self.is_class_or_interface_access_flag(&self.see().kind) {
@@ -293,19 +297,22 @@ impl<'p> Parser<'p> {
                     let name = ident.to_string();
                     self.advance();
 
+                    let curr_span = self.curr_span();
+
                     Some(PhoronInterfaceDef {
                         name,
                         access_flags,
-                        span: span.merge(&self.curr_span()),
+                        span: curr_span,
                     })
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
                         Stage::Parser,
                         Level::Error,
-                        curr_tok.span.merge(&self.curr_span()),
+                        self.curr_span(),
                         format!("missing interface name"),
                     );
+                    self.errored |= true;
                     None
                 }
             }
@@ -314,10 +321,12 @@ impl<'p> Parser<'p> {
                 let name = ident.to_string();
                 self.advance();
 
+                let curr_span = self.curr_span();
+
                 Some(PhoronInterfaceDef {
                     name,
                     access_flags,
-                    span: curr_tok.span.merge(&self.curr_span()),
+                    span: curr_span,
                 })
             }
 
@@ -326,9 +335,10 @@ impl<'p> Parser<'p> {
                     &self.lexer.source_file,
                     Stage::Parser,
                     Level::Error,
-                    curr_tok.span.merge(&self.curr_span()),
+                    self.curr_span(),
                     format!("invalid token {tok_kind:?}"),
                 );
+                self.errored |= true;
                 None
             }
         }
@@ -348,7 +358,7 @@ impl<'p> Parser<'p> {
 
             Some(PhoronImplementsDef {
                 class_name,
-                span: span.merge(&self.curr_span()),
+                span: self.curr_span(),
             })
         } else {
             DiagnosticManager::report_diagnostic(
@@ -358,6 +368,8 @@ impl<'p> Parser<'p> {
                 self.curr_span(),
                 format!("missing class name"),
             );
+
+            self.errored |= true;
 
             None
         }
@@ -377,7 +389,7 @@ impl<'p> Parser<'p> {
     fn parse_super_def(&mut self) -> Option<PhoronSuperDef> {
         self.advance();
 
-        if let TokenKind::TIdent(ident) = self.see().kind {
+        if let TokenKind::TIdent(ref ident) = self.see().kind {
             let super_class_name = ident.to_string();
             self.advance();
 
@@ -390,6 +402,8 @@ impl<'p> Parser<'p> {
                 self.curr_span(),
                 format!("missing super class name"),
             );
+
+            self.errored |= true;
 
             None
         }
@@ -408,7 +422,7 @@ impl<'p> Parser<'p> {
                 let fval = float;
                 self.advance();
                 Some(PhoronFieldInitValue::Double(fval))
-            } else if let TokenKind::TString(s) = self.see().kind {
+            } else if let TokenKind::TString(ref s) = self.see().kind {
                 let sval = s.to_owned();
                 self.advance();
                 Some(PhoronFieldInitValue::QuotedString(sval))
@@ -420,6 +434,8 @@ impl<'p> Parser<'p> {
                     self.curr_span(),
                     format!("invalid field init value"),
                 );
+
+                self.errored |= true;
 
                 None
             })
@@ -435,9 +451,9 @@ impl<'p> Parser<'p> {
         } = self.see()
         {
             let mut field_desc_parser = tdp::TypeParser::new(&ident);
-            let field_desc = field_desc_parser
-                .parse_field_descriptor()
-                .map_err(|err| {
+
+            let field_desc = match field_desc_parser.parse_field_descriptor() {
+                Err(err) => {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
                         Stage::Parser,
@@ -445,10 +461,15 @@ impl<'p> Parser<'p> {
                         span.merge(&self.curr_span()),
                         format!("invalid or malfomed field type descriptor"),
                     );
-                })
-                .ok()?;
 
-            self.advance();
+                    self.advance();
+                    self.errored |= true;
+
+                    PhoronFieldDescriptor::default()
+                }
+
+                Ok(desc) => desc,
+            };
 
             Some(field_desc)
         } else {
@@ -459,6 +480,7 @@ impl<'p> Parser<'p> {
                 self.curr_span(),
                 format!("invalid token for field descriptor"),
             );
+            self.errored |= true;
 
             None
         }
@@ -492,7 +514,7 @@ impl<'p> Parser<'p> {
                 access_flags,
                 field_descriptor,
                 init_val,
-                span: span.merge(&self.curr_span()),
+                span: self.curr_span(),
             })
         } else {
             DiagnosticManager::report_diagnostic(
@@ -502,6 +524,7 @@ impl<'p> Parser<'p> {
                 start_span.merge(&self.curr_span()),
                 format!("malformed field definition"),
             );
+            self.errored |= true;
 
             None
         }
@@ -534,6 +557,7 @@ impl<'p> Parser<'p> {
                 self.curr_span(),
                 format!("malformed class name"),
             );
+            self.errored |= true;
 
             None
         }
@@ -557,6 +581,8 @@ impl<'p> Parser<'p> {
                 self.curr_span(),
                 format!("malformed label"),
             );
+            self.errored |= true;
+
             None
         }
     }
@@ -569,9 +595,7 @@ impl<'p> Parser<'p> {
     /// VarDirective <- VAR_keyword Integer IS_keyword VarName FieldDescriptor FROM_keyword Label TO_keyword Label
     /// CatchDirective <- CATCH_keyword ClassName FROM_keyword Label TO_keyword Label USING_keyword Label
     fn parse_directive(&mut self) -> Option<PhoronDirective> {
-        let curr_tok = self.see();
-
-        Some(match curr_tok.kind {
+        Some(match &self.see().kind {
             TokenKind::TLimit => {
                 self.advance();
 
@@ -586,16 +610,23 @@ impl<'p> Parser<'p> {
                         {
                             let max_stack = *n as u16;
                             self.advance();
-                            PhoronDirective::LimitStack(max_stack)
+                            PhoronDirective::LimitStack {
+                                max_stack,
+                                span: self.curr_span(),
+                            }
                         } else {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
                                 Stage::Parser,
                                 Level::Error,
-                                curr_tok.span.merge(&self.curr_span()),
+                                self.curr_span(),
                                 format!("missing numeric value for `.limit stack` directive"),
                             );
-                            return None;
+
+                            self.advance();
+                            self.errored |= true;
+
+                            PhoronDirective::default()
                         }
                     }
 
@@ -609,16 +640,21 @@ impl<'p> Parser<'p> {
                         {
                             let max_locals = *n as u16;
                             self.advance();
-                            PhoronDirective::LimitLocals(max_locals)
+                            PhoronDirective::LimitLocals {
+                                max_locals,
+                                span: self.curr_span(),
+                            }
                         } else {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
                                 Stage::Parser,
                                 Level::Error,
-                                curr_tok.span.merge(&self.curr_span()),
+                                self.curr_span(),
                                 format!("missing numeric value for `.limit locals` directive"),
                             );
-                            return None;
+                            self.advance();
+                            self.errored |= true;
+                            PhoronDirective::default()
                         }
                     }
 
@@ -627,10 +663,12 @@ impl<'p> Parser<'p> {
                             &self.lexer.source_file,
                             Stage::Parser,
                             Level::Error,
-                            curr_tok.span.merge(&self.curr_span()),
+                            self.curr_span(),
                             format!("invalid directive"),
                         );
-                        return None;
+                        self.advance();
+                        self.errored |= true;
+                        PhoronDirective::default()
                     }
                 }
             }
@@ -638,71 +676,137 @@ impl<'p> Parser<'p> {
             TokenKind::TThrows => {
                 self.advance();
 
-                let class_name = self.parse_class_name().map_err(|_| ParserError::Missing {
-                    instr: ".throws",
-                    component: "class name",
-                })?;
-
-                PhoronDirective::Throws { class_name }
+                let class_name = self.parse_class_name().or(Some(String::new()))?;
+                PhoronDirective::Throws {
+                    class_name,
+                    span: self.curr_span(),
+                }
             }
 
             TokenKind::TLine => {
                 self.advance();
 
-                let line_number = self.parse_us().map_err(|_| ParserError::Missing {
-                    instr: ".line",
-                    component: "line number",
+                let line_number = self.parse_us().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing line number"),
+                    );
+                    self.errored |= true;
+
+                    Some(u16::default())
                 })?;
 
-                PhoronDirective::LineNumber(line_number)
+                PhoronDirective::LineNumber {
+                    line_number,
+                    span: self.curr_span(),
+                }
             }
 
             TokenKind::TVar => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                    instr: ".var",
-                    component: "var num",
+                let varnum = self.parse_us().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u16::default())
                 })?;
 
-                self.advance_if(&TokenKind::TIs)
-                    .map_err(|_| ParserError::Missing {
-                        instr: ".var",
-                        component: "`is` keyword",
-                    })?;
+                if !self.advance_if(&TokenKind::TIs) {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `is` keyword"),
+                    );
+                }
 
-                let name = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: ".var",
-                    component: "name",
+                let name = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing name"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::new())
                 })?;
 
-                let field_descriptor =
-                    self.parse_field_descriptor()
-                        .map_err(|_| ParserError::Missing {
-                            instr: ".var",
-                            component: "field descriptor",
-                        })?;
+                let field_descriptor = self.parse_field_descriptor().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing field descriptor"),
+                    );
 
-                self.advance_if(&TokenKind::TFrom)
-                    .map_err(|_| ParserError::Missing {
-                        instr: ".var",
-                        component: "`from` keyword",
-                    })?;
+                    self.advance();
+                    self.errored |= true;
 
-                let from_label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: ".var",
-                    component: "from label",
+                    Some(PhoronFieldDescriptor::default())
                 })?;
 
-                self.advance_if(&TokenKind::TTo)
-                    .map_err(|_| ParserError::Missing {
-                        instr: ".var",
-                        component: "`to` keyword",
-                    })?;
+                if !self.advance_if(&TokenKind::TFrom) {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `from` keyword"),
+                    );
+                    self.errored |= true;
+                }
 
-                let to_label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: ".var",
-                    component: "to label",
+                let from_label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `from` label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::new())
+                })?;
+
+                if !self.advance_if(&TokenKind::TTo) {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `to` keyword"),
+                    );
+                    self.errored |= true;
+                }
+
+                let to_label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `to` label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::new())
                 })?;
 
                 PhoronDirective::Var {
@@ -711,170 +815,251 @@ impl<'p> Parser<'p> {
                     field_descriptor,
                     from_label,
                     to_label,
+                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
             TokenKind::TCatch => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                let class_name = self.parse_class_name()?;
-                self.advance_if(&TokenKind::TFrom)?;
-                let from_label = self.parse_label()?;
-                self.advance_if(&TokenKind::TTo)?;
-                let to_label = self.parse_label()?;
-                self.advance_if(&TokenKind::TUsing)?;
-                let handler_label = self.parse_label()?;
+                let class_name = self.parse_class_name().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::new())
+                })?;
+
+                if !self.advance_if(&TokenKind::TFrom) {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `from` keyword"),
+                    );
+                    self.errored |= true;
+                }
+
+                let from_label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `from` label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
+                })?;
+
+                if !self.advance_if(&TokenKind::TTo) {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `to` keyword"),
+                    );
+                    self.errored |= true;
+                }
+
+                let to_label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `to` label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
+                })?;
+
+                if !self.advance_if(&TokenKind::TUsing) {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `using` keyword"),
+                    );
+                    self.errored |= true;
+                }
+
+                let handler_label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing handler label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
+                })?;
 
                 PhoronDirective::Catch {
                     class_name,
                     from_label,
                     to_label,
                     handler_label,
+                    span: start_span.merge(&self.curr_span()),
                 }
             }
+
             _ => {
-                return Err(ParserError::Malformed {
-                    component: "Phoron directive",
-                    details: "invalid Phoron directive",
-                })
+                unreachable!()
             }
         })
     }
 
-    fn parse_ub(&mut self) -> ParserResult<u8> {
-        if let TokenKind::TInt(n) = self.see() {
-            let n = *n as u8;
+    fn parse_ub(&mut self) -> Option<u8> {
+        if let TokenKind::TInt(n) = self.see().kind {
             self.advance();
-
-            Ok(n)
+            Some(n as u8)
         } else {
-            Err(ParserError::Malformed {
-                component: "unsigned byte",
-                details: "invalid unsigned byte",
-            })
+            None
         }
     }
 
-    fn parse_sb(&mut self) -> ParserResult<i8> {
-        if let TokenKind::TInt(n) = self.see() {
-            let n = *n as i8;
+    fn parse_sb(&mut self) -> Option<i8> {
+        if let TokenKind::TInt(n) = self.see().kind {
             self.advance();
-
-            Ok(n)
+            Some(n as i8)
         } else {
-            Err(ParserError::Malformed {
-                component: "signed byte",
-                details: "invalid signed byte",
-            })
+            None
         }
     }
 
-    fn parse_us(&mut self) -> ParserResult<u16> {
-        if let TokenKind::TInt(n) = self.see() {
-            let n = *n as u16;
+    fn parse_us(&mut self) -> Option<u16> {
+        if let TokenKind::TInt(n) = self.see().kind {
             self.advance();
-
-            Ok(n)
+            Some(n as u16)
         } else {
-            Err(ParserError::Malformed {
-                component: "unsigned short",
-                details: "invalid unsigned short",
-            })
+            None
         }
     }
 
-    fn parse_ss(&mut self) -> ParserResult<i16> {
-        if let TokenKind::TInt(n) = self.see() {
-            let n = *n as i16;
+    fn parse_ss(&mut self) -> Option<i16> {
+        if let TokenKind::TInt(n) = self.see().kind {
             self.advance();
-
-            Ok(n)
+            Some(n as i16)
         } else {
-            Err(ParserError::Malformed {
-                component: "signed short",
-                details: "invalid signed short",
-            })
+            None
         }
     }
 
-    fn parse_si(&mut self) -> ParserResult<i32> {
-        if let TokenKind::TInt(n) = self.see() {
-            let n = *n as i32;
+    fn parse_si(&mut self) -> Option<i32> {
+        if let TokenKind::TInt(n) = self.see().kind {
             self.advance();
-
-            Ok(n)
+            Some(n as i32)
         } else {
-            Err(ParserError::Malformed {
-                component: "signed integer",
-                details: "invalid signed integer",
-            })
+            None
         }
     }
 
-    fn parse_table_switches(&mut self) -> ParserResult<Vec<String>> {
+    fn parse_table_switches(&mut self) -> Option<Vec<String>> {
         let mut switches = Vec::new();
 
-        while let TokenKind::TIdent(label) = self.see() {
+        while let TokenKind::TIdent(ref label) = self.see().kind {
             let label = label.to_string();
             self.advance();
 
             switches.push(label);
         }
 
-        Ok(switches)
+        Some(switches)
     }
 
-    fn parse_lookup_switches(&mut self) -> ParserResult<Vec<LookupSwitchPair>> {
+    fn parse_lookup_switches(&mut self) -> Option<Vec<LookupSwitchPair>> {
         let mut switches = Vec::new();
 
-        while let TokenKind::TInt(key) = self.see() {
-            let key = *key as i32;
+        while let TokenKind::TInt(key) = self.see().kind {
             self.advance();
 
-            if let TokenKind::TColon = self.see() {
+            if let TokenKind::TColon = self.see().kind {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "lookupswitch",
-                    component: "label for switch entry",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label for switch entry"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
-                switches.push(LookupSwitchPair { key, label })
-            } else {
-                return Err(ParserError::Malformed {
-                    component: "lookupswitch",
-                    details: "missing : in lookupswitch pair",
+
+                switches.push(LookupSwitchPair {
+                    key: key as i32,
+                    label,
                 });
+            } else {
+                DiagnosticManager::report_diagnostic(
+                    &self.lexer.source_file,
+                    Stage::Parser,
+                    Level::Error,
+                    self.curr_span(),
+                    format!("missing : in lookupswitch pair"),
+                );
+                self.errored |= true;
             }
         }
 
-        Ok(switches)
+        Some(switches)
     }
 
-    fn parse_default_switch_pair(&mut self) -> ParserResult<String> {
-        if let TokenKind::TDefault = self.see() {
+    fn parse_default_switch_pair(&mut self) -> Option<String> {
+        if let TokenKind::TDefault = self.see().kind {
             self.advance();
 
-            if let TokenKind::TColon = self.see() {
+            if let TokenKind::TColon = self.see().kind {
                 self.advance();
 
                 let label = self.parse_label()?;
-                Ok(label)
+                Some(label)
             } else {
-                Err(ParserError::Malformed {
-                    component: "default switch pair",
-                    details: "misasing : in default switch pair",
-                })
+                DiagnosticManager::report_diagnostic(
+                    &self.lexer.source_file,
+                    Stage::Parser,
+                    Level::Error,
+                    self.curr_span(),
+                    format!("missing : in default switch pair"),
+                );
+                self.errored |= true;
+
+                None
             }
         } else {
-            Err(ParserError::Missing {
-                instr: "parsing default switch pair",
-                component: "`default` keyword",
-            })
+            DiagnosticManager::report_diagnostic(
+                &self.lexer.source_file,
+                Stage::Parser,
+                Level::Error,
+                self.curr_span(),
+                format!("missing default keyword"),
+            );
+            self.errored |= true;
+
+            None
         }
     }
 
-    fn parse_jvm_instruction(&mut self) -> ParserResult<JvmInstruction> {
-        Ok(match self.see() {
+    fn parse_jvm_instruction(&mut self) -> Option<JvmInstruction> {
+        Some(match self.see().kind {
             // aaload
             TokenKind::TAaload => {
                 self.advance();
@@ -897,10 +1082,19 @@ impl<'p> Parser<'p> {
             TokenKind::TAload => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "aload",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
+
                 JvmInstruction::Aload { varnum }
             }
 
@@ -933,12 +1127,19 @@ impl<'p> Parser<'p> {
             TokenKind::TAnewarray => {
                 self.advance();
 
-                let component_type =
-                    self.parse_field_descriptor()
-                        .map_err(|_| ParserError::Missing {
-                            instr: "anewarray",
-                            component: "compoenent type",
-                        })?;
+                let component_type = self.parse_field_descriptor().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing component type"),
+                    );
+                    self.errored |= true;
+
+                    Some(PhoronFieldDescriptor::default())
+                })?;
+
                 JvmInstruction::Anewarray { component_type }
             }
 
@@ -958,10 +1159,19 @@ impl<'p> Parser<'p> {
             TokenKind::TAstore => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "astore",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
+
                 JvmInstruction::Astore { varnum }
             }
 
@@ -1011,9 +1221,17 @@ impl<'p> Parser<'p> {
             TokenKind::TBipush => {
                 self.advance();
 
-                let sb = self.parse_sb().map_err(|_| ParserError::Missing {
-                    instr: "bipush",
-                    component: "numeric signed byte constant",
+                let sb = self.parse_sb().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing bute constant"),
+                    );
+                    self.errored |= true;
+
+                    Some(i8::default())
                 })?;
 
                 JvmInstruction::Bipush(sb)
@@ -1035,12 +1253,19 @@ impl<'p> Parser<'p> {
             TokenKind::TCheckcast => {
                 self.advance();
 
-                let cast_type =
-                    self.parse_field_descriptor()
-                        .map_err(|_| ParserError::Missing {
-                            instr: "checkcast",
-                            component: "cast type",
-                        })?;
+                let cast_type = self.parse_field_descriptor().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing cast type"),
+                    );
+                    self.errored |= true;
+
+                    Some(PhoronFieldDescriptor::default())
+                })?;
+
                 JvmInstruction::Checkcast { cast_type }
             }
 
@@ -1114,9 +1339,17 @@ impl<'p> Parser<'p> {
             TokenKind::TDload => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "doad",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("misisng var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Dload { varnum }
@@ -1174,9 +1407,17 @@ impl<'p> Parser<'p> {
             TokenKind::TDstore => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "dstor",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Dstore { varnum }
@@ -1324,10 +1565,19 @@ impl<'p> Parser<'p> {
             TokenKind::TFload => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "fload",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
+
                 JvmInstruction::Fload { varnum }
             }
 
@@ -1383,10 +1633,19 @@ impl<'p> Parser<'p> {
             TokenKind::TFstore => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "fstore",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
+
                 JvmInstruction::Fstore { varnum }
             }
 
@@ -1422,75 +1681,138 @@ impl<'p> Parser<'p> {
 
             // getfield <field-spec> <descriptor>
             TokenKind::TGetfield => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(gf_str) = self.see() {
+                if let TokenKind::TIdent(ref gf_str) = self.see().kind {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        let field_descriptor =
-                            self.parse_field_descriptor()
-                                .map_err(|_| ParserError::Missing {
-                                    instr: "getfield",
-                                    component: "field descriptor",
-                                })?;
+                        let field_descriptor = self.parse_field_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing field descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronFieldDescriptor::default())
+                        })?;
 
                         JvmInstruction::Getfield {
                             class_name,
                             field_name,
                             field_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "getfield",
-                            component: "field name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing field name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Getfield {
+                            class_name: String::default(),
+                            field_name: String::default(),
+                            field_descriptor: PhoronFieldDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "getfield",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Getfield {
+                        class_name: String::default(),
+                        field_name: String::default(),
+                        field_descriptor: PhoronFieldDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
             // getstatic <field-spec> <descriptor>
             TokenKind::TGetstatic => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(gs_str) = self.see() {
+                if let TokenKind::TIdent(ref gs_str) = self.see().kind {
                     if let Some(pos) = gs_str.rfind('/') {
                         let class_name = gs_str[..pos].to_owned();
                         let field_name = gs_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        let field_descriptor =
-                            self.parse_field_descriptor()
-                                .map_err(|_| ParserError::Missing {
-                                    instr: "getstatic",
-                                    component: "field descriptor",
-                                })?;
+                        let field_descriptor = self.parse_field_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing field descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronFieldDescriptor::default())
+                        })?;
 
                         JvmInstruction::Getstatic {
                             class_name,
                             field_name,
                             field_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "getstatic",
-                            component: "field name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing field name"),
+                        );
+
+                        self.errored |= true;
+
+                        JvmInstruction::Getstatic {
+                            class_name: String::default(),
+                            field_name: String::default(),
+                            field_descriptor: PhoronFieldDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "getstatic",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Getstatic {
+                        class_name: String::default(),
+                        field_name: String::default(),
+                        field_descriptor: PhoronFieldDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
@@ -1498,10 +1820,19 @@ impl<'p> Parser<'p> {
             TokenKind::TGoto => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "goto",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Goto { label }
             }
 
@@ -1509,10 +1840,19 @@ impl<'p> Parser<'p> {
             TokenKind::TGotow => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "gotow",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Gotow { label }
             }
 
@@ -1628,9 +1968,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfacmpeq => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifacmpeq",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifacmpeq { label }
@@ -1640,9 +1988,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfacmpne => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifacmpne",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifacmpne { label }
@@ -1652,9 +2008,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIficmpeq => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ificmpeq",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ificmpeq { label }
@@ -1664,9 +2028,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIficmpge => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ificmpge",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ificmpge { label }
@@ -1676,10 +2048,19 @@ impl<'p> Parser<'p> {
             TokenKind::TIficmpgt => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifcimpgt",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Ificmpgt { label }
             }
 
@@ -1687,10 +2068,19 @@ impl<'p> Parser<'p> {
             TokenKind::TIficmple => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ificmple",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Ificmple { label }
             }
 
@@ -1698,10 +2088,19 @@ impl<'p> Parser<'p> {
             TokenKind::TIficmplt => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ificmplt",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Ificmplt { label }
             }
 
@@ -1709,26 +2108,37 @@ impl<'p> Parser<'p> {
             TokenKind::TIfne => {
                 self.advance();
 
-                if let TokenKind::TIdent(label) = self.see() {
-                    let label = label.to_string();
-                    self.advance();
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
 
-                    JvmInstruction::Ifne { label }
-                } else {
-                    return Err(ParserError::Missing {
-                        instr: "ifne",
-                        component: "label",
-                    });
-                }
+                    Some(String::default())
+                })?;
+
+                JvmInstruction::Ifne { label }
             }
 
             // if_icmpne <label>
             TokenKind::TIficmpne => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ificmpne",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ificmpne { label }
@@ -1738,9 +2148,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfeq => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "iceq",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifeq { label }
@@ -1750,9 +2168,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfge => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifge",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifge { label }
@@ -1762,9 +2188,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfgt => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifgt",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifgt { label }
@@ -1774,9 +2208,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfle => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifle",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifle { label }
@@ -1786,9 +2228,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIflt => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "iflt",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Iflt { label }
@@ -1798,9 +2248,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfnonnull => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifnonnull",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifnonnull { label }
@@ -1810,9 +2268,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIfnull => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "ifnull",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::Ifnull { label }
@@ -1822,14 +2288,30 @@ impl<'p> Parser<'p> {
             TokenKind::TIinc => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "iinc",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
-                let delta = self.parse_sb().map_err(|_| ParserError::Missing {
-                    instr: "iinc",
-                    component: "delta",
+                let delta = self.parse_sb().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing delta"),
+                    );
+                    self.errored |= true;
+
+                    Some(i8::default())
                 })?;
 
                 JvmInstruction::Iinc { varnum, delta }
@@ -1839,9 +2321,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIload => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "iload",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Iload { varnum }
@@ -1887,166 +2377,308 @@ impl<'p> Parser<'p> {
             TokenKind::TInstanceof => {
                 self.advance();
 
-                let check_type =
-                    self.parse_field_descriptor()
-                        .map_err(|_| ParserError::Missing {
-                            instr: "instanceof",
-                            component: "check type",
-                        })?;
+                let check_type = self.parse_field_descriptor().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing check type"),
+                    );
+                    self.errored |= true;
+
+                    Some(PhoronFieldDescriptor::default())
+                })?;
+
                 JvmInstruction::Instanceof { check_type }
             }
 
             // invokeinterface <method-spec> <n>
             TokenKind::TInvokeinterface => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(ref is_str) = self.see().kind {
                     if let Some(pos) = is_str.rfind('/') {
                         let interface_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        let ub = self.parse_ub().map_err(|_| ParserError::Missing {
-                            instr: "invokeinterface",
-                            component: "numeric unsigned byte constant",
+                        let ub = self.parse_ub().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing unsigned byte constant"),
+                            );
+                            self.errored |= true;
+
+                            Some(u8::default())
                         })?;
 
-                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
-                            JvmInstruction::Invokeinterface {
-                                interface_name,
-                                method_name,
-                                method_descriptor,
-                                ub,
-                            }
-                        } else {
-                            return Err(ParserError::Missing {
-                                instr: "invokeinterface",
-                                component: "method descriptor",
-                            });
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokeinterface {
+                            interface_name,
+                            method_name,
+                            method_descriptor,
+                            ub,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "invokeinterface",
-                            component: "method name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing method name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Invokeinterface {
+                            interface_name: String::default(),
+                            method_name: String::default(),
+                            method_descriptor: PhoronMethodDescriptor::default(),
+                            ub: u8::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "invokeinterface",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Invokeinterface {
+                        interface_name: String::default(),
+                        method_name: String::default(),
+                        method_descriptor: PhoronMethodDescriptor::default(),
+                        ub: u8::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
             // invokespecial <method-spec>
             TokenKind::TInvokespecial => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(ref is_str) = self.see().kind {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
-                            JvmInstruction::Invokespecial {
-                                class_name,
-                                method_name,
-                                method_descriptor,
-                            }
-                        } else {
-                            return Err(ParserError::Missing {
-                                instr: "invokespecial",
-                                component: "method descriptor",
-                            });
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokespecial {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "invokespecial",
-                            component: "method name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing method name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Invokespecial {
+                            class_name: String::default(),
+                            method_name: String::default(),
+                            method_descriptor: PhoronMethodDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "invokespecial",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Invokespecial {
+                        class_name: String::default(),
+                        method_name: String::default(),
+                        method_descriptor: PhoronMethodDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
             // invokestatic <method-spec>
             TokenKind::TInvokestatic => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(ref is_str) = self.see().kind {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
-                            JvmInstruction::Invokestatic {
-                                class_name,
-                                method_name,
-                                method_descriptor,
-                            }
-                        } else {
-                            return Err(ParserError::Missing {
-                                instr: "invokestatic",
-                                component: "method descriptor",
-                            });
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokestatic {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "invokestatic",
-                            component: "method name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing method name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Invokestatic {
+                            class_name: String::default(),
+                            method_name: String::default(),
+                            method_descriptor: PhoronMethodDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "invokestatic",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Invokestatic {
+                        class_name: String::default(),
+                        method_name: String::default(),
+                        method_descriptor: PhoronMethodDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
             // invokevirtual <method-spec>
             TokenKind::TInvokevirtual => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(is_str) = self.see() {
+                if let TokenKind::TIdent(ref is_str) = self.see().kind {
                     if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        if let Ok(method_descriptor) = self.parse_method_descriptor() {
-                            JvmInstruction::Invokevirtual {
-                                class_name,
-                                method_name,
-                                method_descriptor,
-                            }
-                        } else {
-                            return Err(ParserError::Missing {
-                                instr: "invokevirtual",
-                                component: "method descriptor",
-                            });
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokevirtual {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "invokevirtual",
-                            component: "method name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing method name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Invokevirtual {
+                            class_name: String::default(),
+                            method_name: String::default(),
+                            method_descriptor: PhoronMethodDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "invokevirtual",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+
+                    self.errored |= true;
+
+                    JvmInstruction::Invokevirtual {
+                        class_name: String::default(),
+                        method_name: String::default(),
+                        method_descriptor: PhoronMethodDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
@@ -2084,9 +2716,17 @@ impl<'p> Parser<'p> {
             TokenKind::TIstore => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "istore",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Istore { varnum }
@@ -2138,10 +2778,19 @@ impl<'p> Parser<'p> {
             TokenKind::TJsr => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "jsr",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Jsr { label }
             }
 
@@ -2149,10 +2798,19 @@ impl<'p> Parser<'p> {
             TokenKind::TJsrw => {
                 self.advance();
 
-                let label = self.parse_label().map_err(|_| ParserError::Missing {
-                    instr: "jsrw",
-                    component: "label",
+                let label = self.parse_label().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing label"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
+
                 JvmInstruction::Jsrw { label }
             }
 
@@ -2220,7 +2878,7 @@ impl<'p> Parser<'p> {
             TokenKind::TLdc => {
                 self.advance();
 
-                match self.see() {
+                match &self.see().kind {
                     TokenKind::TInt(n) => {
                         let ival = *n as i32;
                         self.advance();
@@ -2233,17 +2891,23 @@ impl<'p> Parser<'p> {
                         JvmInstruction::Ldc(LdcValue::Float(fval))
                     }
 
-                    TokenKind::TString(s) => {
+                    TokenKind::TString(ref s) => {
                         let sval = s.to_owned();
                         self.advance();
                         JvmInstruction::Ldc(LdcValue::QuotedString(sval))
                     }
 
-                    _ => {
-                        return Err(ParserError::IncorrectTypeOrValue {
-                            instr: "lcd",
-                            type_or_val: "integer, float, or quoted string constant",
-                        })
+                    tok_kind => {
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            self.curr_span(),
+                            format!("found {tok_kind:?}, but I expected an int, float, or string value here")
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Ldc(LdcValue::default())
                     }
                 }
             }
@@ -2252,7 +2916,7 @@ impl<'p> Parser<'p> {
             TokenKind::TLdcw => {
                 self.advance();
 
-                match self.see() {
+                match &self.see().kind {
                     TokenKind::TInt(n) => {
                         let ival = *n as i32;
                         self.advance();
@@ -2271,11 +2935,19 @@ impl<'p> Parser<'p> {
                         JvmInstruction::Ldcw(LdcwValue::QuotedString(sval))
                     }
 
-                    _ => {
-                        return Err(ParserError::IncorrectTypeOrValue {
-                            instr: "ldcw",
-                            type_or_val: "integer or float constant",
-                        })
+                    tok_kind => {
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            self.curr_span(),
+                            format!(
+                                "found {tok_kind:?}, but I expected an int, float, or string here"
+                            ),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Ldcw(LdcwValue::default())
                     }
                 }
             }
@@ -2284,7 +2956,7 @@ impl<'p> Parser<'p> {
             TokenKind::TLdc2w => {
                 self.advance();
 
-                match self.see() {
+                match &self.see().kind {
                     TokenKind::TInt(n) => {
                         let lval = *n as i64;
                         self.advance();
@@ -2297,11 +2969,17 @@ impl<'p> Parser<'p> {
                         JvmInstruction::Ldc2w(Ldc2wValue::Double(dval))
                     }
 
-                    _ => {
-                        return Err(ParserError::IncorrectTypeOrValue {
-                            instr: "lcd2w",
-                            type_or_val: "long or double constant",
-                        })
+                    tok_kind => {
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            self.curr_span(),
+                            format!("found {tok_kind:?}, but I expected a long or double here"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Ldc2w(Ldc2wValue::default())
                     }
                 }
             }
@@ -2316,9 +2994,17 @@ impl<'p> Parser<'p> {
             TokenKind::TLload => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "iload",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Lload { varnum }
@@ -2364,6 +3050,8 @@ impl<'p> Parser<'p> {
             // LookupSwitchPair      <-  Integer          COLON_symbol       Label
             // DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label
             TokenKind::TLookupswitch => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
                 let mut switches = self.parse_lookup_switches()?;
@@ -2372,7 +3060,11 @@ impl<'p> Parser<'p> {
 
                 let default = self.parse_default_switch_pair()?;
 
-                JvmInstruction::Lookupswitch { switches, default }
+                JvmInstruction::Lookupswitch {
+                    switches,
+                    default,
+                    span: start_span.merge(&self.curr_span()),
+                }
             }
 
             // lor
@@ -2409,9 +3101,17 @@ impl<'p> Parser<'p> {
             TokenKind::TLstore => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "lstore",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Lstore { varnum }
@@ -2472,23 +3172,40 @@ impl<'p> Parser<'p> {
             }
 
             TokenKind::TMultianewarray => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                let component_type =
-                    self.parse_field_descriptor()
-                        .map_err(|_| ParserError::Missing {
-                            instr: "multianewarray",
-                            component: "component type",
-                        })?;
+                let component_type = self.parse_field_descriptor().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing component type"),
+                    );
+                    self.errored |= true;
 
-                let dimensions = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "multianewarray",
-                    component: "dimensions",
+                    Some(PhoronFieldDescriptor::default())
+                })?;
+
+                let dimensions = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing dimensions"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Multianewarray {
                     component_type,
                     dimensions,
+                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
@@ -2496,9 +3213,17 @@ impl<'p> Parser<'p> {
             TokenKind::TNew => {
                 self.advance();
 
-                let class_name = self.parse_class_name().map_err(|_| ParserError::Missing {
-                    instr: "new",
-                    component: "class name",
+                let class_name = self.parse_class_name().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
                 })?;
 
                 JvmInstruction::New { class_name }
@@ -2508,7 +3233,7 @@ impl<'p> Parser<'p> {
             TokenKind::TNewarray => {
                 self.advance();
 
-                if let TokenKind::TIdent(prim_type) = self.see() {
+                if let TokenKind::TIdent(ref prim_type) = self.see().kind {
                     match prim_type.as_str() {
                         "char" => {
                             self.advance();
@@ -2559,18 +3284,36 @@ impl<'p> Parser<'p> {
                             }
                         }
 
-                        _ => {
-                            return Err(ParserError::IncorrectTypeOrValue {
-                                instr: "newarray",
-                                type_or_val: "primitive type",
-                            })
+                        tok_kind => {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!(
+                                    "{tok_kind:?} is not a primitive type, which I expected here"
+                                ),
+                            );
+                            self.errored |= true;
+
+                            JvmInstruction::Newarray {
+                                component_type: PhoronBaseType::default(),
+                            }
                         }
                     }
                 } else {
-                    return Err(ParserError::Malformed {
-                        component: "newarray",
-                        details: "malformed newarray instruction",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("malformed instruction"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Newarray {
+                        component_type: PhoronBaseType::default(),
+                    }
                 }
             }
 
@@ -2594,75 +3337,137 @@ impl<'p> Parser<'p> {
 
             // putfield <field-sepc> <descriptor>
             TokenKind::TPutfield => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(gf_str) = self.see() {
+                if let TokenKind::TIdent(ref gf_str) = self.see().kind {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        let field_descriptor =
-                            self.parse_field_descriptor()
-                                .map_err(|_| ParserError::Missing {
-                                    instr: "putfield",
-                                    component: "field descriptor",
-                                })?;
+                        let field_descriptor = self.parse_field_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing field descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronFieldDescriptor::default())
+                        })?;
 
                         JvmInstruction::Putfield {
                             class_name,
                             field_name,
                             field_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "putfield",
-                            component: "field name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing field name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Putfield {
+                            class_name: String::default(),
+                            field_name: String::default(),
+                            field_descriptor: PhoronFieldDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "putfield",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Putfield {
+                        class_name: String::default(),
+                        field_name: String::default(),
+                        field_descriptor: PhoronFieldDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
             // putstatic <field-spec> <descriptor>
             TokenKind::TPutstatic => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                if let TokenKind::TIdent(gf_str) = self.see() {
+                if let TokenKind::TIdent(ref gf_str) = self.see().kind {
                     if let Some(pos) = gf_str.rfind('/') {
                         let class_name = gf_str[..pos].to_owned();
                         let field_name = gf_str[pos + 1..].to_owned();
 
                         self.advance();
 
-                        let field_descriptor =
-                            self.parse_field_descriptor()
-                                .map_err(|_| ParserError::Missing {
-                                    instr: "putstatic",
-                                    component: "field descriptor",
-                                })?;
+                        let field_descriptor = self.parse_field_descriptor().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing field descriptor"),
+                            );
+                            self.errored |= true;
+
+                            Some(PhoronFieldDescriptor::default())
+                        })?;
 
                         JvmInstruction::Putstatic {
                             class_name,
                             field_name,
                             field_descriptor,
+                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
-                        return Err(ParserError::Missing {
-                            instr: "putstatic",
-                            component: "field name",
-                        });
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing field name"),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::Putstatic {
+                            class_name: String::default(),
+                            field_name: String::default(),
+                            field_descriptor: PhoronFieldDescriptor::default(),
+                            span: Span::default(),
+                        }
                     }
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "putfield",
-                        component: "class name",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing class name"),
+                    );
+                    self.errored |= true;
+
+                    JvmInstruction::Putstatic {
+                        class_name: String::default(),
+                        field_name: String::default(),
+                        field_descriptor: PhoronFieldDescriptor::default(),
+                        span: Span::default(),
+                    }
                 }
             }
 
@@ -2670,9 +3475,17 @@ impl<'p> Parser<'p> {
             TokenKind::TRet => {
                 self.advance();
 
-                let varnum = self.parse_ub().map_err(|_| ParserError::Missing {
-                    instr: "ret",
-                    component: "varnum",
+                let varnum = self.parse_ub().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing var num"),
+                    );
+                    self.errored |= true;
+
+                    Some(u8::default())
                 })?;
 
                 JvmInstruction::Ret { varnum }
@@ -2700,9 +3513,17 @@ impl<'p> Parser<'p> {
             TokenKind::TSipush => {
                 self.advance();
 
-                let ss = self.parse_ss().map_err(|_| ParserError::Missing {
-                    instr: "sipush",
-                    component: "numeric signed short constant",
+                let ss = self.parse_ss().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing signed 16-byte constant"),
+                    );
+                    self.errored |= true;
+
+                    Some(i16::default())
                 })?;
 
                 JvmInstruction::Sipush(ss)
@@ -2717,31 +3538,57 @@ impl<'p> Parser<'p> {
             // tableswitch    <-  'tableswitch'   Low   High  TableSwitchSingleton*  DefaultSwitchPair
             // TableSwitchSingleton  <-  Label
             TokenKind::TTableswitch => {
+                let start_span = self.curr_span();
+
                 self.advance();
 
-                let low = self.parse_si().map_err(|_| ParserError::Missing {
-                    instr: "tableswitch",
-                    component: "low",
+                let low = self.parse_si().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `low` value"),
+                    );
+                    self.errored |= true;
+
+                    Some(i32::default())
                 })?;
 
-                let high = self.parse_si().map_err(|_| ParserError::Missing {
-                    instr: "tableswitch",
-                    component: "high",
+                let high = self.parse_si().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing `high` value"),
+                    );
+                    self.errored |= true;
+
+                    Some(i32::default())
                 })?;
 
                 let switches = self.parse_table_switches()?;
-                let default =
-                    self.parse_default_switch_pair()
-                        .map_err(|_| ParserError::Missing {
-                            instr: "tableswitch",
-                            component: "default",
-                        })?;
+
+                let default = self.parse_default_switch_pair().or_else(|| {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing default case"),
+                    );
+                    self.errored |= true;
+
+                    Some(String::default())
+                })?;
 
                 JvmInstruction::Tableswitch {
                     low,
                     high,
                     switches,
                     default,
+                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
@@ -2752,13 +3599,21 @@ impl<'p> Parser<'p> {
             TokenKind::Twide => {
                 self.advance();
 
-                match self.see() {
+                match &self.see().kind {
                     TokenKind::TIload => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide iload",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Iload { varnum })
@@ -2767,9 +3622,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TFload => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide fload",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Fload { varnum })
@@ -2778,9 +3641,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TAload => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide aload",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Aload { varnum })
@@ -2789,9 +3660,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TLload => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide lload",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Lload { varnum })
@@ -2800,9 +3679,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TDload => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide dload",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Dload { varnum })
@@ -2811,9 +3698,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TIstore => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide istore",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Istore { varnum })
@@ -2822,9 +3717,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TFstore => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide fstore",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Fstore { varnum })
@@ -2833,9 +3736,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TAstore => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide astore",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Astore { varnum })
@@ -2844,9 +3755,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TLstore => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide lstore",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Lstore { varnum })
@@ -2855,9 +3774,17 @@ impl<'p> Parser<'p> {
                     TokenKind::TDstore => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide dstore",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::Dstore { varnum })
@@ -2866,39 +3793,61 @@ impl<'p> Parser<'p> {
                     TokenKind::TIinc => {
                         self.advance();
 
-                        let varnum = self.parse_us().map_err(|_| ParserError::Missing {
-                            instr: "wide iinc",
-                            component: "varnum",
+                        let varnum = self.parse_us().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing var num"),
+                            );
+                            self.errored |= true;
+
+                            Some(u16::default())
                         })?;
 
-                        let delta = self.parse_ss().map_err(|_| ParserError::Missing {
-                            instr: "wide iinc",
-                            component: "delta",
+                        let delta = self.parse_ss().or_else(|| {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                self.curr_span(),
+                                format!("missing delta"),
+                            );
+                            self.errored |= true;
+
+                            Some(i16::default())
                         })?;
 
                         JvmInstruction::Wide(WideInstruction::IInc { varnum, delta })
                     }
 
-                    _ => {
-                        return Err(ParserError::IncorrectTypeOrValue {
-                            instr: "wide",
-                            type_or_val: "inocrrect instruction following `wide` instruction",
-                        })
+                    instr => {
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            self.curr_span(),
+                            format!(
+                                "{instr:?} - incorrect instruction following `wide` instruction"
+                            ),
+                        );
+                        self.errored |= true;
+
+                        JvmInstruction::default()
                     }
                 }
             }
 
             _ => {
-                return Err(ParserError::Unknown {
-                    component: "jvm instruction",
-                })
+                unreachable!()
             }
         })
     }
 
     /// Instruction <- line_comment* (Directive / JvmInstruction / Label) line_comment?  newline
-    fn parse_instruction(&mut self) -> ParserResult<PhoronInstruction> {
-        Ok(match self.see() {
+    fn parse_instruction(&mut self) -> Option<PhoronInstruction> {
+        Some(match &self.see().kind {
             TThrows | TCatch | TLimit | TVar | TLine => {
                 PhoronInstruction::PhoronDirective(self.parse_directive()?)
             }
@@ -2933,69 +3882,129 @@ impl<'p> Parser<'p> {
             }
 
             TokenKind::TIdent(label_str) => {
+                let start_span = self.curr_span();
+
                 let label = label_str.to_string();
                 self.advance();
 
-                if let TokenKind::TColon = self.see() {
+                if let Token {
+                    kind: TokenKind::TColon,
+                    span,
+                } = self.see()
+                {
                     self.advance();
                     PhoronInstruction::PhoronLabel(label)
                 } else {
-                    return Err(ParserError::Malformed {
-                        component: "label",
-                        details: "malformed label",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span,
+                        format!("unknown instruction or label"),
+                    );
+
+                    if self.see().kind != TokenKind::TEnd {
+                        self.advance();
+                    }
+
+                    self.errored |= true;
+
+                    PhoronInstruction::default()
                 }
             }
+
             _ => {
-                return Err(ParserError::Malformed {
-                    component: "Phoron instruction",
-                    details: "malformed instruction",
-                })
+                if self.see().kind == TokenKind::TEnd {
+                    PhoronInstruction::default()
+                } else {
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("{:?} unknown instruction", self.see().kind),
+                    );
+
+                    self.advance();
+                    self.errored |= true;
+
+                    PhoronInstruction::default()
+                }
             }
         })
     }
 
-    fn parse_instructions(&mut self) -> ParserResult<Vec<PhoronInstruction>> {
+    fn parse_instructions(&mut self) -> Option<Vec<PhoronInstruction>> {
         let mut instructions = Vec::new();
 
-        while self.see() != &TokenKind::TEof {
-            if let TokenKind::TEnd = self.see() {
+        while self.see().kind != TokenKind::TEof {
+            if let Token {
+                kind: TokenKind::TEnd,
+                span,
+            } = self.see()
+            {
                 self.advance();
-                if let TokenKind::TEndMethod = self.see() {
+
+                if let TokenKind::TEndMethod = self.see().kind {
                     self.advance();
                     break;
                 } else {
-                    return Err(ParserError::Missing {
-                        instr: "parsing instructions",
-                        component: "end method marker",
-                    });
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        self.curr_span(),
+                        format!("missing end method marker"),
+                    );
+
+                    self.advance();
+                    self.errored |= true;
+
+                    return Some(vec![]);
                 }
             } else {
                 instructions.push(self.parse_instruction()?);
             }
         }
 
-        Ok(instructions)
+        Some(instructions)
     }
 
     /// MethodDescriptor <- LPAREN_symbol ParameterDescriptor* RPAREN_symbol ReturnDescriptor
     /// ParameterDescriptor <- FieldType
     /// ReturnDescriptor <- FieldType / VoidType
     /// VoidType <- 'V'
-    fn parse_method_descriptor(&mut self) -> ParserResult<PhoronMethodDescriptor> {
-        if let TokenKind::TLeftParen = self.see() {
+    fn parse_method_descriptor(&mut self) -> Option<PhoronMethodDescriptor> {
+        let start_span = self.curr_span();
+
+        if let TokenKind::TLeftParen = self.see().kind {
             self.advance();
 
             let ident_tok = self.see();
-            let param_descriptor = if let TokenKind::TIdent(ident) = ident_tok {
+            let param_descriptor = if let Token {
+                kind: TokenKind::TIdent(ident),
+                span,
+            } = ident_tok
+            {
                 let mut param_parser = tdp::TypeParser::new(ident);
-                let param_desc =
-                    param_parser
-                        .parse_param_descriptor()
-                        .map_err(|_| ParserError::Missing {
-                            instr: "method descriptor",
-                            component: "param descriptor",
-                        })?;
+
+                let param_desc = match param_parser.parse_param_descriptor() {
+                    Err(err) => {
+                        DiagnosticManager::report_diagnostic(
+                            &self.lexer.source_file,
+                            Stage::Parser,
+                            Level::Error,
+                            start_span.merge(&self.curr_span()),
+                            format!("missing param descriptor"),
+                        );
+
+                        self.errored |= true;
+
+                        vec![]
+                    }
+                    Ok(param_desc) => param_desc,
+                };
+
                 self.advance();
 
                 param_desc
@@ -3003,43 +4012,84 @@ impl<'p> Parser<'p> {
                 vec![]
             };
 
-            if let TokenKind::TRightParen = self.see() {
+            if let Token {
+                kind: TokenKind::TRightParen,
+                span,
+            } = self.see()
+            {
                 self.advance();
 
                 let ident_tok = self.see();
-                if let TokenKind::TIdent(ret) = ident_tok {
+                if let Token {
+                    kind: TokenKind::TIdent(ret),
+                    span,
+                } = ident_tok
+                {
                     let mut ret_parser = tdp::TypeParser::new(ret);
-                    let return_descriptor =
-                        ret_parser
-                            .parse_return_descriptor()
-                            .map_err(|_| ParserError::Missing {
-                                instr: "method descriptor",
-                                component: "return descriptor",
-                            })?;
+                    let return_descriptor = match ret_parser.parse_return_descriptor() {
+                        Err(err) => {
+                            DiagnosticManager::report_diagnostic(
+                                &self.lexer.source_file,
+                                Stage::Parser,
+                                Level::Error,
+                                start_span.merge(&self.curr_span()),
+                                format!("missing return descriptor"),
+                            );
+
+                            self.errored |= true;
+
+                            PhoronReturnDescriptor::default()
+                        }
+                        Ok(ret_desc) => ret_desc,
+                    };
 
                     self.advance();
 
-                    Ok(PhoronMethodDescriptor {
+                    Some(PhoronMethodDescriptor {
                         param_descriptor,
                         return_descriptor,
                     })
                 } else {
-                    Err(ParserError::Missing {
-                        instr: "method descriptor",
-                        component: "return descriptor",
-                    })
+                    DiagnosticManager::report_diagnostic(
+                        &self.lexer.source_file,
+                        Stage::Parser,
+                        Level::Error,
+                        start_span.merge(&self.curr_span()),
+                        format!("missing return descriptor"),
+                    );
+
+                    self.advance();
+                    self.errored |= true;
+
+                    None
                 }
             } else {
-                Err(ParserError::Malformed {
-                    component: "method descriptor",
-                    details: "malformed method descriptor",
-                })
+                DiagnosticManager::report_diagnostic(
+                    &self.lexer.source_file,
+                    Stage::Parser,
+                    Level::Error,
+                    start_span.merge(&self.curr_span()),
+                    format!("malformed return descriptorname"),
+                );
+
+                self.advance();
+                self.errored |= true;
+
+                None
             }
         } else {
-            Err(ParserError::Malformed {
-                component: "method descriptor",
-                details: "malformed method descriptor",
-            })
+            DiagnosticManager::report_diagnostic(
+                &self.lexer.source_file,
+                Stage::Parser,
+                Level::Error,
+                start_span.merge(&self.curr_span()),
+                format!("malformed return descriptor name"),
+            );
+
+            self.advance();
+            self.errored |= true;
+
+            None
         }
     }
 
@@ -3047,52 +4097,68 @@ impl<'p> Parser<'p> {
     ///    METHOD_keyword  MethodAccessFlag* MethodName MethodDescriptor newline
     ///      Instruction*
     ///    END_Keyword METHOD_END_keyword newline
-    fn parse_method_def(&mut self) -> ParserResult<PhoronMethodDef> {
+    fn parse_method_def(&mut self) -> Option<PhoronMethodDef> {
+        let start_span = self.curr_span();
+
         self.advance();
 
         let mut access_flags = Vec::new();
-        while self.is_method_access_flag(self.see()) {
-            access_flags.push(self.get_method_acess_flags(&self.see())?);
+        while self.is_method_access_flag(&self.see().kind) {
+            access_flags.push(self.get_method_acess_flags(&self.see().kind));
             self.advance();
         }
 
-        if let TokenKind::TIdent(name_str) = self.see() {
+        if let Token {
+            kind: TokenKind::TIdent(name_str),
+            span,
+        } = self.see()
+        {
             let name = name_str.to_string();
             self.advance();
 
-            let method_descriptor = self.parse_method_descriptor()?;
-            let instructions = self.parse_instructions()?;
+            let method_descriptor = self
+                .parse_method_descriptor()
+                .or(Some(PhoronMethodDescriptor::default()))?;
 
-            Ok(PhoronMethodDef {
+            let instructions = self.parse_instructions().or(Some(vec![]))?;
+
+            Some(PhoronMethodDef {
                 name,
                 access_flags,
                 method_descriptor,
                 instructions,
+                span: start_span.merge(&self.curr_span()),
             })
         } else {
-            Err(ParserError::Missing {
-                instr: "parsing method definition",
-                component: "method name",
-            })
+            DiagnosticManager::report_diagnostic(
+                &self.lexer.source_file,
+                Stage::Parser,
+                Level::Error,
+                start_span.merge(&self.curr_span()),
+                format!("missing method name in method definition"),
+            );
+            self.errored |= true;
+
+            None
         }
     }
 
-    fn parse_method_defs(&mut self) -> ParserResult<Vec<PhoronMethodDef>> {
+    fn parse_method_defs(&mut self) -> Option<Vec<PhoronMethodDef>> {
         let mut method_defs = Vec::new();
 
-        while let TokenKind::TMethod = self.see() {
+        while let TokenKind::TMethod = self.see().kind {
             method_defs.push(self.parse_method_def()?);
         }
 
-        Ok(method_defs)
+        Some(method_defs)
     }
 
     /// Body <- FieldDef* MethodDef*
-    fn parse_body(&mut self) -> ParserResult<PhoronBody> {
-        let field_defs = self.parse_field_defs()?;
-        let method_defs = self.parse_method_defs()?;
+    fn parse_body(&mut self) -> Option<PhoronBody> {
+        let field_defs = self.parse_field_defs().or(Some(vec![]))?;
+        let method_defs = self.parse_method_defs().or(Some(vec![]))?;
 
-        Ok(PhoronBody {
+        Some(PhoronBody {
             field_defs,
             method_defs,
         })
@@ -3102,139 +4168,136 @@ impl<'p> Parser<'p> {
     fn parse_sourcefile_def(&mut self) -> Option<PhoronSourceFileDef> {
         let start_span = self.curr_span();
 
-        if let TokenKind::TIdent(source_file_str) = self.see() {
+        if let Token {
+            kind: TokenKind::TIdent(source_file_str),
+            span,
+        } = self.see()
+        {
             let source_file = source_file_str.to_string();
             self.advance();
 
-            Some(PhoronSourceFileDef { source_file })
+            Some(PhoronSourceFileDef {
+                source_file,
+                span: start_span.merge(&self.curr_span()),
+            })
         } else {
-            let end_span = self.curr_span();
-
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
                 Stage::Parser,
                 Level::Error,
-                start_span.merge(&end_span),
+                start_span.merge(&self.curr_span()),
                 format!("missing source file name for source file definition"),
             );
+            self.errored |= true;
+
             None
         }
     }
 
     /// Header <- SourceFileDef? (ClassDef / InterfaceDef) SuperDef
     fn parse_header(&mut self) -> Option<PhoronHeader> {
-        let start_span = self.curr_span();
-
         self.advance();
 
-        Ok(match self.see() {
+        Some(match &self.see().kind {
             TokenKind::TSource => {
                 self.advance();
 
-                let sourcefile_def = self.parse_sourcefile_def()?;
+                let sourcefile_def = self
+                    .parse_sourcefile_def()
+                    .or(Some(PhoronSourceFileDef::default()))?;
 
-                let class_or_interface_def = match self.see() {
+                let class_or_interface_def = match &self.see().kind {
                     TokenKind::TClass => PhoronClassOrInterface::Class(self.parse_class_def()?),
                     TokenKind::TInterface => {
                         PhoronClassOrInterface::Interface(self.parse_interface_def()?)
                     }
-                    _ => {
-                        let end_span = self.curr_span();
+                    tok_kind => {
                         DiagnosticManager::report_diagnostic(
                             &self.lexer.source_file,
                             Stage::Parser,
                             Level::Error,
-                            start_span.merge(&end_span),
-                            format!("missing class or interface defintion in header"),
+                            self.curr_span(),
+                            format!(" found {tok_kind:?}, but I expected `.class` or `.interface`"),
                         );
+                        self.errored |= true;
 
-                        None
+                        PhoronClassOrInterface::default()
                     }
                 };
 
-                let super_def = self.parse_super_def()?;
-                let implements_defs = self.parse_implements_defs()?;
-
-                let end_span = self.curr_span();
+                let super_def = self.parse_super_def().or(Some(PhoronSuperDef::default()))?;
+                let implements_defs = self.parse_implements_defs().or(Some(vec![]))?;
 
                 PhoronHeader {
                     sourcefile_def,
                     class_or_interface_def,
                     super_def,
                     implements_defs,
-                    span: start_span.merge(&end_span),
                 }
             }
 
             TokenKind::TClass => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.source_file().src.clone(),
+                    source_file: self.lexer.source_file.src.to_string(),
+                    span: self.curr_span(),
                 };
 
-                let class_or_interface_def = PhoronClassOrInterface::Class(self.parse_class_def()?);
+                let class_or_interface_def = PhoronClassOrInterface::Class(
+                    self.parse_class_def().or(Some(PhoronClassDef::default()))?,
+                );
                 let super_def = self.parse_super_def()?;
-                let implements_defs = self.parse_implements_defs()?;
-
-                let end_span = self.curr_span();
+                let implements_defs = self.parse_implements_defs().or(Some(vec![]))?;
 
                 PhoronHeader {
                     sourcefile_def,
                     class_or_interface_def,
                     super_def,
                     implements_defs,
-                    span: start_span.merge(&end_span),
                 }
             }
 
             TokenKind::TInterface => {
                 let sourcefile_def = PhoronSourceFileDef {
-                    source_file: self.lexer.src_file()?.to_string(),
+                    source_file: self.lexer.src_file().to_string(),
+                    span: self.curr_span(),
                 };
 
-                let class_or_interface_def =
-                    PhoronClassOrInterface::Interface(self.parse_interface_def()?);
+                let class_or_interface_def = PhoronClassOrInterface::Interface(
+                    self.parse_interface_def()
+                        .or(Some(PhoronInterfaceDef::default()))?,
+                );
                 let super_def = self.parse_super_def()?;
-                let implements_defs = self.parse_implements_defs()?;
-
-                let end_span = self.curr_span();
+                let implements_defs = self.parse_implements_defs().or(Some(vec![]))?;
 
                 PhoronHeader {
                     sourcefile_def,
                     class_or_interface_def,
                     super_def,
                     implements_defs,
-                    span: start_span.merge(&end_span),
                 }
             }
 
             tok => {
-                let end_span = self.curr_span();
-
                 DiagnosticManager::report_diagnostic(
                     &self.lexer.source_file,
                     Stage::Parser,
                     Level::Error,
-                    start_span.merge(&end_span),
-                    format!("incorrect token in header {tok:?}"),
+                    self.curr_span(),
+                    format!("{tok:?} cannot start a Phoron header"),
                 );
-                None
+
+                self.errored |= true;
+
+                PhoronHeader::default()
             }
         })
     }
 
     /// PhoronProgram <- line_comment* Header Body eof
     pub fn parse(&mut self) -> Option<PhoronProgram> {
-        let start_span = self.curr_span();
-
         let header = self.parse_header()?;
         let body = self.parse_body()?;
 
-        let end_span = self.curr_span();
-
-        Some(PhoronProgram {
-            header,
-            body,
-            span: start_span.merge(&end_span),
-        })
+        Some(PhoronProgram { header, body })
     }
 }
