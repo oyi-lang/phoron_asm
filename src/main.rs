@@ -76,8 +76,8 @@ fn process_file(src_file: &PathBuf) -> PhoronResult<()> {
     let mut parser = Parser::new(Lexer::new(&source_file));
     let ast = parser.parse().unwrap();
 
-    if parser.errored {
-        println!("Detected errors while parsing. Aborting");
+    if parser.errored() {
+        println!("Detected errors while parsing and type-checking. Aborting");
         std::process::exit(1);
     }
 

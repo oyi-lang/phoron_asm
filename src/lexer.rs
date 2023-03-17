@@ -301,7 +301,7 @@ enum Number {
 pub struct Lexer<'a> {
     pub source_file: &'a SourceFile,
     src: Peekable<Enumerate<Chars<'a>>>,
-    pub errored: bool,
+    errored: bool,
 }
 
 impl<'a> Lexer<'a> {
@@ -311,6 +311,10 @@ impl<'a> Lexer<'a> {
             src: source_file.src.chars().enumerate().peekable(),
             errored: false,
         }
+    }
+
+    pub fn errored(&self) -> bool {
+        self.errored
     }
 
     fn curr_pos(&mut self) -> Pos {
@@ -836,6 +840,7 @@ impl<'a> Lexer<'a> {
             match self.lex_char(c) {
                 Err(err) => {
                     DiagnosticManager::report_diagnostic(&self.source_file, err.span, err.message);
+                    self.errored |= true;
 
                     self.src.next();
                     return self.lex();

@@ -26,13 +26,13 @@ impl Emitter {
 
         println!("{RED}error{RESET}: {diag_str}");
         println!("{BLUE}--->{RESET} {src_file}:{line}:{col}");
-        println!("{BLUE}{:>10}{RESET}", "|");
-        println!("{BLUE}{:>5}{:>5}{RESET}{:>10}", line, "|", src_line.trim());
-        print!("{BLUE}{:>10}{RESET}", "|");
+        println!("{BLUE}{:>11}{RESET}", "|");
+        println!("{BLUE}{:>6}{:>5}{RESET}{:>5}", line, "|", src_line.trim());
+        print!("{BLUE}{:>11}{RESET}", "|");
         for _ in 0..*col {
             print!("{}", " ");
         }
         println!("{RED}^{RESET}");
-        println!("{BLUE}{:>10}{RESET}", "|");
+        println!("{BLUE}{:>11}{RESET}", "|");
     }
 }

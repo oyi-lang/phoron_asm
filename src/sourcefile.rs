@@ -50,10 +50,10 @@ impl SourceFile {
         let src = fs::read_to_string(src_file.as_ref())
             .expect(&format!("could not read source file {src_file:?}"));
 
-        let mut beginnings = vec![Pos::new(1)];
+        let mut beginnings = vec![Pos::new(0)];
         beginnings.extend_from_slice(
             &src.match_indices("\n")
-                .map(|(idx, _)| Pos::new(idx + 1))
+                .map(|(idx, _)| Pos::new(idx))
                 .collect::<Vec<_>>(),
         );
 
@@ -97,14 +97,14 @@ impl Span {
                 let line = line + 1;
                 let col: usize = (self.low - source_file.beginnings[line - 1]).into();
 
-                (line, col + 1)
+                (line, col)
             }
 
             Err(line) => {
                 let line = line;
                 let col: usize = (self.low - source_file.beginnings[line - 1]).into();
 
-                (line, col + 1)
+                (line, col)
             }
         };
 
