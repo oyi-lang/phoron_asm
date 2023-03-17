@@ -1,4 +1,4 @@
-use std::fmt;
+use std::error::Error;
 
 use crate::sourcefile::{Location, SourceFile, Span};
 
@@ -28,6 +28,11 @@ impl DiagnosticManager {
 
         Emitter::emit(&diag);
     }
+
+    pub fn failfast<'d>(err: Box<dyn Error>) {
+        eprintln!("{}", err);
+        std::process::exit(1);
+    }
 }
 
 #[derive(Debug)]
@@ -37,33 +42,4 @@ pub struct Diagnostic<'d> {
     col: usize,
     src_line: &'d str,
     diag_str: String,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Level {
-    Info,
-    Warning,
-    Error,
-}
-
-impl fmt::Display for Level {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match *self {
-                Level::Info => "info",
-                Level::Warning => "warning",
-                Level::Error => "error",
-            }
-        )
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Stage {
-    Lexer,
-    Parser,
-    ConstantPoolAnalyzer,
-    CodeGenerator,
 }

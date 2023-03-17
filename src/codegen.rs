@@ -63,7 +63,7 @@ impl fmt::Display for CodegenError {
                 Invalid {
                     ref component,
                     ref details,
-                } => format!("Invalid {component}: {details}"),
+                } => format!("invalid {component}: {details}"),
                 ConstantPoolError {
                     ref cp_entry,
                     ref details,
@@ -71,7 +71,7 @@ impl fmt::Display for CodegenError {
                 OpcodeError {
                     ref opcode,
                     ref details,
-                } => format!("Malformed or Invalid opcode {opcode} : {details}"),
+                } => format!("malformed or invalid opcode {opcode} : {details}"),
                 Unknown => "an unknown error occurred during code generation".into(),
                 SerializeError(ref ser_err) => ser_err.to_string(),
             }
@@ -483,8 +483,8 @@ where
     ) -> CodegenResult<()> {
         self.gen_classfile_headers()?;
         self.gen_constant_pool(&cp)?;
-
         self.visit_program(&program, cp)?;
+
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())
