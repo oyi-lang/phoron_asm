@@ -1,7 +1,5 @@
 use std::default::Default;
 
-use crate::sourcefile::Span;
-
 pub mod attributes;
 
 /// Trait to visit the nodes of the AST.
@@ -61,7 +59,6 @@ pub struct PhoronProgram {
 #[derive(Debug, PartialEq, Default)]
 pub struct PhoronSourceFileDef {
     pub source_file: String,
-    pub span: Span,
 }
 
 // classes and interfaces
@@ -84,14 +81,12 @@ pub enum PhoronClassOrInterfaceAccessFlag {
 pub struct PhoronClassDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
-    pub span: Span,
 }
 
 #[derive(Default, PartialEq, Debug)]
 pub struct PhoronInterfaceDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
-    pub span: Span,
 }
 
 #[derive(PartialEq, Debug)]
@@ -114,7 +109,6 @@ pub struct PhoronSuperDef {
 #[derive(Default, PartialEq, Debug)]
 pub struct PhoronImplementsDef {
     pub class_name: String,
-    pub span: Span,
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -279,7 +273,6 @@ pub struct PhoronFieldDef {
     pub access_flags: Vec<PhoronFieldAccessFlag>,
     pub field_descriptor: PhoronFieldDescriptor,
     pub init_val: Option<PhoronFieldInitValue>,
-    pub span: Span,
 }
 
 // methods
@@ -303,25 +296,15 @@ pub enum PhoronMethodAccessFlag {
 
 #[derive(PartialEq, Debug)]
 pub enum PhoronDirective {
-    LimitStack {
-        max_stack: u16,
-        span: Span,
-    },
+    LimitStack(u16),
 
-    LimitLocals {
-        max_locals: u16,
-        span: Span,
-    },
+    LimitLocals(u16),
 
     Throws {
         class_name: String,
-        span: Span,
     },
 
-    LineNumber {
-        line_number: u16,
-        span: Span,
-    },
+    LineNumber(u16),
 
     Var {
         varnum: u16,
@@ -329,7 +312,6 @@ pub enum PhoronDirective {
         field_descriptor: PhoronFieldDescriptor,
         from_label: String,
         to_label: String,
-        span: Span,
     },
 
     Catch {
@@ -337,16 +319,12 @@ pub enum PhoronDirective {
         from_label: String,
         to_label: String,
         handler_label: String,
-        span: Span,
     },
 }
 
 impl Default for PhoronDirective {
     fn default() -> Self {
-        PhoronDirective::LimitStack {
-            max_stack: u16::default(),
-            span: Span::default(),
-        }
+        PhoronDirective::LimitStack(u16::default())
     }
 }
 
@@ -523,13 +501,11 @@ pub enum JvmInstruction {
         class_name: String,
         field_name: String,
         field_descriptor: PhoronFieldDescriptor,
-        span: Span,
     },
     Getfield {
         class_name: String,
         field_name: String,
         field_descriptor: PhoronFieldDescriptor,
-        span: Span,
     },
     Goto {
         label: String,
@@ -624,25 +600,21 @@ pub enum JvmInstruction {
         method_name: String,
         method_descriptor: PhoronMethodDescriptor,
         ub: u8,
-        span: Span,
     },
     Invokespecial {
         class_name: String,
         method_name: String,
         method_descriptor: PhoronMethodDescriptor,
-        span: Span,
     },
     Invokestatic {
         class_name: String,
         method_name: String,
         method_descriptor: PhoronMethodDescriptor,
-        span: Span,
     },
     Invokevirtual {
         class_name: String,
         method_name: String,
         method_descriptor: PhoronMethodDescriptor,
-        span: Span,
     },
     Ior,
     Irem,
@@ -691,7 +663,6 @@ pub enum JvmInstruction {
     Lookupswitch {
         switches: Vec<LookupSwitchPair>,
         default: String,
-        span: Span,
     },
     Lor,
     Lrem,
@@ -713,7 +684,6 @@ pub enum JvmInstruction {
     Multianewarray {
         component_type: PhoronFieldDescriptor,
         dimensions: u8,
-        span: Span,
     },
     Newarray {
         component_type: PhoronBaseType,
@@ -728,13 +698,11 @@ pub enum JvmInstruction {
         class_name: String,
         field_name: String,
         field_descriptor: PhoronFieldDescriptor,
-        span: Span,
     },
     Putstatic {
         class_name: String,
         field_name: String,
         field_descriptor: PhoronFieldDescriptor,
-        span: Span,
     },
     Return,
     Ret {
@@ -749,7 +717,6 @@ pub enum JvmInstruction {
         high: i32,
         switches: Vec<String>,
         default: String,
-        span: Span,
     },
 
     Wide(WideInstruction),
@@ -774,7 +741,6 @@ pub struct PhoronMethodDef {
     pub access_flags: Vec<PhoronMethodAccessFlag>,
     pub method_descriptor: PhoronMethodDescriptor,
     pub instructions: Vec<PhoronInstruction>,
-    pub span: Span,
 }
 
 #[derive(Default, PartialEq, Debug)]

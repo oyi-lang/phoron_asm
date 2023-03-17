@@ -227,12 +227,7 @@ impl<'p> Parser<'p> {
                     let name = name.to_string();
                     self.advance();
 
-                    let curr_span = self.curr_span();
-                    Some(PhoronClassDef {
-                        name,
-                        access_flags,
-                        span: curr_span,
-                    })
+                    Some(PhoronClassDef { name, access_flags })
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
@@ -245,15 +240,10 @@ impl<'p> Parser<'p> {
             }
 
             TokenKind::TIdent(name) => {
-                let start_span = self.curr_span();
                 let name = name.to_string();
                 self.advance();
 
-                Some(PhoronClassDef {
-                    name,
-                    access_flags,
-                    span: start_span.merge(&self.curr_span()),
-                })
+                Some(PhoronClassDef { name, access_flags })
             }
 
             tok => {
@@ -265,7 +255,7 @@ impl<'p> Parser<'p> {
 
                 self.errored = true;
 
-                None
+                Some(PhoronClassDef::default())
             }
         }
     }
@@ -293,13 +283,7 @@ impl<'p> Parser<'p> {
                     let name = ident.to_string();
                     self.advance();
 
-                    let curr_span = self.curr_span();
-
-                    Some(PhoronInterfaceDef {
-                        name,
-                        access_flags,
-                        span: curr_span,
-                    })
+                    Some(PhoronInterfaceDef { name, access_flags })
                 } else {
                     DiagnosticManager::report_diagnostic(
                         &self.lexer.source_file,
@@ -315,13 +299,7 @@ impl<'p> Parser<'p> {
                 let name = ident.to_string();
                 self.advance();
 
-                let curr_span = self.curr_span();
-
-                Some(PhoronInterfaceDef {
-                    name,
-                    access_flags,
-                    span: curr_span,
-                })
+                Some(PhoronInterfaceDef { name, access_flags })
             }
 
             tok_kind => {
@@ -331,7 +309,7 @@ impl<'p> Parser<'p> {
                     format!("invalid token {tok_kind:?}"),
                 );
                 self.errored |= true;
-                None
+                Some(PhoronInterfaceDef::default())
             }
         }
     }
@@ -348,10 +326,7 @@ impl<'p> Parser<'p> {
             let class_name = ident.to_string();
             self.advance();
 
-            Some(PhoronImplementsDef {
-                class_name,
-                span: self.curr_span(),
-            })
+            Some(PhoronImplementsDef { class_name })
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
@@ -361,7 +336,7 @@ impl<'p> Parser<'p> {
 
             self.errored |= true;
 
-            None
+            Some(PhoronImplementsDef::default())
         }
     }
 
@@ -423,7 +398,7 @@ impl<'p> Parser<'p> {
 
                 self.errored |= true;
 
-                None
+                Some(PhoronFieldInitValue::default())
             })
         } else {
             Some(None)
@@ -445,7 +420,6 @@ impl<'p> Parser<'p> {
                         span.merge(&self.curr_span()),
                         format!("invalid or malfomed field type descriptor"),
                     );
-
                     self.errored |= true;
 
                     PhoronFieldDescriptor::default()
@@ -466,7 +440,7 @@ impl<'p> Parser<'p> {
             );
             self.errored |= true;
 
-            None
+            Some(PhoronFieldDescriptor::default())
         }
     }
 
@@ -498,7 +472,6 @@ impl<'p> Parser<'p> {
                 access_flags,
                 field_descriptor,
                 init_val,
-                span: self.curr_span(),
             })
         } else {
             DiagnosticManager::report_diagnostic(
@@ -508,7 +481,7 @@ impl<'p> Parser<'p> {
             );
             self.errored |= true;
 
-            None
+            Some(PhoronFieldDef::default())
         }
     }
 
@@ -539,7 +512,7 @@ impl<'p> Parser<'p> {
             );
             self.errored |= true;
 
-            None
+            Some(String::default())
         }
     }
 
@@ -561,7 +534,7 @@ impl<'p> Parser<'p> {
             );
             self.errored |= true;
 
-            None
+            Some(String::default())
         }
     }
 
@@ -588,10 +561,7 @@ impl<'p> Parser<'p> {
                         {
                             let max_stack = *n as u16;
                             self.advance();
-                            PhoronDirective::LimitStack {
-                                max_stack,
-                                span: self.curr_span(),
-                            }
+                            PhoronDirective::LimitStack(max_stack)
                         } else {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
@@ -616,18 +586,17 @@ impl<'p> Parser<'p> {
                         {
                             let max_locals = *n as u16;
                             self.advance();
-                            PhoronDirective::LimitLocals {
-                                max_locals,
-                                span: self.curr_span(),
-                            }
+                            PhoronDirective::LimitLocals(max_locals)
                         } else {
                             DiagnosticManager::report_diagnostic(
                                 &self.lexer.source_file,
                                 self.curr_span(),
                                 format!("missing numeric value for `.limit locals` directive"),
                             );
+
                             self.advance();
                             self.errored |= true;
+
                             PhoronDirective::default()
                         }
                     }
@@ -638,8 +607,10 @@ impl<'p> Parser<'p> {
                             self.curr_span(),
                             format!("invalid directive"),
                         );
+
                         self.advance();
                         self.errored |= true;
+
                         PhoronDirective::default()
                     }
                 }
@@ -649,10 +620,7 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 let class_name = self.parse_class_name().or(Some(String::new()))?;
-                PhoronDirective::Throws {
-                    class_name,
-                    span: self.curr_span(),
-                }
+                PhoronDirective::Throws { class_name }
             }
 
             TokenKind::TLine => {
@@ -669,10 +637,7 @@ impl<'p> Parser<'p> {
                     Some(u16::default())
                 })?;
 
-                PhoronDirective::LineNumber {
-                    line_number,
-                    span: self.curr_span(),
-                }
+                PhoronDirective::LineNumber(line_number)
             }
 
             TokenKind::TVar => {
@@ -769,7 +734,6 @@ impl<'p> Parser<'p> {
                     field_descriptor,
                     from_label,
                     to_label,
-                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
@@ -854,7 +818,6 @@ impl<'p> Parser<'p> {
                     from_label,
                     to_label,
                     handler_label,
-                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
@@ -986,7 +949,7 @@ impl<'p> Parser<'p> {
             );
             self.errored |= true;
 
-            None
+            Some(String::default())
         }
     }
 
@@ -1621,7 +1584,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             field_name,
                             field_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -1635,7 +1597,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             field_name: String::default(),
                             field_descriptor: PhoronFieldDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -1650,7 +1611,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         field_name: String::default(),
                         field_descriptor: PhoronFieldDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -1683,7 +1643,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             field_name,
                             field_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -1698,7 +1657,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             field_name: String::default(),
                             field_descriptor: PhoronFieldDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -1713,7 +1671,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         field_name: String::default(),
                         field_descriptor: PhoronFieldDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -2291,7 +2248,6 @@ impl<'p> Parser<'p> {
                             method_name,
                             method_descriptor,
                             ub,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -2306,7 +2262,6 @@ impl<'p> Parser<'p> {
                             method_name: String::default(),
                             method_descriptor: PhoronMethodDescriptor::default(),
                             ub: u8::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -2322,7 +2277,6 @@ impl<'p> Parser<'p> {
                         method_name: String::default(),
                         method_descriptor: PhoronMethodDescriptor::default(),
                         ub: u8::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -2355,7 +2309,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             method_name,
                             method_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -2369,7 +2322,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             method_name: String::default(),
                             method_descriptor: PhoronMethodDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -2384,7 +2336,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         method_name: String::default(),
                         method_descriptor: PhoronMethodDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -2417,7 +2368,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             method_name,
                             method_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -2431,7 +2381,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             method_name: String::default(),
                             method_descriptor: PhoronMethodDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -2446,7 +2395,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         method_name: String::default(),
                         method_descriptor: PhoronMethodDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -2479,7 +2427,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             method_name,
                             method_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -2493,7 +2440,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             method_name: String::default(),
                             method_descriptor: PhoronMethodDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -2509,7 +2455,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         method_name: String::default(),
                         method_descriptor: PhoronMethodDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -2868,8 +2813,6 @@ impl<'p> Parser<'p> {
             // LookupSwitchPair      <-  Integer          COLON_symbol       Label
             // DefaultSwitchPair     <-  DEFAULT_keyword  COLON_symbol       Label
             TokenKind::TLookupswitch => {
-                let start_span = self.curr_span();
-
                 self.advance();
 
                 let mut switches = self.parse_lookup_switches()?;
@@ -2878,11 +2821,7 @@ impl<'p> Parser<'p> {
 
                 let default = self.parse_default_switch_pair()?;
 
-                JvmInstruction::Lookupswitch {
-                    switches,
-                    default,
-                    span: start_span.merge(&self.curr_span()),
-                }
+                JvmInstruction::Lookupswitch { switches, default }
             }
 
             // lor
@@ -3017,7 +2956,6 @@ impl<'p> Parser<'p> {
                 JvmInstruction::Multianewarray {
                     component_type,
                     dimensions,
-                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
@@ -3169,7 +3107,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             field_name,
                             field_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -3183,7 +3120,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             field_name: String::default(),
                             field_descriptor: PhoronFieldDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -3198,7 +3134,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         field_name: String::default(),
                         field_descriptor: PhoronFieldDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -3231,7 +3166,6 @@ impl<'p> Parser<'p> {
                             class_name,
                             field_name,
                             field_descriptor,
-                            span: start_span.merge(&self.curr_span()),
                         }
                     } else {
                         DiagnosticManager::report_diagnostic(
@@ -3245,7 +3179,6 @@ impl<'p> Parser<'p> {
                             class_name: String::default(),
                             field_name: String::default(),
                             field_descriptor: PhoronFieldDescriptor::default(),
-                            span: Span::default(),
                         }
                     }
                 } else {
@@ -3260,7 +3193,6 @@ impl<'p> Parser<'p> {
                         class_name: String::default(),
                         field_name: String::default(),
                         field_descriptor: PhoronFieldDescriptor::default(),
-                        span: Span::default(),
                     }
                 }
             }
@@ -3372,7 +3304,6 @@ impl<'p> Parser<'p> {
                     high,
                     switches,
                     default,
-                    span: start_span.merge(&self.curr_span()),
                 }
             }
 
@@ -3867,7 +3798,6 @@ impl<'p> Parser<'p> {
                 access_flags,
                 method_descriptor,
                 instructions,
-                span: start_span.merge(&self.curr_span()),
             })
         } else {
             DiagnosticManager::report_diagnostic(
@@ -3914,10 +3844,7 @@ impl<'p> Parser<'p> {
             let source_file = source_file_str.to_string();
             self.advance();
 
-            Some(PhoronSourceFileDef {
-                source_file,
-                span: start_span.merge(&self.curr_span()),
-            })
+            Some(PhoronSourceFileDef { source_file })
         } else {
             DiagnosticManager::report_diagnostic(
                 &self.lexer.source_file,
@@ -3973,7 +3900,6 @@ impl<'p> Parser<'p> {
             TokenKind::TClass => {
                 let sourcefile_def = PhoronSourceFileDef {
                     source_file: self.lexer.src_file().to_string(),
-                    span: self.curr_span(),
                 };
 
                 let class_or_interface_def = PhoronClassOrInterface::Class(
@@ -3993,7 +3919,6 @@ impl<'p> Parser<'p> {
             TokenKind::TInterface => {
                 let sourcefile_def = PhoronSourceFileDef {
                     source_file: self.lexer.src_file().to_string(),
-                    span: self.curr_span(),
                 };
 
                 let class_or_interface_def = PhoronClassOrInterface::Interface(

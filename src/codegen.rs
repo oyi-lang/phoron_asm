@@ -788,11 +788,11 @@ where
                 for instr in &method_def.instructions {
                     match instr {
                         PhoronInstruction::PhoronDirective(ref dir) => match dir {
-                            PhoronDirective::LimitStack { max_stack, .. } => {
+                            PhoronDirective::LimitStack(max_stack) => {
                                 code_max_stack = *max_stack;
                             }
 
-                            PhoronDirective::LimitLocals { max_locals, .. } => {
+                            PhoronDirective::LimitLocals(max_locals) => {
                                 code_max_locals = *max_locals;
                             }
 
@@ -853,9 +853,7 @@ where
                             // even though we can have multiple LineNumberTable attributes, we restrict
                             // ourselves to one LineNumberTable attribute per method, adding the line
                             // numbers for that method into the same entry, as in the case of the `.var` directive
-                            PhoronDirective::LineNumber {
-                                ref line_number, ..
-                            } => {
+                            PhoronDirective::LineNumber(line_number) => {
                                 let line_num_table_index = if code_attributes.is_empty() {
                                     code_attributes_count += 1;
                                     code_attributes_length += 8;

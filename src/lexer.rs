@@ -16,6 +16,12 @@ pub struct Token {
     pub span: Span,
 }
 
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     TAaload,

@@ -5,6 +5,7 @@ use phoron_asm::{
     },
     lexer::Lexer,
     parser::Parser,
+    sourcefile::*,
 };
 
 use std::{error::Error, fs, path::Path};
@@ -14,8 +15,22 @@ where
     P: AsRef<Path> + Copy,
 {
     let src = fs::read_to_string(testfile)?;
-    let mut parser = Parser::new(Lexer::new(testfile.as_ref().to_path_buf(), &src));
-    let program = parser.parse()?;
+    let mut beginnings = vec![Pos::new(1)];
+    beginnings.extend_from_slice(
+        &src.match_indices("\n")
+            .map(|(idx, _)| Pos::new(idx + 1))
+            .collect::<Vec<_>>(),
+    );
+
+    let source_file = SourceFile {
+        src_file: testfile.as_ref().to_str().expect("no source file"),
+        src: src.as_str(),
+        beginnings,
+    };
+
+    let mut parser = Parser::new(Lexer::new(&source_file));
+    let program = parser.parse().unwrap_or(PhoronProgram::default());
+
     Ok(program)
 }
 
