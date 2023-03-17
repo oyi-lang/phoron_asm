@@ -1,28 +1,15 @@
 use phoron_asm::{
     lexer::{Lexer, Token, TokenKind::*},
-    sourcefile::{Pos, SourceFile, Span},
+    sourcefile::{SourceFile, Span},
 };
 
-use std::{error::Error, fs, path::Path};
+use std::{error::Error, path::Path};
 
 fn lex<P>(testfile: P) -> Result<Vec<Token>, Box<dyn Error>>
 where
     P: AsRef<Path> + Copy,
 {
-    let src = fs::read_to_string(testfile)?;
-    let mut beginnings = vec![Pos::new(1)];
-    beginnings.extend_from_slice(
-        &src.match_indices("\n")
-            .map(|(idx, _)| Pos::new(idx + 1))
-            .collect::<Vec<_>>(),
-    );
-
-    let source_file = SourceFile {
-        src_file: testfile.as_ref().to_str().expect("no source file"),
-        src: src.as_str(),
-        beginnings,
-    };
-
+    let source_file = SourceFile::new(testfile.as_ref());
     let mut lexer = Lexer::new(&source_file);
     let mut tokens = Vec::new();
 

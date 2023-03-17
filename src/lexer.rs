@@ -299,7 +299,7 @@ enum Number {
 
 /// The Phoron Lexer
 pub struct Lexer<'a> {
-    pub source_file: &'a SourceFile<'a>,
+    pub source_file: &'a SourceFile,
     src: Peekable<Enumerate<Chars<'a>>>,
     pub errored: bool,
 }

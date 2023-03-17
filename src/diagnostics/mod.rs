@@ -1,10 +1,17 @@
+use crate::sourcefile::{Location, SourceFile, Span};
 use std::error::Error;
 
-use crate::sourcefile::{Location, SourceFile, Span};
-
 mod emitter;
-
 use emitter::Emitter;
+
+#[derive(Debug)]
+pub struct Diagnostic<'d> {
+    src_file: &'d str,
+    line: usize,
+    col: usize,
+    src_line: &'d str,
+    diag_str: String,
+}
 
 pub struct DiagnosticManager;
 
@@ -29,17 +36,8 @@ impl DiagnosticManager {
         Emitter::emit(&diag);
     }
 
-    pub fn failfast<'d>(err: Box<dyn Error>) {
-        eprintln!("{}", err);
+    pub fn failfast<'d>(err: impl Error) {
+        eprintln!("{}", err.to_string());
         std::process::exit(1);
     }
-}
-
-#[derive(Debug)]
-pub struct Diagnostic<'d> {
-    src_file: &'d str,
-    line: usize,
-    col: usize,
-    src_line: &'d str,
-    diag_str: String,
 }

@@ -1,4 +1,4 @@
-use std::{convert::From, ops::Sub};
+use std::{convert::From, fmt::Debug, fs, ops::Sub, path::Path};
 
 /// Absolute offset from the beginning of the byte stream
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -32,14 +32,41 @@ impl From<usize> for Pos {
 
 /// Abstract representation of a source file
 #[derive(Debug)]
-pub struct SourceFile<'a> {
+pub struct SourceFile {
     /// the name of the source file
-    pub src_file: &'a str,
+    pub src_file: String,
     /// the actual raw source code
-    pub src: &'a str,
+    pub src: String,
     /// a vector of Pos values for the beginning of each line
     /// in the source code
     pub beginnings: Vec<Pos>,
+}
+
+impl SourceFile {
+    pub fn new<P>(src_file: P) -> Self
+    where
+        P: AsRef<Path> + Debug,
+    {
+        let src = fs::read_to_string(src_file.as_ref())
+            .expect(&format!("could not read source file {src_file:?}"));
+
+        let mut beginnings = vec![Pos::new(1)];
+        beginnings.extend_from_slice(
+            &src.match_indices("\n")
+                .map(|(idx, _)| Pos::new(idx + 1))
+                .collect::<Vec<_>>(),
+        );
+
+        SourceFile {
+            src_file: src_file
+                .as_ref()
+                .to_str()
+                .expect(&format!("could not get source file name for {src_file:?}"))
+                .to_owned(),
+            src,
+            beginnings,
+        }
+    }
 }
 
 /// Abstract representation of a region of source code
@@ -63,7 +90,7 @@ impl Span {
     ///       on `beginnings`.
     ///     - column number is retrieved as span.low - beginnings[line number].
     pub fn location<'s>(&self, source_file: &'s SourceFile) -> Location<'s> {
-        let src_file = source_file.src_file;
+        let src_file = &source_file.src_file;
 
         let (line, col) = match source_file.beginnings.binary_search(&self.low) {
             Ok(line) => {

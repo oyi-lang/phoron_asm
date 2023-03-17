@@ -1,9 +1,10 @@
 use phoron_asm::{
     codegen::{Codegen, CodegenError},
     cp_analyzer::{ConstantPoolAnalyzer, ConstantPoolAnalyzerError},
+    diagnostics::DiagnosticManager,
     lexer::Lexer,
     parser::Parser,
-    sourcefile::{Pos, SourceFile},
+    sourcefile::SourceFile,
 };
 use std::{
     convert::From,
@@ -13,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const PHORON_VERSION: &'static str = "0.1.0";
+const PHORON_VERSION: &'static str = "1.0.0";
 const USAGE_STR: &'static str = r#"usage: phoron [-d <outpath>] -f <file> [<file> ...]
         or: phoron -v"#;
 
@@ -53,6 +54,14 @@ impl_from_err!(io::Error);
 impl_from_err!(CodegenError);
 impl_from_err!(ConstantPoolAnalyzerError);
 
+impl From<()> for PhoronError {
+    fn from(_err: ()) -> Self {
+        PhoronError::Error {
+            details: "system error",
+        }
+    }
+}
+
 pub type PhoronResult<T> = Result<T, PhoronError>;
 
 fn usage() {
@@ -60,23 +69,10 @@ fn usage() {
     std::process::exit(0);
 }
 
-fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
-    let outfile = output_dir.join(src_file.with_extension("class"));
+fn process_file(src_file: &PathBuf) -> PhoronResult<()> {
+    let outfile = src_file.with_extension("class");
 
-    let src = fs::read_to_string(src_file)?;
-    let mut beginnings = vec![Pos::new(1)];
-    beginnings.extend_from_slice(
-        &src.match_indices("\n")
-            .map(|(idx, _)| Pos::new(idx + 1))
-            .collect::<Vec<_>>(),
-    );
-
-    let source_file = SourceFile {
-        src_file: src_file.to_str().expect("no source file"),
-        src: src.as_str(),
-        beginnings,
-    };
-
+    let source_file = SourceFile::new(src_file);
     let mut parser = Parser::new(Lexer::new(&source_file));
     let ast = parser.parse().unwrap();
 
@@ -86,11 +82,15 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
     }
 
     let mut cp_analyzer = ConstantPoolAnalyzer::new();
-    let cp = cp_analyzer.analyze(&ast)?;
+    let cp = cp_analyzer.analyze(&ast).map_err(|err| {
+        DiagnosticManager::failfast(err);
+    })?;
 
     let mut outfile_w = BufWriter::new(fs::File::create(&outfile)?);
     let mut codegen = Codegen::new(&mut outfile_w);
-    codegen.gen_bytecode(&ast, &cp)?;
+    codegen.gen_bytecode(&ast, &cp).map_err(|err| {
+        DiagnosticManager::failfast(err);
+    })?;
 
     println!("Generated {}", outfile.display());
 
@@ -100,7 +100,7 @@ fn process_file(output_dir: &Path, src_file: &PathBuf) -> PhoronResult<()> {
 fn process_files(output_dir: &Path, srcfiles: &[PathBuf]) -> PhoronResult<()> {
     srcfiles
         .iter()
-        .try_for_each(|srcfile| process_file(output_dir, srcfile))?;
+        .try_for_each(|srcfile| process_file(&output_dir.join(srcfile)))?;
     Ok(())
 }
 

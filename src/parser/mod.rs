@@ -1,81 +1,12 @@
 use crate::{
     ast::*,
     diagnostics::DiagnosticManager,
-    lexer::{Lexer, LexerError, Token, TokenKind},
+    lexer::{Lexer, Token, TokenKind},
     sourcefile::Span,
 };
 
 mod type_descriptor_parser;
-
 use type_descriptor_parser as tdp;
-
-#[derive(Debug)]
-pub enum ParserError {
-    Missing {
-        instr: &'static str,
-        component: &'static str,
-    },
-
-    IncorrectTypeOrValue {
-        instr: &'static str,
-        type_or_val: &'static str,
-    },
-
-    Malformed {
-        component: &'static str,
-        details: &'static str,
-    },
-
-    Unknown {
-        component: &'static str,
-    },
-
-    LexerError(LexerError),
-}
-
-impl std::error::Error for ParserError {}
-
-use std::fmt;
-impl fmt::Display for ParserError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use ParserError::*;
-
-        write!(
-            f,
-            "{}",
-            match *self {
-                Missing {
-                    ref instr,
-                    ref component,
-                } => format!("{} : {} {}", instr, "missing or invalid ", component),
-
-                IncorrectTypeOrValue {
-                    ref instr,
-                    ref type_or_val,
-                } => format!(
-                    "{} : {} {}",
-                    instr, "incorrect type or value of ", type_or_val
-                ),
-
-                Malformed {
-                    ref component,
-                    ref details,
-                } => format!("Malformed {}: {}", component, details),
-                Unknown { ref component } => format!("Unknown {component}"),
-
-                LexerError(ref err) => err.to_string(),
-            }
-        )
-    }
-}
-
-impl From<LexerError> for ParserError {
-    fn from(lex_err: LexerError) -> Self {
-        ParserError::LexerError(lex_err)
-    }
-}
-
-pub type ParserResult<T> = Result<T, ParserError>;
 
 use TokenKind::*;
 
