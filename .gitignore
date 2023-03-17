@@ -1,6 +1,7 @@
 target/
 doc/grammar/phoron
 doc/grammar/phoron.c
+doc/grammar/ErrorTest.pho
 **/*.a
 **/*.o
 **/*.class

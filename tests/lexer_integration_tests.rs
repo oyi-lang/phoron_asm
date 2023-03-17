@@ -1,21 +1,25 @@
-use phoron_asm::lexer::{
-    Lexer,
-    Token::{self, *},
+use phoron_asm::{
+    lexer::{Lexer, Token, TokenKind::*},
+    sourcefile::{SourceFile, Span},
 };
 
-use std::{error::Error, fs, path::Path};
+use std::{error::Error, path::Path};
 
 fn lex<P>(testfile: P) -> Result<Vec<Token>, Box<dyn Error>>
 where
     P: AsRef<Path> + Copy,
 {
-    let src = fs::read_to_string(testfile)?;
-    let mut lexer = Lexer::new(testfile.as_ref().to_path_buf(), &src);
+    let source_file = SourceFile::new(testfile.as_ref());
+    let mut lexer = Lexer::new(&source_file);
     let mut tokens = Vec::new();
 
     loop {
-        let tok = lexer.lex()?;
-        if tok == Token::TEof {
+        let tok = lexer.lex().unwrap_or(Token {
+            kind: TEof,
+            span: Span::default(),
+        });
+
+        if tok.kind == TEof {
             break;
         }
 
@@ -28,50 +32,182 @@ where
 #[test]
 fn test_lex_malign() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("Malign".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TBipush,
-        TInt(100),
-        TInvokevirtual,
-        TIdent("java/lang/Object/clone".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("Ljava/lang/Object;".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Malign".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(100),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/clone".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/Object;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/Malign.pho"))?;
@@ -83,65 +219,242 @@ fn test_lex_malign() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_fields() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("FieldsDemo".to_string().to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string().to_string()),
-        TField,
-        TPrivate,
-        TIdent("x".to_string().to_string()),
-        TIdent("I".to_string().to_string()),
-        TField,
-        TPrivate,
-        TIdent("y".to_string()),
-        TIdent("D".to_string()),
-        TField,
-        TPrivate,
-        TIdent("z".to_string()),
-        TIdent("Ljava/lang/String;".to_string()),
-        TAssign,
-        TString("Foo".to_string()),
-        TField,
-        TPublic,
-        TStatic,
-        TFinal,
-        TIdent("PI".to_string()),
-        TIdent("F".to_string()),
-        TAssign,
-        TFloat(3.14159),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(1),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FieldsDemo".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("x".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("y".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("D".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("z".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAssign,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Foo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TFinal,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PI".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("F".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAssign,
+            span: Span::default(),
+        },
+        Token {
+            kind: TFloat(3.14159),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/FieldsDemo.pho"))?;
@@ -153,51 +466,186 @@ fn test_lex_fields() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_hola_mundo() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("HolaMundo".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Hola, Mundo!".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("HolaMundo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hola, Mundo!".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/HolaMundo.pho"))?;
@@ -209,51 +657,186 @@ fn test_lex_hola_mundo() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_hello_world() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("HelloWorld".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Hello, world".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("HelloWorld".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hello, world".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/HelloWorld.pho"))?;
@@ -265,50 +848,182 @@ fn test_lex_hello_world() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_malign_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("MalignJasmin".to_string().to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string().to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(1),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TBipush,
-        TInt(100),
-        TInvokevirtual,
-        TIdent("java/lang/Object/clone".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("Ljava/lang/Object;".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("MalignJasmin".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(100),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/clone".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/Object;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/MalignJasmin.pho"))?;
@@ -320,51 +1035,186 @@ fn test_lex_malign_jasmin() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_privet_mir() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("PrivetMir".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Привет, мир!".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrivetMir".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Привет, мир!".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/PrivetMir.pho"))?;
@@ -376,69 +1226,258 @@ fn test_lex_privet_mir() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_areturn() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("Areturn".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("makeIntArray".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("[I".to_string()),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TIload0,
-        TNewarray,
-        TIdent("int".to_string()),
-        TAreturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TBipush,
-        TInt(10),
-        TInvokestatic,
-        TIdent("Areturn/makeIntArray".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("[I".to_string()),
-        TAstore1,
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Areturn".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("makeIntArray".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TNewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("int".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Areturn/makeIntArray".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/Areturn.pho"))?;
@@ -450,60 +1489,222 @@ fn test_lex_areturn() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_create_array_of_threads() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("CreateArrayOfThreads".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TBipush,
-        TInt(10),
-        TAnewarray,
-        TIdent("java/lang/Thread".to_string()),
-        TAstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TInstanceof,
-        TIdent("[Ljava/lang/Thread;".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("CreateArrayOfThreads".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAnewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Thread".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInstanceof,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/Thread;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/CreateArrayOfThreads.pho"))?;
@@ -515,56 +1716,206 @@ fn test_lex_create_array_of_threads() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_swap_top_two_items() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("SwapTopTwoItems".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TIconst1,
-        TIconst2,
-        TSwap,
-        TPop,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("SwapTopTwoItems".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TSwap,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPop,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/SwapTopTwoItems.pho"))?;
@@ -576,65 +1927,242 @@ fn test_lex_swap_top_two_items() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("CreateMatrixOfInt".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(5),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TBipush,
-        TInt(2),
-        TBipush,
-        TInt(3),
-        TBipush,
-        TInt(7),
-        TMultianewarray,
-        TIdent("[[[I".to_string()),
-        TInt(3),
-        TAstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TInstanceof,
-        TIdent("[[[I".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("CreateMatrixOfInt".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(7),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMultianewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[[[I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInstanceof,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[[[I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/CreateMatrixOfInt.pho"))?;
@@ -646,77 +2174,290 @@ fn test_lex_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_count() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("Count".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(4),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAstore1,
-        TBipush,
-        TInt(10),
-        TIstore2,
-        TIdent("Loop".to_string()),
-        TColon,
-        TBipush,
-        TInt(10),
-        TIload2,
-        TIsub,
-        TInvokestatic,
-        TIdent("java/lang/String/valueOf".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TAstore3,
-        TAload1,
-        TAload3,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TIinc,
-        TInt(2),
-        TInt(-1),
-        TIload2,
-        TIfne,
-        TIdent("Loop".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Count".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIsub,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String/valueOf".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIinc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(-1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIfne,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/Count.pho"))?;
@@ -728,78 +2469,294 @@ fn test_lex_count() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_catcher() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("Catcher".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TCatch,
-        TIdent("java/lang/Exception".to_string()),
-        TFrom,
-        TIdent("Label1".to_string()),
-        TTo,
-        TIdent("Label2".to_string()),
-        TUsing,
-        TIdent("Handler".to_string()),
-        TIdent("Label1".to_string()),
-        TColon,
-        TNew,
-        TIdent("java/lang/Exception".to_string()),
-        TDup,
-        TInvokespecial,
-        TIdent("java/lang/Exception/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAthrow,
-        TIdent("Label2".to_string()),
-        TColon,
-        TIdent("Handler".to_string()),
-        TColon,
-        TPop,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Exception Caught".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Catcher".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TCatch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Exception".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TFrom,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TTo,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TUsing,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Handler".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TNew,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Exception".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDup,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Exception/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAthrow,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Handler".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPop,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Exception Caught".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/Catcher.pho"))?;
@@ -811,66 +2768,246 @@ fn test_lex_catcher() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_anewarray() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("Anewarray".to_string().to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string().to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string().to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string().to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string().to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(4),
-        TBipush,
-        TInt(10),
-        TAnewarray,
-        TIdent("java/lang/Thread".to_string()),
-        TAstore1,
-        TIconst2,
-        TAnewarray,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TAstore2,
-        TAload2,
-        TIconst0,
-        TBipush,
-        TInt(5),
-        TAnewarray,
-        TIdent("java/lang/String".to_string()),
-        TAastore,
-        TAload2,
-        TIconst1,
-        TBipush,
-        TInt(5),
-        TAnewarray,
-        TIdent("java/lang/String".to_string()),
-        TAastore,
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Anewarray".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string().to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAnewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Thread".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAnewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAnewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAnewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/Anewarray.pho"))?;
@@ -882,54 +3019,198 @@ fn test_lex_anewarray() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_args_to_main() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("ArgsToMain".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload0,
-        TArraylength,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ArgsToMain".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TArraylength,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/ArgsToMain.pho"))?;
@@ -941,68 +3222,254 @@ fn test_lex_args_to_main() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_count_jasmin2() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("CountJasmin2".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(4),
-        TIconst0,
-        TIstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAstore2,
-        TIdent("loop".to_string()),
-        TColon,
-        TAload2,
-        TIload1,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TIinc,
-        TInt(1),
-        TInt(1),
-        TIload,
-        TInt(1),
-        TBipush,
-        TInt(10),
-        TIficmplt,
-        TIdent("loop".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("CountJasmin2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIinc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIficmplt,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/CountJasmin2.pho"))?;
@@ -1014,81 +3481,306 @@ fn test_lex_count_jasmin2() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("AddNumsJasmin".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("addNums".to_string()),
-        TLeftParen,
-        TIdent("II".to_string()),
-        TRightParen,
-        TIdent("I".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TIload0,
-        TIload1,
-        TIadd,
-        TIreturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TIconst1,
-        TBipush,
-        TInt(99),
-        TInvokestatic,
-        TIdent("AddNumsJasmin/addNums".to_string()),
-        TLeftParen,
-        TIdent("II".to_string()),
-        TRightParen,
-        TIdent("I".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AddNumsJasmin".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("addNums".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("II".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIadd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(99),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AddNumsJasmin/addNums".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("II".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/AddNumsJasmin.pho"))?;
@@ -1100,66 +3792,246 @@ fn test_lex_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("StackPushJasmin".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(40),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TIconstm1,
-        TIconst0,
-        TIconst1,
-        TIconst2,
-        TIconst3,
-        TIconst4,
-        TIconst5,
-        TLconst0,
-        TLconst1,
-        TFconst0,
-        TFconst1,
-        TDconst0,
-        TDconst1,
-        TBipush,
-        TInt(10),
-        TSipush,
-        TInt(1000),
-        TLdc,
-        TString("Hello, world".to_string()),
-        TLdcw,
-        TString("Hola, mundo".to_string()),
-        TLdc2w,
-        TInt(12345),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("StackPushJasmin".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(40),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconstm1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst4,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst5,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TFconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TFconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TDconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TDconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1000),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hello, world".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdcw,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hola, mundo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc2w,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(12345),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/StackPushJasmin.pho"))?;
@@ -1171,99 +4043,378 @@ fn test_lex_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_factorial_goto() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("FactorialGoto".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("factorial".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("I".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TIconst1,
-        TIstore1,
-        TIconst2,
-        TIstore2,
-        TIdent("floop".to_string()),
-        TColon,
-        TIload2,
-        TIload0,
-        TIficmpgt,
-        TIdent("back".to_string()),
-        TIload1,
-        TIload2,
-        TImul,
-        TIstore1,
-        TIinc,
-        TInt(2),
-        TInt(1),
-        TGoto,
-        TIdent("floop".to_string()),
-        TIdent("back".to_string()),
-        TColon,
-        TIload1,
-        TIreturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TBipush,
-        TInt(10),
-        TInvokestatic,
-        TIdent("FactorialGoto/factorial".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("I".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FactorialGoto".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("factorial".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("floop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIficmpgt,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("back".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TImul,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIinc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGoto,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("floop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("back".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FactorialGoto/factorial".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/FactorialGoto.pho"))?;
@@ -1275,95 +4426,362 @@ fn test_lex_factorial_goto() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_factorial_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("FactorialJasmin".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("factorial".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("I".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TIconst1,
-        TIstore1,
-        TIconst2,
-        TIstore2,
-        TIdent("loop".to_string()),
-        TColon,
-        TIload2,
-        TIload1,
-        TImul,
-        TIstore1,
-        TIinc,
-        TInt(2),
-        TInt(1),
-        TIload2,
-        TIload0,
-        TIficmple,
-        TIdent("loop".to_string()),
-        TIload1,
-        TIreturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TBipush,
-        TInt(10),
-        TInvokestatic,
-        TIdent("FactorialJasmin/factorial".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("I".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FactorialJasmin".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("factorial".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TImul,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIinc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIficmple,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FactorialJasmin/factorial".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/FactorialJasmin.pho"))?;
@@ -1375,77 +4793,290 @@ fn test_lex_factorial_jasmin() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_check_array_type() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("CheckArrayType".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TBipush,
-        TInt(5),
-        TNewarray,
-        TIdent("int".to_string()),
-        TAstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TInstanceof,
-        TIdent("[I".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TBipush,
-        TInt(10),
-        TNewarray,
-        TIdent("char".to_string()),
-        TAstore2,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload2,
-        TInstanceof,
-        TIdent("[I".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("CheckArrayType".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TNewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("int".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInstanceof,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TNewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("char".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInstanceof,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/CheckArrayType.pho"))?;
@@ -1457,85 +5088,322 @@ fn test_lex_check_array_type() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_print_hello_10_times() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("PrintHello10Times".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TIconst1,
-        TIstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAstore2,
-        TIdent("loop".to_string()),
-        TColon,
-        TAload2,
-        TIload1,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/print".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload2,
-        TLdc,
-        TString(" - ".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/print".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload2,
-        TLdc,
-        TString("Hello".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TIinc,
-        TInt(1),
-        TInt(1),
-        TIload1,
-        TBipush,
-        TInt(10),
-        TIficmple,
-        TIdent("loop".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintHello10Times".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/print".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString(" - ".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/print".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hello".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIinc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIficmple,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/PrintHello10Times.pho"))?;
@@ -1547,114 +5415,438 @@ fn test_lex_print_hello_10_times() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_add_nums() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("AddNums".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(5),
-        TLimit,
-        TLocals,
-        TInt(8),
-        TNew,
-        TIdent("java/util/Scanner".to_string()),
-        TDup,
-        TGetstatic,
-        TIdent("java/lang/System/in".to_string()),
-        TIdent("Ljava/io/InputStream;".to_string()),
-        TInvokespecial,
-        TIdent("java/util/Scanner/<init>".to_string()),
-        TLeftParen,
-        TIdent("Ljava/io/InputStream;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TAstore1,
-        TJsr,
-        TIdent("ReadNum".to_string()),
-        TIstore3,
-        TJsr,
-        TIdent("ReadNum".to_string()),
-        TIstore,
-        TInt(4),
-        TIload3,
-        TIload,
-        TInt(4),
-        TJsr,
-        TIdent("AddNum".to_string()),
-        TIstore,
-        TInt(5),
-        TIload,
-        TInt(5),
-        TJsr,
-        TIdent("PrintSum".to_string()),
-        TReturn,
-        TIdent("PrintSum".to_string()),
-        TColon,
-        TAstore,
-        TInt(7),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TSwap,
-        TInvokestatic,
-        TIdent("java/lang/String/valueOf".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TRet,
-        TInt(7),
-        TIdent("AddNum".to_string()),
-        TColon,
-        TAstore,
-        TInt(6),
-        TIadd,
-        TRet,
-        TInt(6),
-        TIdent("ReadNum".to_string()),
-        TColon,
-        TAstore2,
-        TAload1,
-        TInvokevirtual,
-        TIdent("java/util/Scanner/nextInt".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("I".to_string()),
-        TRet,
-        TInt(2),
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AddNums".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(8),
+            span: Span::default(),
+        },
+        Token {
+            kind: TNew,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/util/Scanner".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDup,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/in".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/InputStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/util/Scanner/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/InputStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ReadNum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ReadNum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AddNum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintSum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintSum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(7),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSwap,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String/valueOf".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRet,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(7),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AddNum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(6),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIadd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRet,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(6),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ReadNum".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/util/Scanner/nextInt".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRet,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/AddNums.pho"))?;
@@ -1666,77 +5858,290 @@ fn test_lex_add_nums() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_count_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("CountJasmin".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(4),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAstore1,
-        TBipush,
-        TInt(10),
-        TIstore2,
-        TIdent("loop".to_string()),
-        TColon,
-        TBipush,
-        TInt(10),
-        TIload2,
-        TIsub,
-        TInvokestatic,
-        TIdent("java/lang/String/valueOf".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TAstore3,
-        TAload1,
-        TAload3,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TIinc,
-        TInt(2),
-        TInt(-1),
-        TIload2,
-        TIfne,
-        TIdent("loop".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("CountJasmin".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIsub,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String/valueOf".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIinc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(-1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIfne,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("loop".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/CountJasmin.pho"))?;
@@ -1748,102 +6153,390 @@ fn test_lex_count_jasmin() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_string_buffer_demo() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("StringBufferDemo".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("sbDemo".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/Object;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TAload0,
-        TCheckcast,
-        TIdent("java/lang/StringBuffer".to_string()),
-        TLdc,
-        TString("Hello, mundo!".to_string()),
-        TInvokevirtual,
-        TIdent("java/lang/StringBuffer/append".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("Ljava/lang/StringBuffer;".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TNew,
-        TIdent("java/lang/StringBuffer".to_string()),
-        TDup,
-        TInvokespecial,
-        TIdent("java/lang/StringBuffer/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAstore1,
-        TAload1,
-        TInvokestatic,
-        TIdent("StringBufferDemo/sbDemo".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/Object;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TInvokevirtual,
-        TIdent("java/lang/StringBuffer/toString".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("StringBufferDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("sbDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/Object;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TCheckcast,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/StringBuffer".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hello, mundo!".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/StringBuffer/append".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/StringBuffer;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TNew,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/StringBuffer".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDup,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/StringBuffer/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("StringBufferDemo/sbDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/Object;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/StringBuffer/toString".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/StringBufferDemo.pho"))?;
@@ -1855,207 +6548,810 @@ fn test_lex_string_buffer_demo() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_array_demo() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TClass,
-        TPublic,
-        TIdent("ArrayDemo".to_string()),
-        TSuper,
-        TIdent("java/lang/Object".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Object/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("setArr".to_string()),
-        TLeftParen,
-        TIdent("[III".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(4),
-        TLimit,
-        TLocals,
-        TInt(4),
-        TAload0,
-        TIload1,
-        TIload2,
-        TIastore,
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("printArr".to_string()),
-        TLeftParen,
-        TIdent("[II".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(4),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload0,
-        TIload1,
-        TIaload,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TBipush,
-        TInt(5),
-        TNewarray,
-        TIdent("int".to_string()),
-        TAstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TBipush,
-        TInt(4),
-        TIaload,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload1,
-        TBipush,
-        TInt(0),
-        TBipush,
-        TInt(1),
-        TInvokestatic,
-        TIdent("ArrayDemo/setArr".to_string()),
-        TLeftParen,
-        TIdent("[III".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload1,
-        TBipush,
-        TInt(1),
-        TBipush,
-        TInt(2),
-        TIastore,
-        TAload1,
-        TBipush,
-        TInt(2),
-        TBipush,
-        TInt(3),
-        TIastore,
-        TAload1,
-        TBipush,
-        TInt(3),
-        TBipush,
-        TInt(4),
-        TIastore,
-        TAload1,
-        TBipush,
-        TInt(4),
-        TBipush,
-        TInt(5),
-        TIastore,
-        TAload1,
-        TBipush,
-        TInt(0),
-        TInvokestatic,
-        TIdent("ArrayDemo/printArr".to_string()),
-        TLeftParen,
-        TIdent("[II".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TBipush,
-        TInt(1),
-        TIaload,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TBipush,
-        TInt(2),
-        TIaload,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TBipush,
-        TInt(3),
-        TIaload,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TAload1,
-        TBipush,
-        TInt(4),
-        TIaload,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ArrayDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("setArr".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[III".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("printArr".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[II".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIaload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TNewarray,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("int".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIaload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(0),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ArrayDemo/setArr".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[III".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(5),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIastore,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(0),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("ArrayDemo/printArr".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[II".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIaload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIaload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIaload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIaload,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/ArrayDemo.pho"))?;
@@ -2067,569 +7363,2258 @@ fn test_lex_array_demo() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_lex_all_in_one() -> Result<(), Box<dyn Error>> {
     let expected_tokens = vec![
-        TSource,
-        TIdent("AllInOne.pho".to_string()),
-        TClass,
-        TPublic,
-        TIdent("AllInOne".to_string()),
-        TSuper,
-        TIdent("java/lang/Thread".to_string()),
-        TField,
-        TPrivate,
-        TIdent("x".to_string()),
-        TIdent("I".to_string()),
-        TField,
-        TPrivate,
-        TIdent("y".to_string()),
-        TIdent("D".to_string()),
-        TAssign,
-        TFloat(1.2345),
-        TField,
-        TPublic,
-        TIdent("z".to_string()),
-        TIdent("I".to_string()),
-        TAssign,
-        TInt(12345),
-        TField,
-        TPublic,
-        TStatic,
-        TFinal,
-        TIdent("PREFIX".to_string()),
-        TIdent("Ljava/lang/String;".to_string()),
-        TAssign,
-        TString("FooBar".to_string()),
-        TMethod,
-        TPublic,
-        TIdent("<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload0,
-        TInvokespecial,
-        TIdent("java/lang/Thread/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("exceptionsDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TCatch,
-        TIdent("java/lang/Exception".to_string()),
-        TFrom,
-        TIdent("Label1".to_string()),
-        TTo,
-        TIdent("Label2".to_string()),
-        TUsing,
-        TIdent("Handler".to_string()),
-        TIdent("Label1".to_string()),
-        TColon,
-        TNew,
-        TIdent("java/lang/Exception".to_string()),
-        TDup,
-        TInvokespecial,
-        TIdent("java/lang/Exception/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAthrow,
-        TIdent("Label2".to_string()),
-        TColon,
-        TIdent("Handler".to_string()),
-        TColon,
-        TPop,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Exception caught".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("finallyDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(3),
-        TLimit,
-        TLocals,
-        TInt(4),
-        TCatch,
-        TIdent("java/io/FileNotFoundException".to_string()),
-        TFrom,
-        TIdent("Start".to_string()),
-        TTo,
-        TIdent("End1".to_string()),
-        TUsing,
-        TIdent("NotFound".to_string()),
-        TCatch,
-        TIdent("java/io/IOException".to_string()),
-        TFrom,
-        TIdent("Start".to_string()),
-        TTo,
-        TIdent("End2".to_string()),
-        TUsing,
-        TIdent("IOE".to_string()),
-        TCatch,
-        TIdent("all".to_string()),
-        TFrom,
-        TIdent("Start".to_string()),
-        TTo,
-        TIdent("Done".to_string()),
-        TUsing,
-        TIdent("Other_Exception".to_string()),
-        TIdent("Start".to_string()),
-        TColon,
-        TNew,
-        TIdent("java/io/FileInputStream".to_string()),
-        TDup,
-        TLdc,
-        TString("myfile".to_string()),
-        TInvokespecial,
-        TIdent("java/io/FileInputStream/<init>".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TAstore1,
-        TIdent("End1".to_string()),
-        TColon,
-        TGoto,
-        TIdent("Done".to_string()),
-        TIdent("NotFound".to_string()),
-        TColon,
-        TPop,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("No such file".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGoto,
-        TIdent("Done".to_string()),
-        TIdent("IOE".to_string()),
-        TColon,
-        TPop,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("IO Exception occurred".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TGoto,
-        TIdent("Done".to_string()),
-        TIdent("End2".to_string()),
-        TColon,
-        TIdent("Done".to_string()),
-        TColon,
-        TJsr,
-        TIdent("FinalSub".to_string()),
-        TReturn,
-        TIdent("Other_Exception".to_string()),
-        TColon,
-        TAstore2,
-        TJsr,
-        TIdent("FinalSub".to_string()),
-        TAload2,
-        TAthrow,
-        TIdent("FinalSub".to_string()),
-        TColon,
-        TAstore3,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Done".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TRet,
-        TInt(3),
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TSynchronized,
-        TIdent("synchronizedMethoDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(1),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TIdent("monitoDemo".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/Object;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TAload1,
-        TMonitorenter,
-        TAload1,
-        TMonitorexit,
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TIdent("checkCastDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TAload0,
-        TCheckcast,
-        TIdent("java/lang/Object".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TIdent("instanceofDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TAload0,
-        TInstanceof,
-        TIdent("java/lang/Thread".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TSwap,
-        TInvokestatic,
-        TIdent("java/lang/String/valueOf".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("subroutinesDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TLdc,
-        TString("Hello".to_string()),
-        TJsr,
-        TIdent("PrintString".to_string()),
-        TLdc,
-        TString(", world".to_string()),
-        TJsr,
-        TIdent("PrintString".to_string()),
-        TReturn,
-        TIdent("PrintString".to_string()),
-        TColon,
-        TAstore1,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TSwap,
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TRet,
-        TInt(1),
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("lookupswitchDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("I".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(2),
-        TBipush,
-        TInt(10),
-        TIstore1,
-        TIload1,
-        TLookupswitch,
-        TInt(1),
-        TColon,
-        TIdent("R1".to_string()),
-        TInt(10),
-        TColon,
-        TIdent("R2".to_string()),
-        TInt(100),
-        TColon,
-        TIdent("R3".to_string()),
-        TDefault,
-        TColon,
-        TIdent("R4".to_string()),
-        TIdent("R1".to_string()),
-        TColon,
-        TIconst1,
-        TIreturn,
-        TIdent("R2".to_string()),
-        TColon,
-        TIconst2,
-        TIreturn,
-        TIdent("R3".to_string()),
-        TColon,
-        TIconst3,
-        TIreturn,
-        TIdent("R4".to_string()),
-        TColon,
-        TIconst0,
-        TIreturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("tableswitchDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("I".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TIconst3,
-        TIstore1,
-        TIload1,
-        TTableswitch,
-        TInt(1),
-        TInt(3),
-        TIdent("R1".to_string()),
-        TIdent("R2".to_string()),
-        TIdent("R3".to_string()),
-        TDefault,
-        TColon,
-        TIdent("R4".to_string()),
-        TIdent("R1".to_string()),
-        TColon,
-        TIconst1,
-        TIreturn,
-        TIdent("R2".to_string()),
-        TColon,
-        TIconst2,
-        TIreturn,
-        TIdent("R3".to_string()),
-        TColon,
-        TIconst3,
-        TIreturn,
-        TIdent("R4".to_string()),
-        TColon,
-        TIconst0,
-        TIreturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPrivate,
-        TStatic,
-        TIdent("varDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TLocals,
-        TInt(1),
-        TVar,
-        TInt(0),
-        TIs,
-        TIdent("Count".to_string()),
-        TIdent("I".to_string()),
-        TFrom,
-        TIdent("Label1".to_string()),
-        TTo,
-        TIdent("Label2".to_string()),
-        TIdent("Label1".to_string()),
-        TColon,
-        TBipush,
-        TInt(10),
-        TIstore0,
-        TIdent("Label2".to_string()),
-        TColon,
-        TReturn,
-        TEnd,
-        TEndMethod,
-        TMethod,
-        TPublic,
-        TStatic,
-        TIdent("main".to_string()),
-        TLeftParen,
-        TIdent("[Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TLimit,
-        TStack,
-        TInt(2),
-        TLimit,
-        TLocals,
-        TInt(3),
-        TThrows,
-        TIdent("java/lang/RuntimeException".to_string()),
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TLdc,
-        TString("Hello, world".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TInvokestatic,
-        TIdent("AllInOne/exceptionsDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TInvokestatic,
-        TIdent("AllInOne/finallyDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TNew,
-        TIdent("AllInOne".to_string()),
-        TDup,
-        TInvokespecial,
-        TIdent("AllInOne/<init>".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAstore1,
-        TAload1,
-        TInvokevirtual,
-        TIdent("AllInOne/instanceofDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TAload1,
-        TInvokevirtual,
-        TIdent("AllInOne/checkCastDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TInvokestatic,
-        TIdent("AllInOne/subroutinesDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("V".to_string()),
-        TInvokestatic,
-        TIdent("AllInOne/lookupswitchDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("I".to_string()),
-        TJsr,
-        TIdent("PrintInt".to_string()),
-        TInvokestatic,
-        TIdent("AllInOne/tableswitchDemo".to_string()),
-        TLeftParen,
-        TRightParen,
-        TIdent("I".to_string()),
-        TJsr,
-        TIdent("PrintInt".to_string()),
-        TReturn,
-        TIdent("PrintInt".to_string()),
-        TColon,
-        TAstore2,
-        TGetstatic,
-        TIdent("java/lang/System/out".to_string()),
-        TIdent("Ljava/io/PrintStream;".to_string()),
-        TSwap,
-        TInvokestatic,
-        TIdent("java/lang/String/valueOf".to_string()),
-        TLeftParen,
-        TIdent("I".to_string()),
-        TRightParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TInvokevirtual,
-        TIdent("java/io/PrintStream/println".to_string()),
-        TLeftParen,
-        TIdent("Ljava/lang/String;".to_string()),
-        TRightParen,
-        TIdent("V".to_string()),
-        TRet,
-        TInt(2),
-        TEnd,
-        TEndMethod,
+        Token {
+            kind: TSource,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne.pho".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TClass,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSuper,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Thread".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("x".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("y".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("D".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAssign,
+            span: Span::default(),
+        },
+        Token {
+            kind: TFloat(1.2345),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("z".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAssign,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(12345),
+            span: Span::default(),
+        },
+        Token {
+            kind: TField,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TFinal,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PREFIX".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAssign,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("FooBar".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Thread/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("exceptionsDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TCatch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Exception".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TFrom,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TTo,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TUsing,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Handler".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TNew,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Exception".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDup,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Exception/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAthrow,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Handler".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPop,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Exception caught".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("finallyDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(4),
+            span: Span::default(),
+        },
+        Token {
+            kind: TCatch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/FileNotFoundException".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TFrom,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Start".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TTo,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("End1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TUsing,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("NotFound".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TCatch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/IOException".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TFrom,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Start".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TTo,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("End2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TUsing,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("IOE".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TCatch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("all".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TFrom,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Start".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TTo,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Done".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TUsing,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Other_Exception".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Start".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TNew,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/FileInputStream".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDup,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("myfile".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/FileInputStream/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("End1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGoto,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Done".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("NotFound".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPop,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("No such file".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGoto,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Done".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("IOE".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPop,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("IO Exception occurred".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGoto,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Done".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("End2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Done".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FinalSub".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Other_Exception".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FinalSub".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAthrow,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("FinalSub".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Done".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRet,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TSynchronized,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("synchronizedMethoDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("monitoDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/Object;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMonitorenter,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMonitorexit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("checkCastDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TCheckcast,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Object".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("instanceofDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInstanceof,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/Thread".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSwap,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String/valueOf".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("subroutinesDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hello".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintString".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString(", world".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintString".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintString".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSwap,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRet,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("lookupswitchDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLookupswitch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(100),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R3".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDefault,
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R4".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R3".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R4".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("tableswitchDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TTableswitch,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R3".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDefault,
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R4".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R3".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst3,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("R4".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIconst0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIreturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPrivate,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("varDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(1),
+            span: Span::default(),
+        },
+        Token {
+            kind: TVar,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(0),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIs,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Count".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TFrom,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TTo,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label1".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TBipush,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(10),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIstore0,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Label2".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TMethod,
+            span: Span::default(),
+        },
+        Token {
+            kind: TPublic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("main".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("[Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TStack,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLimit,
+            span: Span::default(),
+        },
+        Token {
+            kind: TLocals,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(3),
+            span: Span::default(),
+        },
+        Token {
+            kind: TThrows,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/RuntimeException".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLdc,
+            span: Span::default(),
+        },
+        Token {
+            kind: TString("Hello, world".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/exceptionsDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/finallyDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TNew,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TDup,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokespecial,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/<init>".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/instanceofDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TAload1,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/checkCastDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/subroutinesDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/lookupswitchDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintInt".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("AllInOne/tableswitchDemo".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TJsr,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintInt".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TReturn,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("PrintInt".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TColon,
+            span: Span::default(),
+        },
+        Token {
+            kind: TAstore2,
+            span: Span::default(),
+        },
+        Token {
+            kind: TGetstatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/System/out".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/io/PrintStream;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TSwap,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokestatic,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/lang/String/valueOf".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("I".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TInvokevirtual,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("java/io/PrintStream/println".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TLeftParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("Ljava/lang/String;".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRightParen,
+            span: Span::default(),
+        },
+        Token {
+            kind: TIdent("V".to_string()),
+            span: Span::default(),
+        },
+        Token {
+            kind: TRet,
+            span: Span::default(),
+        },
+        Token {
+            kind: TInt(2),
+            span: Span::default(),
+        },
+        Token {
+            kind: TEnd,
+            span: Span::default(),
+        },
+        Token {
+            kind: TEndMethod,
+            span: Span::default(),
+        },
     ];
 
     let actual_tokens = lex(Path::new("doc/grammar/AllInOne.pho"))?;

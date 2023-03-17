@@ -1,3 +1,7 @@
+use std::default::Default;
+
+pub mod attributes;
+
 /// Trait to visit the nodes of the AST.
 ///
 /// `Input` is the expected input to the visitor methods.
@@ -44,7 +48,7 @@ pub trait PhoronAstVisitor<'a> {
         -> Self::Result;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct PhoronProgram {
     pub header: PhoronHeader,
     pub body: PhoronBody,
@@ -52,15 +56,16 @@ pub struct PhoronProgram {
 
 // header
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct PhoronSourceFileDef {
     pub source_file: String,
 }
 
 // classes and interfaces
 
-#[derive(Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq)]
 pub enum PhoronClassOrInterfaceAccessFlag {
+    #[default]
     AccPublic,
     AccFinal,
     AccSuper,
@@ -72,13 +77,13 @@ pub enum PhoronClassOrInterfaceAccessFlag {
     AccModule,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronClassDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronInterfaceDef {
     pub name: String,
     pub access_flags: Vec<PhoronClassOrInterfaceAccessFlag>,
@@ -90,17 +95,23 @@ pub enum PhoronClassOrInterface {
     Interface(PhoronInterfaceDef),
 }
 
-#[derive(PartialEq, Debug)]
+impl Default for PhoronClassOrInterface {
+    fn default() -> Self {
+        PhoronClassOrInterface::Class(PhoronClassDef::default())
+    }
+}
+
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronSuperDef {
     pub super_class_name: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronImplementsDef {
     pub class_name: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronHeader {
     pub sourcefile_def: PhoronSourceFileDef,
     pub class_or_interface_def: PhoronClassOrInterface,
@@ -123,6 +134,12 @@ pub enum PhoronFieldDescriptor {
     },
 }
 
+impl Default for PhoronFieldDescriptor {
+    fn default() -> Self {
+        PhoronFieldDescriptor::BaseType(PhoronBaseType::default())
+    }
+}
+
 impl fmt::Display for PhoronFieldDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use PhoronFieldDescriptor::*;
@@ -139,8 +156,9 @@ impl fmt::Display for PhoronFieldDescriptor {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub enum PhoronBaseType {
+    #[default]
     Byte,
     Character,
     Double,
@@ -172,7 +190,7 @@ impl fmt::Display for PhoronBaseType {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronMethodDescriptor {
     pub param_descriptor: Vec<PhoronFieldDescriptor>,
     pub return_descriptor: PhoronReturnDescriptor,
@@ -196,9 +214,10 @@ impl fmt::Display for PhoronMethodDescriptor {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub enum PhoronReturnDescriptor {
     FieldDescriptor(PhoronFieldDescriptor),
+    #[default]
     VoidDescriptor,
 }
 
@@ -221,8 +240,9 @@ impl fmt::Display for PhoronReturnDescriptor {
 
 // Fields
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub enum PhoronFieldAccessFlag {
+    #[default]
     AccPublic,
     AccPrivate,
     AccProtected,
@@ -241,7 +261,13 @@ pub enum PhoronFieldInitValue {
     QuotedString(String),
 }
 
-#[derive(PartialEq, Debug)]
+impl Default for PhoronFieldInitValue {
+    fn default() -> Self {
+        PhoronFieldInitValue::Integer(i64::default())
+    }
+}
+
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronFieldDef {
     pub name: String,
     pub access_flags: Vec<PhoronFieldAccessFlag>,
@@ -251,8 +277,9 @@ pub struct PhoronFieldDef {
 
 // methods
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub enum PhoronMethodAccessFlag {
+    #[default]
     AccPublic,
     AccPrivate,
     AccProtected,
@@ -270,11 +297,15 @@ pub enum PhoronMethodAccessFlag {
 #[derive(PartialEq, Debug)]
 pub enum PhoronDirective {
     LimitStack(u16),
+
     LimitLocals(u16),
+
     Throws {
         class_name: String,
     },
+
     LineNumber(u16),
+
     Var {
         varnum: u16,
         name: String,
@@ -282,12 +313,19 @@ pub enum PhoronDirective {
         from_label: String,
         to_label: String,
     },
+
     Catch {
         class_name: String,
         from_label: String,
         to_label: String,
         handler_label: String,
     },
+}
+
+impl Default for PhoronDirective {
+    fn default() -> Self {
+        PhoronDirective::LimitStack(u16::default())
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -297,11 +335,23 @@ pub enum LdcValue {
     QuotedString(String),
 }
 
+impl Default for LdcValue {
+    fn default() -> Self {
+        LdcValue::Integer(i32::default())
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum LdcwValue {
     Float(f32),
     Integer(i32),
     QuotedString(String),
+}
+
+impl Default for LdcwValue {
+    fn default() -> Self {
+        LdcwValue::Integer(i32::default())
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -310,7 +360,13 @@ pub enum Ldc2wValue {
     Long(i64),
 }
 
-#[derive(Debug, PartialEq)]
+impl Default for Ldc2wValue {
+    fn default() -> Self {
+        Ldc2wValue::Long(i64::default())
+    }
+}
+
+#[derive(Default, Debug, PartialEq)]
 pub struct LookupSwitchPair {
     pub key: i32,
     pub label: String,
@@ -332,8 +388,17 @@ pub enum WideInstruction {
     IInc { varnum: u16, delta: i16 },
 }
 
-#[derive(PartialEq, Debug)]
+impl Default for WideInstruction {
+    fn default() -> Self {
+        WideInstruction::Iload {
+            varnum: u16::default(),
+        }
+    }
+}
+
+#[derive(Default, PartialEq, Debug)]
 pub enum JvmInstruction {
+    #[default]
     Aaload,
     Anewarray {
         component_type: PhoronFieldDescriptor,
@@ -664,7 +729,13 @@ pub enum PhoronInstruction {
     PhoronLabel(String),
 }
 
-#[derive(PartialEq, Debug)]
+impl Default for PhoronInstruction {
+    fn default() -> Self {
+        PhoronInstruction::PhoronLabel(String::default())
+    }
+}
+
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronMethodDef {
     pub name: String,
     pub access_flags: Vec<PhoronMethodAccessFlag>,
@@ -672,7 +743,7 @@ pub struct PhoronMethodDef {
     pub instructions: Vec<PhoronInstruction>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub struct PhoronBody {
     pub field_defs: Vec<PhoronFieldDef>,
     pub method_defs: Vec<PhoronMethodDef>,

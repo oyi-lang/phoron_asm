@@ -5,17 +5,19 @@ use phoron_asm::{
     },
     lexer::Lexer,
     parser::Parser,
+    sourcefile::SourceFile,
 };
 
-use std::{error::Error, fs, path::Path};
+use std::{error::Error, path::Path};
 
 fn parse<P>(testfile: P) -> Result<PhoronProgram, Box<dyn Error>>
 where
     P: AsRef<Path> + Copy,
 {
-    let src = fs::read_to_string(testfile)?;
-    let mut parser = Parser::new(Lexer::new(testfile.as_ref().to_path_buf(), &src));
-    let program = parser.parse()?;
+    let source_file = SourceFile::new(testfile.as_ref());
+    let mut parser = Parser::new(Lexer::new(&source_file));
+    let program = parser.parse().unwrap_or(PhoronProgram::default());
+
     Ok(program)
 }
 

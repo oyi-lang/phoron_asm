@@ -1,7 +1,29 @@
-use std::{error::Error, fmt, iter::Peekable, path, str::Chars};
+use std::{
+    error::Error,
+    fmt,
+    iter::{Enumerate, Peekable},
+    str::Chars,
+};
 
-#[derive(Debug, PartialEq)]
-pub enum Token {
+use crate::{
+    diagnostics::DiagnosticManager,
+    sourcefile::{Pos, SourceFile, Span},
+};
+
+#[derive(Debug)]
+pub struct Token {
+    pub kind: TokenKind,
+    pub span: Span,
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TokenKind {
     TAaload,
     TAastore,
     TAbstract,
@@ -255,49 +277,16 @@ pub enum Token {
 }
 
 #[derive(Debug)]
-pub enum LexerError {
-    Custom(String),
-    IncompleteString,
-    InvalidCharacter(char),
-    InvalidDirective(String),
-    OutOfCharacters,
-    ParseFloatError(std::num::ParseFloatError),
-    ParseIntError(std::num::ParseIntError),
+pub struct LexerError {
+    pub span: Span,
+    pub message: String,
 }
 
 impl Error for LexerError {}
 
 impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match *self {
-                LexerError::Custom(ref msg) => msg.into(),
-                LexerError::IncompleteString => "invalid or malformed string".into(),
-                LexerError::InvalidCharacter(ref c) =>
-                    format!("Invalid character while lexing: {c}"),
-                LexerError::InvalidDirective(ref directive) =>
-                    format!("Invalid directive {directive} for Phoron"),
-                LexerError::ParseIntError(ref err) =>
-                    format!("error while trying to lex an integer: {err}"),
-                LexerError::ParseFloatError(ref err) =>
-                    format!("error while trying to lex a float: {err}"),
-                LexerError::OutOfCharacters => "unexpected end of input stream while lexing".into(),
-            }
-        )
-    }
-}
-
-impl From<std::num::ParseIntError> for LexerError {
-    fn from(pie: std::num::ParseIntError) -> Self {
-        LexerError::ParseIntError(pie)
-    }
-}
-
-impl From<std::num::ParseFloatError> for LexerError {
-    fn from(pfe: std::num::ParseFloatError) -> Self {
-        LexerError::ParseFloatError(pfe)
+        write!(f, "{}: {:?}", self.message, self.span)
     }
 }
 
@@ -310,28 +299,30 @@ enum Number {
 
 /// The Phoron Lexer
 pub struct Lexer<'a> {
-    src_file: path::PathBuf,
-    src: Peekable<Chars<'a>>,
+    pub source_file: &'a SourceFile,
+    src: Peekable<Enumerate<Chars<'a>>>,
+    pub errored: bool,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(src_file: path::PathBuf, src: &'a str) -> Self {
+    pub fn new(source_file: &'a SourceFile) -> Self {
         Lexer {
-            src_file,
-            src: src.chars().peekable(),
+            source_file,
+            src: source_file.src.chars().enumerate().peekable(),
+            errored: false,
         }
     }
 
-    fn next(&mut self) -> LexerResult<char> {
-        Ok(self.src.next().ok_or(LexerError::OutOfCharacters)?)
+    fn curr_pos(&mut self) -> Pos {
+        self.src.peek().map_or(Pos::default(), |p| p.0.into())
     }
 
-    fn extract_float_or_int(&mut self) -> LexerResult<Number> {
+    fn extract_float_or_int(&mut self) -> Option<Number> {
         let mut numbuf = String::new();
         loop {
-            if let Some(d) = self.src.peek() {
+            if let Some((_idx, d)) = self.src.peek() {
                 if d.is_digit(10) {
-                    numbuf.push(self.next()?);
+                    numbuf.push(self.src.next()?.1);
                 } else {
                     break;
                 }
@@ -340,13 +331,13 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        if let Some('.') = self.src.peek() {
-            numbuf.push(self.next()?);
+        if let Some((_idx, '.')) = self.src.peek() {
+            numbuf.push(self.src.next()?.1);
 
             loop {
-                if let Some(d) = self.src.peek() {
+                if let Some((_idx, d)) = self.src.peek() {
                     if d.is_digit(10) {
-                        numbuf.push(self.next()?);
+                        numbuf.push(self.src.next()?.1);
                     } else {
                         break;
                     }
@@ -355,13 +346,13 @@ impl<'a> Lexer<'a> {
                 }
             }
 
-            Ok(Number::Float(numbuf.parse::<f64>()?))
+            numbuf.parse::<f64>().ok().map(|f| Number::Float(f))
         } else {
-            Ok(Number::Int(numbuf.parse::<i64>()?))
+            numbuf.parse::<i64>().ok().map(|i| Number::Int(i))
         }
     }
 
-    fn extract_ident(&mut self) -> LexerResult<String> {
+    fn extract_ident(&mut self) -> String {
         let is_ident_char = |c| match c {
             '/' | '.' | '<' | '>' | '_' | '[' | ';' => true,
             c if c.is_alphabetic() => true,
@@ -371,9 +362,9 @@ impl<'a> Lexer<'a> {
 
         let mut identbuf = String::new();
         loop {
-            if let Some(c) = self.src.peek() {
+            if let Some((_idx, c)) = self.src.peek() {
                 if is_ident_char(*c) {
-                    identbuf.push(self.next()?);
+                    identbuf.push(self.src.next().unwrap().1);
                 } else {
                     break;
                 }
@@ -382,13 +373,13 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        Ok(identbuf)
+        identbuf
     }
 
-    fn extract_directive(&mut self, ident: &str) -> LexerResult<Token> {
-        use Token::*;
+    fn extract_directive(&mut self, ident: &str) -> Option<TokenKind> {
+        use TokenKind::*;
 
-        Ok(match ident {
+        Some(match ident {
             "catch" => TCatch,
             "class" => TClass,
             "end" => TEnd,
@@ -402,12 +393,12 @@ impl<'a> Lexer<'a> {
             "super" => TSuper,
             "throws" => TThrows,
             "var" => TVar,
-            _ => return Err(LexerError::InvalidDirective(ident.to_owned())),
+            _ => return None,
         })
     }
 
-    fn extract_kw_or_instr(&mut self, ident: &str) -> Option<Token> {
-        use Token::*;
+    fn extract_kw_or_instr(&mut self, ident: &str) -> Option<TokenKind> {
+        use TokenKind::*;
 
         Some(match ident {
             "aaload" => TAaload,
@@ -634,36 +625,74 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    fn lex_char(&mut self, c: char) -> LexerResult<Token> {
-        use Token::*;
+    fn lex_char(&mut self, c: char) -> LexerResult<TokenKind> {
+        use TokenKind::*;
 
         Ok(match c {
             c if c.is_whitespace() => {
-                self.next()?;
-                self.lex()?
+                self.src.next();
+
+                match self.lex() {
+                    None => {
+                        let (low, high) = (self.curr_pos(), self.curr_pos());
+
+                        return Err(LexerError {
+                            span: Span { low, high },
+                            message: format!("Missing token"),
+                        });
+                    }
+
+                    Some(tok) => tok.kind,
+                }
             }
 
             ';' => {
                 loop {
-                    if let Some(c) = self.src.peek() {
+                    if let Some((_idx, c)) = self.src.peek() {
                         if *c != '\n' {
-                            self.next()?;
+                            self.src.next();
                         } else {
                             break;
                         }
+                    } else {
+                        break;
                     }
                 }
 
-                self.lex()?
+                match self.lex() {
+                    None => {
+                        let (low, high) = (self.curr_pos(), self.curr_pos());
+
+                        return Err(LexerError {
+                            span: Span { low, high },
+                            message: format!("missing token"),
+                        });
+                    }
+
+                    Some(tok) => tok.kind,
+                }
             }
 
             '.' => {
-                self.next()?;
+                self.src.next();
 
-                if let Some(c) = self.src.peek() {
+                let low = self.curr_pos();
+
+                if let Some((_idx, c)) = self.src.peek() {
                     if c.is_alphabetic() {
-                        let ident = self.extract_ident()?;
-                        self.extract_directive(&ident)?
+                        let ident = self.extract_ident();
+                        let high = self.curr_pos();
+
+                        match self.extract_directive(&ident) {
+                            None => {
+                                return Err(LexerError {
+                                    span: Span { low, high },
+                                    message: format!("invalid directive `{ident}`"),
+                                })
+                            }
+
+                            Some(dir) => dir,
+                        }
                     } else {
                         TDot
                     }
@@ -673,55 +702,67 @@ impl<'a> Lexer<'a> {
             }
 
             ':' => {
-                self.next()?;
+                self.src.next();
                 TColon
             }
 
             '(' => {
-                self.next()?;
+                self.src.next();
                 TLeftParen
             }
 
             ')' => {
-                self.next()?;
+                self.src.next();
                 TRightParen
             }
 
             '=' => {
-                self.next()?;
+                self.src.next();
                 TAssign
             }
 
             c if c == '+' || c == '-' => {
-                self.next()?;
-                let number = self.extract_float_or_int()?;
+                self.src.next();
 
-                match number {
-                    Number::Float(float) => {
-                        if c == '+' {
-                            TFloat(float)
-                        } else {
-                            TFloat(-float)
-                        }
+                let (low, high) = (self.curr_pos(), self.curr_pos());
+
+                match self.extract_float_or_int() {
+                    None => {
+                        return Err(LexerError {
+                            span: Span { low, high },
+                            message: format!("missing integer or float"),
+                        })
                     }
-                    Number::Int(int) => {
-                        if c == '+' {
-                            TInt(int)
-                        } else {
-                            TInt(-int)
+
+                    Some(number) => match number {
+                        Number::Float(float) => {
+                            if c == '+' {
+                                TFloat(float)
+                            } else {
+                                TFloat(-float)
+                            }
                         }
-                    }
+                        Number::Int(int) => {
+                            if c == '+' {
+                                TInt(int)
+                            } else {
+                                TInt(-int)
+                            }
+                        }
+                    },
                 }
             }
 
             '"' => {
-                self.next()?;
+                self.src.next();
+
+                let low = self.curr_pos();
 
                 let mut strbuf = String::new();
                 loop {
-                    if let Some(c) = self.src.peek() {
+                    if let Some((_idx, c)) = self.src.peek() {
                         if *c != '"' {
-                            strbuf.push(self.next()?);
+                            strbuf.push(self.src.next().unwrap().1);
                         } else {
                             break;
                         }
@@ -729,15 +770,19 @@ impl<'a> Lexer<'a> {
                 }
 
                 if self.src.peek().is_none() {
-                    return Err(LexerError::IncompleteString);
+                    let high = self.curr_pos();
+                    return Err(LexerError {
+                        span: Span { low, high },
+                        message: format!("unterminated string"),
+                    });
                 }
 
-                self.next()?; // consume the closing double quote
+                self.src.next(); // consume the closing double quote
                 TString(strbuf)
             }
 
             '0'..='9' => {
-                let number = self.extract_float_or_int()?;
+                let number = self.extract_float_or_int().unwrap();
 
                 match number {
                     Number::Float(float) => TFloat(float),
@@ -746,7 +791,7 @@ impl<'a> Lexer<'a> {
             }
 
             c if c.is_alphabetic() || c == '_' || c == '<' || c == '[' => {
-                let ident = self.extract_ident()?;
+                let ident = self.extract_ident();
 
                 if let Some(kw_or_instr) = self.extract_kw_or_instr(&ident) {
                     kw_or_instr
@@ -754,21 +799,61 @@ impl<'a> Lexer<'a> {
                     TIdent(ident)
                 }
             }
+            _ => {
+                let low = self.curr_pos();
+                let high = self.curr_pos();
 
-            _ => return Err(LexerError::InvalidCharacter(c)),
+                return Err(LexerError {
+                    span: Span { low, high },
+                    message: format!("invalid character {c:?}"),
+                });
+            }
         })
     }
 
-    pub fn src_file(&self) -> LexerResult<&path::PathBuf> {
-        Ok(&self.src_file)
+    pub fn src_file(&self) -> &str {
+        &self.source_file.src_file
     }
 
-    pub fn lex(&mut self) -> LexerResult<Token> {
+    pub fn lex(&mut self) -> Option<Token> {
         if self.src.peek().is_none() {
-            Ok(Token::TEof)
+            Some(Token {
+                kind: TokenKind::TEof,
+                span: Span {
+                    low: Pos::default(),
+                    high: Pos::default(),
+                },
+            })
         } else {
-            let c = *self.src.peek().unwrap();
-            self.lex_char(c)
+            let (low, c) = self.src.peek().unwrap();
+            let low = if *low == 0 {
+                Pos::default()
+            } else {
+                Pos::new(*low + 1)
+            };
+
+            let c = *c;
+            match self.lex_char(c) {
+                Err(err) => {
+                    DiagnosticManager::report_diagnostic(&self.source_file, err.span, err.message);
+
+                    self.src.next();
+                    return self.lex();
+                }
+
+                Ok(tok_kind) => {
+                    let mut high = self.curr_pos();
+
+                    if high < low {
+                        high = low;
+                    }
+
+                    Some(Token {
+                        kind: tok_kind,
+                        span: Span { low, high },
+                    })
+                }
+            }
         }
     }
 }

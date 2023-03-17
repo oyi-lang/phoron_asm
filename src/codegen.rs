@@ -1,4 +1,7 @@
-use crate::{ast::*, attributes::*, cp_analyzer::constant_pool::*};
+use crate::{
+    ast::{attributes::*, *},
+    cp_analyzer::constant_pool::*,
+};
 use phoron_core::{
     error::SerializeError,
     model::{
@@ -60,7 +63,7 @@ impl fmt::Display for CodegenError {
                 Invalid {
                     ref component,
                     ref details,
-                } => format!("Invalid {component}: {details}"),
+                } => format!("invalid {component}: {details}"),
                 ConstantPoolError {
                     ref cp_entry,
                     ref details,
@@ -68,7 +71,7 @@ impl fmt::Display for CodegenError {
                 OpcodeError {
                     ref opcode,
                     ref details,
-                } => format!("Malformed or Invalid opcode {opcode} : {details}"),
+                } => format!("malformed or invalid opcode {opcode} : {details}"),
                 Unknown => "an unknown error occurred during code generation".into(),
                 SerializeError(ref ser_err) => ser_err.to_string(),
             }
@@ -297,10 +300,6 @@ where
             }
         }
 
-        for (idx, p) in constant_pool.iter().enumerate() {
-            println!("{idx} => {p:?}");
-        }
-
         self.classfile.constant_pool = constant_pool;
 
         Ok(())
@@ -413,10 +412,7 @@ where
                         }
 
                         Tableswitch {
-                            ref low,
-                            ref high,
-                            ref switches,
-                            ref default,
+                            ref low, ref high, ..
                         } => {
                             let mut opcode_len = 1i16; // for the opcode
 
@@ -487,9 +483,8 @@ where
     ) -> CodegenResult<()> {
         self.gen_classfile_headers()?;
         self.gen_constant_pool(&cp)?;
-
         self.visit_program(&program, cp)?;
-        println!("classfile = {:#?}", self.classfile);
+
         self.outfile.serialize(&self.classfile)?;
 
         Ok(())
@@ -686,7 +681,7 @@ where
                             // this is a top-level attribute inside Methhodnfo, ot the same level as the
                             // `Code` attribute. Just like the `Code` attribute, there may be at most one
                             // such entry in the method attributes.
-                            PhoronDirective::Throws { ref class_name } => {
+                            PhoronDirective::Throws { ref class_name, .. } => {
                                 let exceptions_index = if method_info.attributes.is_empty() {
                                     method_info.attributes_count += 1;
 
@@ -744,14 +739,14 @@ where
                             }
                         },
 
-                        PhoronInstruction::PhoronLabel(ref label) => {
+                        PhoronInstruction::PhoronLabel(ref _label) => {
                             return Err(CodegenError::Invalid {
                                 component: "interface",
                                 details: "labels are not suported for interfaces",
                             })
                         }
 
-                        PhoronInstruction::JvmInstruction(ref jvm_instr) => {
+                        PhoronInstruction::JvmInstruction(ref _jvm_instr) => {
                             return Err(CodegenError::Invalid {
                                 component: "interface",
                                 details: "jvm instructions are not supported for interfaces",
@@ -779,8 +774,8 @@ where
                 method_info.attributes_count += 1; // for the Code attribute
 
                 let mut code_attributes_length = 12; // default minimum (as per the spec)
-                let mut max_stack = 1; // default
-                let mut max_locals = 1; // default
+                let mut code_max_stack = 1; // default
+                let mut code_max_locals = 1; // default
 
                 let mut code = Vec::new();
 
@@ -793,24 +788,24 @@ where
                 for instr in &method_def.instructions {
                     match instr {
                         PhoronInstruction::PhoronDirective(ref dir) => match dir {
-                            PhoronDirective::LimitStack(stack) => {
-                                max_stack = *stack;
+                            PhoronDirective::LimitStack(max_stack) => {
+                                code_max_stack = *max_stack;
                             }
 
-                            PhoronDirective::LimitLocals(locals) => {
-                                max_locals = *locals;
+                            PhoronDirective::LimitLocals(max_locals) => {
+                                code_max_locals = *max_locals;
                             }
 
                             // this is a top-level attribute inside Methhodnfo, ot the same level as the
                             // `Code` attribute. Just like the `Code` attribute, there may be at most one
                             // such entry in the method attributes.
-                            PhoronDirective::Throws { ref class_name } => {
+                            PhoronDirective::Throws { ref class_name, .. } => {
                                 let exceptions_index = if method_info.attributes.is_empty() {
                                     method_info.attributes_count += 1;
 
                                     let attribute_name_index = *cp.get_name(PHORON_EXCEPTIONS).ok_or(CodegenError::AttributeError {
                                 attr: "Exceptions",
-                                details: "missing attribute name index for `Execptions` attribute in method info"
+                                details: "missing attribute name index for `Exceptions` attribute in method info"
                             })?;
 
                                     let attribute_length = 2; // excluding the initial 6 bytes, as per the spec
@@ -858,7 +853,7 @@ where
                             // even though we can have multiple LineNumberTable attributes, we restrict
                             // ourselves to one LineNumberTable attribute per method, adding the line
                             // numbers for that method into the same entry, as in the case of the `.var` directive
-                            PhoronDirective::LineNumber(ref linum) => {
+                            PhoronDirective::LineNumber(line_number) => {
                                 let line_num_table_index = if code_attributes.is_empty() {
                                     code_attributes_count += 1;
                                     code_attributes_length += 8;
@@ -903,7 +898,7 @@ where
 
                                     line_number_table.push(LineNumber {
                                         start_pc,
-                                        line_number: *linum,
+                                        line_number: *line_number,
                                     });
 
                                     *attribute_length += 4;
@@ -918,11 +913,11 @@ where
                             // If not empty, find the index of the vector which contains the
                             // LocalVariableTable, and enter the local vars there.
                             PhoronDirective::Var {
-                                ref varnum,
                                 ref name,
                                 ref field_descriptor,
                                 ref from_label,
                                 ref to_label,
+                                ..
                             } => {
                                 let local_var_table_index = if code_attributes.is_empty() {
                                     code_attributes_count += 1;
@@ -955,14 +950,6 @@ where
                                     }
                                     lvtindex
                                 };
-
-                                let start_pc = *self.label_mapping.get(from_label).ok_or(
-                                    CodegenError::AttributeError {
-                                        attr: "Code",
-                                        details:
-                                            "missing start_pc for local var for code attribute",
-                                    },
-                                )?;
 
                                 if let AttributeInfo::LocalVariableTable {
                                     ref mut attribute_length,
@@ -1020,6 +1007,7 @@ where
                                 ref from_label,
                                 ref to_label,
                                 ref handler_label,
+                                ..
                             } => {
                                 exception_table_length += 1;
 
@@ -1064,7 +1052,7 @@ where
                             }
                         },
 
-                        PhoronInstruction::PhoronLabel(ref label) => {}
+                        PhoronInstruction::PhoronLabel(..) => {}
 
                         PhoronInstruction::JvmInstruction(ref jvm_instr) => {
                             let opcodes = self.visit_jvm_instruction(jvm_instr, cp)?;
@@ -1086,8 +1074,8 @@ where
                 method_info.attributes.push(AttributeInfo::Code {
                     attribute_name_index: *attribute_name_index,
                     attribute_length: code_attributes_length,
-                    max_stack,
-                    max_locals,
+                    max_stack: code_max_stack,
+                    max_locals: code_max_locals,
                     code_length,
                     code,
                     exception_table_length,
@@ -1104,7 +1092,7 @@ where
     }
 
     /// Generate JVM bytecode for Phoron directive
-    fn visit_directive(&mut self, directive: &PhoronDirective, cp: Self::Input) -> Self::Result {
+    fn visit_directive(&mut self, _directive: &PhoronDirective, _cp: Self::Input) -> Self::Result {
         Ok(CodegenResultType::Empty)
     }
 
@@ -1141,7 +1129,7 @@ where
                 opcodes.extend_from_slice(&match component_type {
                     PhoronFieldDescriptor::BaseType(..) => unreachable!(),
 
-                    PhoronFieldDescriptor::ObjectType { ref class_name } => {
+                    PhoronFieldDescriptor::ObjectType { .. } => {
                         let class_ref = *cp
                             .get_class(&component_name[1..component_name.len() - 1])
                             .ok_or(CodegenError::OpcodeError {
@@ -1199,7 +1187,7 @@ where
                 opcodes.extend_from_slice(&match cast_type {
                     PhoronFieldDescriptor::BaseType(..) => unreachable!(),
 
-                    PhoronFieldDescriptor::ObjectType { ref class_name } => {
+                    PhoronFieldDescriptor::ObjectType { .. } => {
                         let class_ref = *cp.get_class(&cast_name[1..cast_name.len() - 1]).ok_or(
                             CodegenError::OpcodeError {
                                 opcode: "checkcast",
@@ -1311,6 +1299,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ..
             } => {
                 let mut opcodes = vec![0xb2];
 
@@ -1329,6 +1318,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ..
             } => {
                 let mut opcodes = vec![0xb4];
 
@@ -1704,7 +1694,7 @@ where
                 opcodes.extend_from_slice(&match check_type {
                     PhoronFieldDescriptor::BaseType(..) => unreachable!(),
 
-                    PhoronFieldDescriptor::ObjectType { ref class_name } => {
+                    PhoronFieldDescriptor::ObjectType { .. } => {
                         let class_ref = *cp.get_class(&check_name[1..check_name.len() - 1]).ok_or(
                             CodegenError::OpcodeError {
                                 opcode: "instanecof",
@@ -1727,12 +1717,12 @@ where
                 CodegenResultType::ByteVec(opcodes)
             }
 
-            // check
             Invokeinterface {
                 ref interface_name,
                 ref method_name,
                 ref method_descriptor,
                 ref ub,
+                ..
             } => {
                 let mut opcodes = vec![0xb9];
 
@@ -1754,6 +1744,7 @@ where
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ..
             } => {
                 let mut opcodes = vec![0xb7];
 
@@ -1772,6 +1763,7 @@ where
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ..
             } => {
                 let mut opcodes = vec![0xb8];
 
@@ -1790,6 +1782,7 @@ where
                 ref class_name,
                 ref method_name,
                 ref method_descriptor,
+                ..
             } => {
                 let mut opcodes = Vec::new();
                 opcodes.push(0xb6);
@@ -1983,6 +1976,7 @@ where
             Lookupswitch {
                 ref switches,
                 ref default,
+                ..
             } => {
                 let mut opcodes = vec![0xab];
 
@@ -2050,6 +2044,7 @@ where
             Multianewarray {
                 ref component_type,
                 ref dimensions,
+                ..
             } => {
                 let mut opcodes = vec![0xc5];
                 let class_ref = *cp.get_class(&component_type.to_string()).ok_or(
@@ -2103,6 +2098,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ..
             } => {
                 let mut opcodes = vec![0xb5];
 
@@ -2121,6 +2117,7 @@ where
                 ref class_name,
                 ref field_name,
                 ref field_descriptor,
+                ..
             } => {
                 let mut opcodes = vec![0xb3];
 
@@ -2159,6 +2156,7 @@ where
                 ref high,
                 ref switches,
                 ref default,
+                ..
             } => {
                 let mut opcodes = vec![0xaa];
 
