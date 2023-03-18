@@ -37,7 +37,7 @@ impl DiagnosticManager {
     }
 
     pub fn failfast<'d>(err: impl Error) {
-        eprintln!("{}", err.to_string());
+        eprintln!("{}", err);
         std::process::exit(1);
     }
 }

@@ -14,7 +14,7 @@ fn parse<P>(testfile: P) -> Result<PhoronProgram, Box<dyn Error>>
 where
     P: AsRef<Path> + Copy,
 {
-    let source_file = SourceFile::new(testfile.as_ref());
+    let source_file = SourceFile::new(testfile.as_ref()).map_err(|err| Box::new(err))?;
     let mut parser = Parser::new(Lexer::new(&source_file));
     let program = parser.parse().unwrap_or(PhoronProgram::default());
 

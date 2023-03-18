@@ -762,7 +762,9 @@ impl<'p> Parser<'p> {
     }
 
     fn parse_jvm_instruction(&mut self) -> Option<JvmInstruction> {
-        Some(match self.see().kind {
+        let curr_tok = self.see();
+
+        Some(match curr_tok.kind {
             // aaload
             TokenKind::TAaload => {
                 self.advance();
@@ -3034,7 +3036,7 @@ impl<'p> Parser<'p> {
             }
 
             _ => {
-                unreachable!()
+                panic!("{curr_tok:?}");
             }
         })
     }
@@ -3091,7 +3093,7 @@ impl<'p> Parser<'p> {
                 } else {
                     self.report_diagnostic_no_advance(
                         start_span,
-                        format!("missing ':' after label"),
+                        format!("missing ':' after label (or possibly invalid JVM opcode)"),
                     );
                     PhoronInstruction::default()
                 }
