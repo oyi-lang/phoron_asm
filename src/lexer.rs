@@ -292,6 +292,7 @@ impl fmt::Display for LexerError {
 
 pub type LexerResult<T> = Result<T, LexerError>;
 
+#[derive(Debug)]
 enum Number {
     Float(f64),
     Int(i64),
@@ -335,6 +336,9 @@ impl<'a> Lexer<'a> {
             }
         }
 
+        let mut saw_e = false;
+        let mut saw_sign = false;
+
         if let Some((_idx, '.')) = self.src.peek() {
             numbuf.push(self.src.next()?.1);
 
@@ -342,6 +346,32 @@ impl<'a> Lexer<'a> {
                 if let Some((_idx, d)) = self.src.peek() {
                     if d.is_digit(10) {
                         numbuf.push(self.src.next()?.1);
+
+                        // check for exponent part
+                        match self.src.peek() {
+                            Some((_idx, 'e')) | Some((_idx, 'E')) => {
+                                if saw_e {
+                                    break;
+                                }
+
+                                numbuf.push(self.src.next()?.1);
+                                saw_e = true;
+                            }
+                            _ => {}
+                        }
+
+                        // check for `-` or `+` sign
+                        match self.src.peek() {
+                            Some((_idx, '+')) | Some((_idx, '-')) => {
+                                if saw_sign {
+                                    break;
+                                }
+
+                                numbuf.push(self.src.next()?.1);
+                                saw_sign = true;
+                            }
+                            _ => {}
+                        }
                     } else {
                         break;
                     }
@@ -539,7 +569,7 @@ impl<'a> Lexer<'a> {
             "ineg" => TIneg,
             "instanceof" => TInstanceof,
             "invokeinterface" => TInvokeinterface,
-            "invokespecial" => TInvokespecial,
+            "invokenonvirtual" | "invokespecial" => TInvokespecial,
             "invokestatic" => TInvokestatic,
             "invokevirtual" => TInvokevirtual,
             "ior" => TIor,
@@ -766,7 +796,64 @@ impl<'a> Lexer<'a> {
                 loop {
                     if let Some((_idx, c)) = self.src.peek() {
                         if *c != '"' {
-                            strbuf.push(self.src.next().unwrap().1);
+                            if *c == '\\' {
+                                self.src.next();
+
+                                match self.src.peek().unwrap().1 {
+                                    'n' => {
+                                        strbuf.push('\n');
+                                        self.src.next();
+                                    }
+
+                                    'r' => {
+                                        strbuf.push('\r');
+                                        self.src.next();
+                                    }
+
+                                    't' => {
+                                        strbuf.push('\t');
+                                        self.src.next();
+                                    }
+
+                                    'f' => {
+                                        strbuf.push_str(r"\f");
+                                        self.src.next();
+                                    }
+
+                                    'b' => {
+                                        strbuf.push_str(r"\b");
+                                        self.src.next();
+                                    }
+
+                                    '\'' => {
+                                        strbuf.push('\'');
+                                        self.src.next();
+                                    }
+
+                                    '"' => {
+                                        strbuf.push('\"');
+                                        self.src.next();
+                                    }
+
+                                    '\\' => {
+                                        strbuf.push('\\');
+                                        self.src.next();
+                                    }
+
+                                    d => {
+                                        let high = self.curr_pos();
+
+                                        return Err(LexerError {
+                                            span: Span { low, high },
+                                            message: format!(
+                                                "invalid escape sequence character: `{d}`"
+                                            ),
+                                        });
+                                    }
+                                }
+                            } else {
+                                strbuf.push(self.src.next().unwrap().1);
+                            }
                         } else {
                             break;
                         }

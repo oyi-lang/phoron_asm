@@ -1,4 +1,4 @@
-use std::{convert::From, fmt::Debug, fs, ops::Sub, path::Path};
+use std::{convert::From, fmt::Debug, fs, io, ops::Sub, path::Path};
 
 /// Absolute offset from the beginning of the byte stream
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -43,12 +43,11 @@ pub struct SourceFile {
 }
 
 impl SourceFile {
-    pub fn new<P>(src_file: P) -> Self
+    pub fn new<P>(src_file: P) -> Result<Self, io::Error>
     where
         P: AsRef<Path> + Debug,
     {
-        let src = fs::read_to_string(src_file.as_ref())
-            .expect(&format!("could not read source file {src_file:?}"));
+        let src = fs::read_to_string(src_file.as_ref())?;
 
         let mut beginnings = vec![Pos::new(0)];
         beginnings.extend_from_slice(
@@ -57,15 +56,18 @@ impl SourceFile {
                 .collect::<Vec<_>>(),
         );
 
-        SourceFile {
+        Ok(SourceFile {
             src_file: src_file
                 .as_ref()
                 .to_str()
-                .expect(&format!("could not get source file name for {src_file:?}"))
+                .ok_or(io::Error::new(
+                    io::ErrorKind::Other,
+                    "could not read source file contents",
+                ))?
                 .to_owned(),
             src,
             beginnings,
-        }
+        })
     }
 }
 

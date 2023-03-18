@@ -8,6 +8,8 @@ use crate::{
 mod type_descriptor_parser;
 use type_descriptor_parser as tdp;
 
+mod levenshtein;
+
 use TokenKind::*;
 
 /// The Phoron parser
@@ -532,47 +534,56 @@ impl<'p> Parser<'p> {
                     Some(PhoronFieldDescriptor::default())
                 })?;
 
-                if !self.advance_if(&TokenKind::TFrom) {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `from` keyword"),
-                    );
-                }
+                // `from` is optional
+                if self.advance_if(&TokenKind::TFrom) {
+                    let from_label = self.parse_label().or_else(|| {
+                        self.report_diagnostic(
+                            start_span.merge(&self.curr_span()),
+                            format!("missing `from` label"),
+                        );
 
-                let from_label = self.parse_label().or_else(|| {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `from` label"),
-                    );
+                        Some(String::default())
+                    })?;
 
-                    Some(String::new())
-                })?;
+                    // `to` is optional
+                    if self.advance_if(&TokenKind::TTo) {
+                        let to_label = self.parse_label().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing `from` label"),
+                            );
 
-                if !self.advance_if(&TokenKind::TTo) {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `to` keyword"),
-                    );
-                }
+                            Some(String::default())
+                        })?;
 
-                let to_label = self.parse_label().or_else(|| {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `to` label"),
-                    );
-
-                    Some(String::new())
-                })?;
-
-                PhoronDirective::Var {
-                    varnum,
-                    name,
-                    field_descriptor,
-                    from_label,
-                    to_label,
+                        PhoronDirective::Var {
+                            varnum,
+                            name,
+                            field_descriptor,
+                            from_label,
+                            to_label,
+                        }
+                    } else {
+                        PhoronDirective::Var {
+                            varnum,
+                            name,
+                            field_descriptor,
+                            from_label,
+                            to_label: String::default(),
+                        }
+                    }
+                } else {
+                    PhoronDirective::Var {
+                        varnum,
+                        name,
+                        field_descriptor,
+                        from_label: String::default(),
+                        to_label: String::default(),
+                    }
                 }
             }
 
+            // todo - check if from and to are also optional for Catch
             TokenKind::TCatch => {
                 let start_span = self.curr_span();
 
@@ -762,7 +773,9 @@ impl<'p> Parser<'p> {
     }
 
     fn parse_jvm_instruction(&mut self) -> Option<JvmInstruction> {
-        Some(match self.see().kind {
+        let curr_tok = self.see();
+
+        Some(match curr_tok.kind {
             // aaload
             TokenKind::TAaload => {
                 self.advance();
@@ -1472,7 +1485,7 @@ impl<'p> Parser<'p> {
             // i2d
             TokenKind::TI2d => {
                 self.advance();
-                JvmInstruction::I2c
+                JvmInstruction::I2d
             }
 
             // i2f
@@ -1879,7 +1892,37 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let interface_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let ub = self.parse_ub().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing unsigned byte constant"),
+                            );
+
+                            Some(u8::default())
+                        })?;
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokeinterface {
+                            interface_name,
+                            method_name,
+                            method_descriptor,
+                            ub,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let interface_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -1943,7 +1986,27 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokespecial {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -1995,7 +2058,27 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokestatic {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -2047,7 +2130,27 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokevirtual {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -3034,7 +3137,7 @@ impl<'p> Parser<'p> {
             }
 
             _ => {
-                unreachable!()
+                panic!("{curr_tok:?}");
             }
         })
     }
@@ -3089,11 +3192,21 @@ impl<'p> Parser<'p> {
                     self.advance();
                     PhoronInstruction::PhoronLabel(label)
                 } else {
-                    self.report_diagnostic_no_advance(
-                        start_span,
-                        format!("missing ':' after label"),
-                    );
-                    PhoronInstruction::default()
+                    if let Some(maybe_jvm_opcode) = levenshtein::find_levenshtein_match(&label) {
+                        self.report_diagnostic_no_advance(
+                            start_span,
+                            format!(
+                                "missing ':' after label (or did you mean `{maybe_jvm_opcode})`?"
+                            ),
+                        );
+                        PhoronInstruction::default()
+                    } else {
+                        self.report_diagnostic_no_advance(
+                            start_span,
+                            format!("missing ':' after label"),
+                        );
+                        PhoronInstruction::default()
+                    }
                 }
             }
 

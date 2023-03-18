@@ -9,7 +9,7 @@ fn lex<P>(testfile: P) -> Result<Vec<Token>, Box<dyn Error>>
 where
     P: AsRef<Path> + Copy,
 {
-    let source_file = SourceFile::new(testfile.as_ref());
+    let source_file = SourceFile::new(testfile.as_ref()).map_err(|err| Box::new(err))?;
     let mut lexer = Lexer::new(&source_file);
     let mut tokens = Vec::new();
 

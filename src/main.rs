@@ -72,7 +72,7 @@ fn usage() {
 fn process_file(src_file: &PathBuf) -> PhoronResult<()> {
     let outfile = src_file.with_extension("class");
 
-    let source_file = SourceFile::new(src_file);
+    let source_file = SourceFile::new(src_file).map_err(DiagnosticManager::failfast)?;
     let mut parser = Parser::new(Lexer::new(&source_file));
     let ast = parser.parse().unwrap();
 
@@ -82,15 +82,15 @@ fn process_file(src_file: &PathBuf) -> PhoronResult<()> {
     }
 
     let mut cp_analyzer = ConstantPoolAnalyzer::new();
-    let cp = cp_analyzer.analyze(&ast).map_err(|err| {
-        DiagnosticManager::failfast(err);
-    })?;
+    let cp = cp_analyzer
+        .analyze(&ast)
+        .map_err(DiagnosticManager::failfast)?;
 
     let mut outfile_w = BufWriter::new(fs::File::create(&outfile)?);
     let mut codegen = Codegen::new(&mut outfile_w);
-    codegen.gen_bytecode(&ast, &cp).map_err(|err| {
-        DiagnosticManager::failfast(err);
-    })?;
+    codegen
+        .gen_bytecode(&ast, &cp)
+        .map_err(DiagnosticManager::failfast)?;
 
     println!("Generated {}", outfile.display());
 
