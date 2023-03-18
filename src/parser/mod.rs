@@ -1881,7 +1881,37 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let interface_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let ub = self.parse_ub().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing unsigned byte constant"),
+                            );
+
+                            Some(u8::default())
+                        })?;
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokeinterface {
+                            interface_name,
+                            method_name,
+                            method_descriptor,
+                            ub,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let interface_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -1945,7 +1975,27 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokespecial {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -1997,7 +2047,27 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokestatic {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 
@@ -2049,7 +2119,27 @@ impl<'p> Parser<'p> {
                 self.advance();
 
                 if let TokenKind::TIdent(ref is_str) = self.see().kind {
-                    if let Some(pos) = is_str.rfind('/') {
+                    if let Some(pos) = is_str.rfind('.') {
+                        let class_name = is_str[..pos].to_owned();
+                        let method_name = is_str[pos + 1..].to_owned();
+
+                        self.advance();
+
+                        let method_descriptor = self.parse_method_descriptor().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing method descriptor"),
+                            );
+
+                            Some(PhoronMethodDescriptor::default())
+                        })?;
+
+                        JvmInstruction::Invokevirtual {
+                            class_name,
+                            method_name,
+                            method_descriptor,
+                        }
+                    } else if let Some(pos) = is_str.rfind('/') {
                         let class_name = is_str[..pos].to_owned();
                         let method_name = is_str[pos + 1..].to_owned();
 

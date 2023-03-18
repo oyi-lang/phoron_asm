@@ -766,7 +766,64 @@ impl<'a> Lexer<'a> {
                 loop {
                     if let Some((_idx, c)) = self.src.peek() {
                         if *c != '"' {
-                            strbuf.push(self.src.next().unwrap().1);
+                            if *c == '\\' {
+                                self.src.next();
+
+                                match self.src.peek().unwrap().1 {
+                                    'n' => {
+                                        strbuf.push('\n');
+                                        self.src.next();
+                                    }
+
+                                    'r' => {
+                                        strbuf.push('\r');
+                                        self.src.next();
+                                    }
+
+                                    't' => {
+                                        strbuf.push('\t');
+                                        self.src.next();
+                                    }
+
+                                    'f' => {
+                                        strbuf.push_str(r"\f");
+                                        self.src.next();
+                                    }
+
+                                    'b' => {
+                                        strbuf.push_str(r"\b");
+                                        self.src.next();
+                                    }
+
+                                    '\'' => {
+                                        strbuf.push('\'');
+                                        self.src.next();
+                                    }
+
+                                    '"' => {
+                                        strbuf.push('\"');
+                                        self.src.next();
+                                    }
+
+                                    '\\' => {
+                                        strbuf.push('\\');
+                                        self.src.next();
+                                    }
+
+                                    d => {
+                                        let high = self.curr_pos();
+
+                                        return Err(LexerError {
+                                            span: Span { low, high },
+                                            message: format!(
+                                                "invalid escape sequence character: `{d}`"
+                                            ),
+                                        });
+                                    }
+                                }
+                            } else {
+                                strbuf.push(self.src.next().unwrap().1);
+                            }
                         } else {
                             break;
                         }
