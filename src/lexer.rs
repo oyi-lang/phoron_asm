@@ -539,7 +539,7 @@ impl<'a> Lexer<'a> {
             "ineg" => TIneg,
             "instanceof" => TInstanceof,
             "invokeinterface" => TInvokeinterface,
-            "invokespecial" => TInvokespecial,
+            "invokenonvirtual" | "invokespecial" => TInvokespecial,
             "invokestatic" => TInvokestatic,
             "invokevirtual" => TInvokevirtual,
             "ior" => TIor,
