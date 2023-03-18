@@ -581,6 +581,7 @@ impl<'p> Parser<'p> {
                 }
             }
 
+            // todo - check if from and to are also optional for Catch
             TokenKind::TCatch => {
                 let start_span = self.curr_span();
 
@@ -1482,7 +1483,7 @@ impl<'p> Parser<'p> {
             // i2d
             TokenKind::TI2d => {
                 self.advance();
-                JvmInstruction::I2c
+                JvmInstruction::I2d
             }
 
             // i2f

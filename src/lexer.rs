@@ -292,6 +292,7 @@ impl fmt::Display for LexerError {
 
 pub type LexerResult<T> = Result<T, LexerError>;
 
+#[derive(Debug)]
 enum Number {
     Float(f64),
     Int(i64),
@@ -335,6 +336,9 @@ impl<'a> Lexer<'a> {
             }
         }
 
+        let mut saw_e = false;
+        let mut saw_sign = false;
+
         if let Some((_idx, '.')) = self.src.peek() {
             numbuf.push(self.src.next()?.1);
 
@@ -342,6 +346,32 @@ impl<'a> Lexer<'a> {
                 if let Some((_idx, d)) = self.src.peek() {
                     if d.is_digit(10) {
                         numbuf.push(self.src.next()?.1);
+
+                        // check for exponent part
+                        match self.src.peek() {
+                            Some((_idx, 'e')) | Some((_idx, 'E')) => {
+                                if saw_e {
+                                    break;
+                                }
+
+                                numbuf.push(self.src.next()?.1);
+                                saw_e = true;
+                            }
+                            _ => {}
+                        }
+
+                        // check for `-` or `+` sign
+                        match self.src.peek() {
+                            Some((_idx, '+')) | Some((_idx, '-')) => {
+                                if saw_sign {
+                                    break;
+                                }
+
+                                numbuf.push(self.src.next()?.1);
+                                saw_sign = true;
+                            }
+                            _ => {}
+                        }
                     } else {
                         break;
                     }
