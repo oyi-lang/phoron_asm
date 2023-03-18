@@ -8,6 +8,8 @@ use crate::{
 mod type_descriptor_parser;
 use type_descriptor_parser as tdp;
 
+mod levenshtein;
+
 use TokenKind::*;
 
 /// The Phoron parser
@@ -3190,11 +3192,21 @@ impl<'p> Parser<'p> {
                     self.advance();
                     PhoronInstruction::PhoronLabel(label)
                 } else {
-                    self.report_diagnostic_no_advance(
-                        start_span,
-                        format!("missing ':' after label (or possibly invalid JVM opcode)"),
-                    );
-                    PhoronInstruction::default()
+                    if let Some(maybe_jvm_opcode) = levenshtein::find_levenshtein_match(&label) {
+                        self.report_diagnostic_no_advance(
+                            start_span,
+                            format!(
+                                "missing ':' after label (or did you mean `{maybe_jvm_opcode})`?"
+                            ),
+                        );
+                        PhoronInstruction::default()
+                    } else {
+                        self.report_diagnostic_no_advance(
+                            start_span,
+                            format!("missing ':' after label"),
+                        );
+                        PhoronInstruction::default()
+                    }
                 }
             }
 
