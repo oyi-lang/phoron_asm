@@ -960,15 +960,17 @@ where
                                 {
                                     *local_variable_table_length += 1;
 
-                                    let start_pc = *self.label_mapping.get(from_label).ok_or(CodegenError::AttributeError {
-                                attr: "Code",
-                                details: "missing start pc for local var for local variable table for Code attribute",
-                            })? as u16;
+                                    // from_label and to_label are optional. If they are missing
+                                    // their range extends from across the entire code vector.
+                                    // This possibly backpatching once the size of the code vector
+                                    // is available.
+                                    let start_pc =
+                                        self.label_mapping.get(from_label).map_or(0, |spc| *spc)
+                                            as u16;
 
-                                    let end_pc = *self.label_mapping.get(to_label).ok_or(CodegenError::AttributeError {
-                                attr: "Code",
-                                details: "missing length for local var for local vaiable table for Code attribute",
-                            })? as u16;
+                                    let end_pc =
+                                        self.label_mapping.get(to_label).map_or(0, |epc| *epc)
+                                            as u16;
 
                                     let length = end_pc - start_pc;
 
@@ -1070,6 +1072,24 @@ where
 
                 let code_length = code.len() as u32;
                 code_attributes_length += code_length; // need to add sizes of all attributes
+
+                // backpatch the LocalVarTable, if applicable - in case the length of
+                // the local var's range is 0, assume that `from` and/or `to` quantifiers
+                // were not provided, simply mark the range of the local var as the entire
+                // code vector.
+                for attr in code_attributes.iter_mut() {
+                    if let AttributeInfo::LocalVariableTable {
+                        ref mut local_variable_table,
+                        ..
+                    } = attr
+                    {
+                        for local_var in local_variable_table {
+                            if local_var.length == 0 {
+                                local_var.length = code_length as u16;
+                            }
+                        }
+                    }
+                }
 
                 method_info.attributes.push(AttributeInfo::Code {
                     attribute_name_index: *attribute_name_index,

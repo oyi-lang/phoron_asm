@@ -532,44 +532,52 @@ impl<'p> Parser<'p> {
                     Some(PhoronFieldDescriptor::default())
                 })?;
 
-                if !self.advance_if(&TokenKind::TFrom) {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `from` keyword"),
-                    );
-                }
+                // `from` is optional
+                if self.advance_if(&TokenKind::TFrom) {
+                    let from_label = self.parse_label().or_else(|| {
+                        self.report_diagnostic(
+                            start_span.merge(&self.curr_span()),
+                            format!("missing `from` label"),
+                        );
 
-                let from_label = self.parse_label().or_else(|| {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `from` label"),
-                    );
+                        Some(String::default())
+                    })?;
 
-                    Some(String::new())
-                })?;
+                    // `to` is optional
+                    if self.advance_if(&TokenKind::TTo) {
+                        let to_label = self.parse_label().or_else(|| {
+                            self.report_diagnostic(
+                                start_span.merge(&self.curr_span()),
+                                format!("missing `from` label"),
+                            );
 
-                if !self.advance_if(&TokenKind::TTo) {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `to` keyword"),
-                    );
-                }
+                            Some(String::default())
+                        })?;
 
-                let to_label = self.parse_label().or_else(|| {
-                    self.report_diagnostic(
-                        start_span.merge(&self.curr_span()),
-                        format!("missing `to` label"),
-                    );
-
-                    Some(String::new())
-                })?;
-
-                PhoronDirective::Var {
-                    varnum,
-                    name,
-                    field_descriptor,
-                    from_label,
-                    to_label,
+                        PhoronDirective::Var {
+                            varnum,
+                            name,
+                            field_descriptor,
+                            from_label,
+                            to_label,
+                        }
+                    } else {
+                        PhoronDirective::Var {
+                            varnum,
+                            name,
+                            field_descriptor,
+                            from_label,
+                            to_label: String::default(),
+                        }
+                    }
+                } else {
+                    PhoronDirective::Var {
+                        varnum,
+                        name,
+                        field_descriptor,
+                        from_label: String::default(),
+                        to_label: String::default(),
+                    }
                 }
             }
 
