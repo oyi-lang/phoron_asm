@@ -1,7 +1,11 @@
 use crate::{
     ast::*,
     diagnostics::DiagnosticManager,
-    lexer::{Lexer, Token, TokenKind},
+    lexer::{
+        token::Token,
+        token::TokenKind::{self, *},
+        Lexer,
+    },
     sourcefile::Span,
 };
 
@@ -9,8 +13,6 @@ mod type_descriptor_parser;
 use type_descriptor_parser as tdp;
 
 mod levenshtein;
-
-use TokenKind::*;
 
 /// The Phoron parser
 pub struct Parser<'p> {
@@ -189,8 +191,8 @@ impl<'p> Parser<'p> {
                 Some(PhoronClassDef { name, access_flags })
             }
 
-            tok => {
-                self.report_diagnostic(self.curr_span(), format!("invalid token {tok:?}"));
+            tok_kind => {
+                self.report_diagnostic(self.curr_span(), format!("invalid token: `{tok_kind}``"));
                 Some(PhoronClassDef::default())
             }
         }
@@ -234,7 +236,7 @@ impl<'p> Parser<'p> {
             }
 
             tok_kind => {
-                self.report_diagnostic(self.curr_span(), format!("invalid token {tok_kind:?}"));
+                self.report_diagnostic(self.curr_span(), format!("invalid token: `{tok_kind}`"));
                 Some(PhoronInterfaceDef::default())
             }
         }
@@ -2397,7 +2399,7 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         self.report_diagnostic(
                             start_span,
-                            format!("found {tok_kind:?}, but I expected an int, float, or string value here")
+                            format!("found `{tok_kind}`, but I expected an int, float, or string value here")
                         );
 
                         JvmInstruction::Ldc(LdcValue::default())
@@ -2433,7 +2435,7 @@ impl<'p> Parser<'p> {
                         self.report_diagnostic(
                             start_span,
                             format!(
-                                "found {tok_kind:?}, but I expected an int, float, or string here"
+                                "found `{tok_kind}`, but I expected an int, float, or string here"
                             ),
                         );
 
@@ -2463,7 +2465,7 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         self.report_diagnostic(
                             start_span,
-                            format!("found {tok_kind:?}, but I expected a long or double here"),
+                            format!("found `{tok_kind}`, but I expected a long or double here"),
                         );
 
                         JvmInstruction::Ldc2w(Ldc2wValue::default())
@@ -2741,7 +2743,7 @@ impl<'p> Parser<'p> {
                             self.report_diagnostic(
                                 start_span,
                                 format!(
-                                    "{tok_kind:?} is not a primitive type, which I expected here"
+                                    "`{tok_kind}` is not a primitive type, which I expected here"
                                 ),
                             );
 
@@ -3126,9 +3128,7 @@ impl<'p> Parser<'p> {
                     instr => {
                         self.report_diagnostic(
                             start_span,
-                            format!(
-                                "{instr:?} - incorrect instruction following `wide` instruction"
-                            ),
+                            format!("{instr} - incorrect instruction following `wide` instruction"),
                         );
 
                         JvmInstruction::default()
@@ -3137,7 +3137,7 @@ impl<'p> Parser<'p> {
             }
 
             _ => {
-                panic!("{curr_tok:?}");
+                panic!("{}", curr_tok.kind);
             }
         })
     }
@@ -3216,7 +3216,7 @@ impl<'p> Parser<'p> {
                 } else {
                     self.report_diagnostic(
                         self.curr_span(),
-                        format!("{:?} unknown instruction", self.see().kind),
+                        format!("unknown instruction: `{}`", self.see().kind),
                     );
 
                     PhoronInstruction::default()
@@ -3459,7 +3459,7 @@ impl<'p> Parser<'p> {
                     tok_kind => {
                         self.report_diagnostic(
                             self.curr_span(),
-                            format!(" found {tok_kind:?}, but I expected `.class` or `.interface`"),
+                            format!(" found `{tok_kind}`, but I expected `.class` or `.interface`"),
                         );
 
                         PhoronClassOrInterface::default()
@@ -3516,10 +3516,10 @@ impl<'p> Parser<'p> {
                 }
             }
 
-            tok => {
+            tok_kind => {
                 self.report_diagnostic(
                     self.curr_span(),
-                    format!("{tok:?} cannot start a Phoron header"),
+                    format!("`{tok_kind}` cannot start a Phoron header"),
                 );
 
                 PhoronHeader::default()

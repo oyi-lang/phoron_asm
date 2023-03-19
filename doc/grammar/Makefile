@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 all:
-	peg -o phoron.c phoron.peg  && gcc -o phoron phoron.c main.c
+	peg -o peg_phoron.c phoron.peg  && gcc -o peg_phoron peg_phoron.c peg_main.c
 
 clean:
-	rm -f phoron phoron.c *.class
+	rm -f peg_phoron peg_phoron.c *.class

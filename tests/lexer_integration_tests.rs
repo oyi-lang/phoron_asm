@@ -1,5 +1,8 @@
 use phoron_asm::{
-    lexer::{Lexer, Token, TokenKind::*},
+    lexer::{
+        token::{Token, TokenKind::*},
+        Lexer,
+    },
     sourcefile::{SourceFile, Span},
 };
 

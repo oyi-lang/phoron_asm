@@ -2,11 +2,9 @@
 
 src_files=`ls *.pho`
 
-cargo build --release
-
 for f in ${src_files}
 do
-  cargo run --release -- -f $f
+  cargo run --release -- -f $f &>/dev/null
 done
 
 java -cp . Main

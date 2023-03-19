@@ -1,6 +1,6 @@
 target/
-doc/grammar/phoron
-doc/grammar/phoron.c
+doc/grammar/peg_phoron
+doc/grammar/peg_phoron.c
 doc/grammar/ErrorTest.pho
 **/*.a
 **/*.o
