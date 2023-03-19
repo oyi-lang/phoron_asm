@@ -585,7 +585,6 @@ impl<'p> Parser<'p> {
                 }
             }
 
-            // todo - check if from and to are also optional for Catch
             TokenKind::TCatch => {
                 let start_span = self.curr_span();
 

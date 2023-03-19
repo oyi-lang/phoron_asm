@@ -26,7 +26,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/Malign.pho".to_string(),
+                source_file: "samples/Malign.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Malign".to_string(),
@@ -97,7 +97,7 @@ fn test_parse_malign() -> Result<(), Box<dyn Error>> {
             ],
         },
     };
-    let actual_ast = parse("doc/grammar/Malign.pho")?;
+    let actual_ast = parse("samples/Malign.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -108,7 +108,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/FieldsDemo.pho".to_string(),
+                source_file: "samples/FieldsDemo.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FieldsDemo".to_string(),
@@ -200,7 +200,7 @@ fn test_parse_fields() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/FieldsDemo.pho")?;
+    let actual_ast = parse("samples/FieldsDemo.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -211,7 +211,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/HolaMundo.pho".to_string(),
+                source_file: "samples/HolaMundo.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "HolaMundo".to_string(),
@@ -289,7 +289,7 @@ fn test_parse_hola_mundo() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/HolaMundo.pho")?;
+    let actual_ast = parse("samples/HolaMundo.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -300,7 +300,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/HelloWorld.pho".to_string(),
+                source_file: "samples/HelloWorld.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "HelloWorld".to_string(),
@@ -378,7 +378,7 @@ fn test_parse_hello_world() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/HelloWorld.pho")?;
+    let actual_ast = parse("samples/HelloWorld.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -389,7 +389,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/MalignJasmin.pho".to_string(),
+                source_file: "samples/MalignJasmin.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "MalignJasmin".to_string(),
@@ -461,7 +461,7 @@ fn test_parse_malign_jasmin() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/MalignJasmin.pho")?;
+    let actual_ast = parse("samples/MalignJasmin.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -472,7 +472,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/PrivetMir.pho".to_string(),
+                source_file: "samples/PrivetMir.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "PrivetMir".to_string(),
@@ -550,7 +550,7 @@ fn test_parse_privet_mir() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/PrivetMir.pho")?;
+    let actual_ast = parse("samples/PrivetMir.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -561,7 +561,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/Areturn.pho".to_string(),
+                source_file: "samples/Areturn.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Areturn".to_string(),
@@ -655,7 +655,7 @@ fn test_parse_areturn() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/Areturn.pho")?;
+    let actual_ast = parse("samples/Areturn.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -666,7 +666,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/CreateArrayOfThreads.pho".to_string(),
+                source_file: "samples/CreateArrayOfThreads.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CreateArrayOfThreads".to_string(),
@@ -757,7 +757,7 @@ fn test_parse_create_array_of_threads() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/CreateArrayOfThreads.pho")?;
+    let actual_ast = parse("samples/CreateArrayOfThreads.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -767,7 +767,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/SwapTopTwoItems.pho".to_string(),
+                source_file: "samples/SwapTopTwoItems.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "SwapTopTwoItems".to_string(),
@@ -846,7 +846,7 @@ fn test_parse_swap_top_two_items() -> Result<(), Box<dyn Error>> {
             ],
         },
     };
-    let actual_ast = parse("doc/grammar/SwapTopTwoItems.pho")?;
+    let actual_ast = parse("samples/SwapTopTwoItems.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -857,7 +857,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/CreateMatrixOfInt.pho".to_string(),
+                source_file: "samples/CreateMatrixOfInt.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CreateMatrixOfInt".to_string(),
@@ -959,7 +959,7 @@ fn test_parse_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/CreateMatrixOfInt.pho")?;
+    let actual_ast = parse("samples/CreateMatrixOfInt.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -970,7 +970,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/Count.pho".to_string(),
+                source_file: "samples/Count.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Count".to_string(),
@@ -1076,7 +1076,7 @@ fn test_parse_count() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/Count.pho")?;
+    let actual_ast = parse("samples/Count.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1087,7 +1087,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/Catcher.pho".to_string(),
+                source_file: "samples/Catcher.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Catcher".to_string(),
@@ -1189,7 +1189,7 @@ fn test_parse_catcher() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/Catcher.pho")?;
+    let actual_ast = parse("samples/Catcher.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1200,7 +1200,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/Anewarray.pho".to_string(),
+                source_file: "samples/Anewarray.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "Anewarray".to_string(),
@@ -1295,7 +1295,7 @@ fn test_parse_anewarray() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/Anewarray.pho")?;
+    let actual_ast = parse("samples/Anewarray.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -1305,7 +1305,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/ArgsToMain.pho".to_string(),
+                source_file: "samples/ArgsToMain.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "ArgsToMain".to_string(),
@@ -1383,7 +1383,7 @@ fn test_parse_args_to_main() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/ArgsToMain.pho")?;
+    let actual_ast = parse("samples/ArgsToMain.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -1393,7 +1393,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/CountJasmin2.pho".to_string(),
+                source_file: "samples/CountJasmin2.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CountJasmin2".to_string(),
@@ -1483,7 +1483,7 @@ fn test_parse_count_jasmin2() -> Result<(), Box<dyn Error>> {
             ],
         },
     };
-    let actual_ast = parse("doc/grammar/CountJasmin2.pho")?;
+    let actual_ast = parse("samples/CountJasmin2.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1494,7 +1494,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/AddNumsJasmin.pho".to_string(),
+                source_file: "samples/AddNumsJasmin.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AddNumsJasmin".to_string(),
@@ -1599,7 +1599,7 @@ fn test_parse_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/AddNumsJasmin.pho")?;
+    let actual_ast = parse("samples/AddNumsJasmin.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -1609,7 +1609,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/StackPushJasmin.pho".to_string(),
+                source_file: "samples/StackPushJasmin.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "StackPushJasmin".to_string(),
@@ -1688,7 +1688,7 @@ fn test_parse_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/StackPushJasmin.pho")?;
+    let actual_ast = parse("samples/StackPushJasmin.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1699,7 +1699,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/FactorialGoto.pho".to_string(),
+                source_file: "samples/FactorialGoto.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FactorialGoto".to_string(),
@@ -1823,7 +1823,7 @@ fn test_parse_factorial_goto() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/FactorialGoto.pho")?;
+    let actual_ast = parse("samples/FactorialGoto.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1834,7 +1834,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/FactorialJasmin.pho".to_string(),
+                source_file: "samples/FactorialJasmin.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "FactorialJasmin".to_string(),
@@ -1954,7 +1954,7 @@ fn test_parse_factorial_jasmin() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/FactorialJasmin.pho")?;
+    let actual_ast = parse("samples/FactorialJasmin.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -1965,7 +1965,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/CheckArrayType.pho".to_string(),
+                source_file: "samples/CheckArrayType.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CheckArrayType".to_string(),
@@ -2078,7 +2078,7 @@ fn test_parse_check_array_type() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/CheckArrayType.pho")?;
+    let actual_ast = parse("samples/CheckArrayType.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -2089,7 +2089,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/PrintHello10Times.pho".to_string(),
+                source_file: "samples/PrintHello10Times.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "PrintHello10Times".to_string(),
@@ -2204,7 +2204,7 @@ fn test_parse_print_hello_10_times() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/PrintHello10Times.pho")?;
+    let actual_ast = parse("samples/PrintHello10Times.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -2214,7 +2214,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/AddNums.pho".to_string(),
+                source_file: "samples/AddNums.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "AddNums".to_string(),
@@ -2362,7 +2362,7 @@ fn test_parse_add_nums() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/AddNums.pho")?;
+    let actual_ast = parse("samples/AddNums.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -2372,7 +2372,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/CountJasmin.pho".to_string(),
+                source_file: "samples/CountJasmin.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "CountJasmin".to_string(),
@@ -2478,7 +2478,7 @@ fn test_parse_count_jasmin() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/CountJasmin.pho")?;
+    let actual_ast = parse("samples/CountJasmin.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -2488,7 +2488,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/StringBufferDemo.pho".to_string(),
+                source_file: "samples/StringBufferDemo.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "StringBufferDemo".to_string(),
@@ -2638,7 +2638,7 @@ fn test_parse_string_buffer_demo() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/StringBufferDemo.pho")?;
+    let actual_ast = parse("samples/StringBufferDemo.pho")?;
     assert_eq!(expected_ast, actual_ast);
     Ok(())
 }
@@ -2648,7 +2648,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
     let expected_ast = PhoronProgram {
         header: PhoronHeader {
             sourcefile_def: PhoronSourceFileDef {
-                source_file: "doc/grammar/ArrayDemo.pho".to_string(),
+                source_file: "samples/ArrayDemo.pho".to_string(),
             },
             class_or_interface_def: Class(PhoronClassDef {
                 name: "ArrayDemo".to_string(),
@@ -2917,7 +2917,7 @@ fn test_parse_array_demo() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/ArrayDemo.pho")?;
+    let actual_ast = parse("samples/ArrayDemo.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())
@@ -3594,7 +3594,7 @@ fn test_parse_all_in_one() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    let actual_ast = parse("doc/grammar/AllInOne.pho")?;
+    let actual_ast = parse("samples/AllInOne.pho")?;
     assert_eq!(expected_ast, actual_ast);
 
     Ok(())

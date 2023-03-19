@@ -213,7 +213,7 @@ fn test_lex_malign() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/Malign.pho"))?;
+    let actual_tokens = lex(Path::new("samples/Malign.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -460,7 +460,7 @@ fn test_lex_fields() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/FieldsDemo.pho"))?;
+    let actual_tokens = lex(Path::new("samples/FieldsDemo.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -651,7 +651,7 @@ fn test_lex_hola_mundo() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/HolaMundo.pho"))?;
+    let actual_tokens = lex(Path::new("samples/HolaMundo.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -842,7 +842,7 @@ fn test_lex_hello_world() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/HelloWorld.pho"))?;
+    let actual_tokens = lex(Path::new("samples/HelloWorld.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -1029,7 +1029,7 @@ fn test_lex_malign_jasmin() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/MalignJasmin.pho"))?;
+    let actual_tokens = lex(Path::new("samples/MalignJasmin.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -1220,7 +1220,7 @@ fn test_lex_privet_mir() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/PrivetMir.pho"))?;
+    let actual_tokens = lex(Path::new("samples/PrivetMir.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -1483,7 +1483,7 @@ fn test_lex_areturn() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/Areturn.pho"))?;
+    let actual_tokens = lex(Path::new("samples/Areturn.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -1710,7 +1710,7 @@ fn test_lex_create_array_of_threads() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/CreateArrayOfThreads.pho"))?;
+    let actual_tokens = lex(Path::new("samples/CreateArrayOfThreads.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -1921,7 +1921,7 @@ fn test_lex_swap_top_two_items() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/SwapTopTwoItems.pho"))?;
+    let actual_tokens = lex(Path::new("samples/SwapTopTwoItems.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -2168,7 +2168,7 @@ fn test_lex_create_matrix_of_int() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/CreateMatrixOfInt.pho"))?;
+    let actual_tokens = lex(Path::new("samples/CreateMatrixOfInt.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -2463,7 +2463,7 @@ fn test_lex_count() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/Count.pho"))?;
+    let actual_tokens = lex(Path::new("samples/Count.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -2762,7 +2762,7 @@ fn test_lex_catcher() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/Catcher.pho"))?;
+    let actual_tokens = lex(Path::new("samples/Catcher.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -3013,7 +3013,7 @@ fn test_lex_anewarray() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/Anewarray.pho"))?;
+    let actual_tokens = lex(Path::new("samples/Anewarray.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -3216,7 +3216,7 @@ fn test_lex_args_to_main() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/ArgsToMain.pho"))?;
+    let actual_tokens = lex(Path::new("samples/ArgsToMain.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -3475,7 +3475,7 @@ fn test_lex_count_jasmin2() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/CountJasmin2.pho"))?;
+    let actual_tokens = lex(Path::new("samples/CountJasmin2.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -3786,7 +3786,7 @@ fn test_lex_add_nums_jasmin() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/AddNumsJasmin.pho"))?;
+    let actual_tokens = lex(Path::new("samples/AddNumsJasmin.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -4037,7 +4037,7 @@ fn test_lex_stack_push_jasmin() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/StackPushJasmin.pho"))?;
+    let actual_tokens = lex(Path::new("samples/StackPushJasmin.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -4420,7 +4420,7 @@ fn test_lex_factorial_goto() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/FactorialGoto.pho"))?;
+    let actual_tokens = lex(Path::new("samples/FactorialGoto.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -4787,7 +4787,7 @@ fn test_lex_factorial_jasmin() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/FactorialJasmin.pho"))?;
+    let actual_tokens = lex(Path::new("samples/FactorialJasmin.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -5082,7 +5082,7 @@ fn test_lex_check_array_type() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/CheckArrayType.pho"))?;
+    let actual_tokens = lex(Path::new("samples/CheckArrayType.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -5409,7 +5409,7 @@ fn test_lex_print_hello_10_times() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/PrintHello10Times.pho"))?;
+    let actual_tokens = lex(Path::new("samples/PrintHello10Times.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -5852,7 +5852,7 @@ fn test_lex_add_nums() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/AddNums.pho"))?;
+    let actual_tokens = lex(Path::new("samples/AddNums.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -6147,7 +6147,7 @@ fn test_lex_count_jasmin() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/CountJasmin.pho"))?;
+    let actual_tokens = lex(Path::new("samples/CountJasmin.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -6542,7 +6542,7 @@ fn test_lex_string_buffer_demo() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/StringBufferDemo.pho"))?;
+    let actual_tokens = lex(Path::new("samples/StringBufferDemo.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -7357,7 +7357,7 @@ fn test_lex_array_demo() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/ArrayDemo.pho"))?;
+    let actual_tokens = lex(Path::new("samples/ArrayDemo.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
@@ -9620,7 +9620,7 @@ fn test_lex_all_in_one() -> Result<(), Box<dyn Error>> {
         },
     ];
 
-    let actual_tokens = lex(Path::new("doc/grammar/AllInOne.pho"))?;
+    let actual_tokens = lex(Path::new("samples/AllInOne.pho"))?;
     assert_eq!(expected_tokens, actual_tokens);
 
     Ok(())
