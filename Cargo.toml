@@ -1,7 +1,7 @@
 [package]
 name = "phoron_asm"
 description = "A Jasmin-compatible Assembler for the JVM"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Timmy Jose"]
 homepage = "https://github.com/oyi-lang/phoron_asm"
 documentation = "https://docs.rs/phoron_asm/1.0.0/phoron_asm/"
@@ -19,5 +19,5 @@ path = "src/main.rs"
 
 [dependencies]
 
-phoron_core = "0.5.3"
+phoron_core = "0.5.4"
 
