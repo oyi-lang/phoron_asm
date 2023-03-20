@@ -201,7 +201,7 @@ Running it:
 $ cargo run --release
 Class file generated
 
-:$ javap -v samples/HelloWorld.class
+$ javap -v samples/HelloWorld.class
 Classfile /Users/z0ltan/dev/playground/phoron_asm_demo/samples/HelloWorld.class
   Last modified 19-Mar-2023; size 389 bytes
   SHA-256 checksum 533a66c051831cba84a32b20d38c4bb20d68b78aabc137d7c7fb3cc864ff8bf9
@@ -263,7 +263,7 @@ Constant pool:
 }
 SourceFile: "./samples/HelloWorld.pho"
 
-~/dev/playground/phoron_asm_demo:$ java -cp "./samples" HelloWorld
+$ java -cp "./samples" HelloWorld
 Hello, world
 
 ```

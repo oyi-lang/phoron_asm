@@ -1,3 +1,7 @@
+//! The Phoron Parser takes in a lexer and produces a token on demand (syntax-driven).
+//! It also uses the `Span` information collected during tokenisation to provide goood
+//! error recovery and error reporting.
+
 use crate::{
     ast::*,
     diagnostics::DiagnosticManager,

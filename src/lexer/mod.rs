@@ -1,3 +1,6 @@
+//! Takes a `SourceFile` representing the assembly source code, and produces a stream of tokens
+//! for consumption by the parser.
+
 use std::{
     error::Error,
     fmt,

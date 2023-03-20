@@ -1,3 +1,8 @@
+//! The Phoron AST.
+//!
+//! The model is kept as simple as possible in order to allow provide good type-checking as well as
+//! east and direct translation into the  `ClassFile` format required by the `Codegen` module.
+
 use std::default::Default;
 
 pub mod attributes;

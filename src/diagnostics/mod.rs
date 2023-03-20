@@ -1,3 +1,7 @@
+//! A simple diagnostic module for Phoron.
+//!
+//! Provides formatted error reporting via the `emitter` submodule as well as a fail-fast version
+//! that exits immediately.
 use crate::sourcefile::{Location, SourceFile, Span};
 use std::error::Error;
 

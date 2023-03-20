@@ -1,3 +1,7 @@
+//! Abstract representation of a physical source file in the file system. The `SourceFile` is
+//! used by the lexer for tokenisation, as well as to provide `Span`s over the actual source code
+//! for error reporting during parsing and type-checking.
+
 use std::{convert::From, fmt::Debug, fs, io, ops::Sub, path::Path};
 
 /// Absolute offset from the beginning of the byte stream

@@ -1,4 +1,4 @@
-//! A parser for type descriptors as per the JVM specification
+//! A parser for type descriptors as per the JVM specification.
 
 use crate::ast::{PhoronBaseType, PhoronFieldDescriptor, PhoronReturnDescriptor};
 use std::{error::Error, fmt, iter::Peekable, str::Chars};

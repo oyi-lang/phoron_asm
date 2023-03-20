@@ -1,3 +1,5 @@
+//! The interface to `phoron_core`. This module constructs the `ClassFile` object needed by
+//! `phoron_core` in order to generate the actual `class` file.
 use crate::{
     ast::{attributes::*, *},
     cp_analyzer::constant_pool::*,
