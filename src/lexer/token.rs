@@ -1,3 +1,6 @@
+//! Represents a valid token in the Phoron (Jasmin) assembly language.
+//! Unlike Jasmin, each JVM opcode becomes its own type enabling better type-checking and error
+//! reporting.
 use crate::sourcefile::Span;
 
 #[derive(Debug)]

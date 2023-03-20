@@ -4,13 +4,13 @@ version = 3
 
 [[package]]
 name = "phoron_asm"
-version = "1.0.0"
+version = "1.0.2"
 dependencies = [
  "phoron_core",
 ]
 
 [[package]]
 name = "phoron_core"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b792ef6aecacbb5ede70f16cde879b00fc992ed084f3655f7d95b6bed19b5c14"
+checksum = "25d51efca1234563a111e9713d61e72aefad7af4f8aea8ac0da8ae48c0b5bdd1"

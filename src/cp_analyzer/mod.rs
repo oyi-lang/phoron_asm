@@ -1,3 +1,9 @@
+//! A Phoron abstraction of the JVM's  Constant Pool (arguably the most important aspect of the JVM
+//! bytecode format).
+//!
+//! The indxeing of the Constant Pool elements is deterministic (the ordering is left unspecified
+//! in the JVM specification) and follows a top-down recursive approach.
+//!
 use crate::ast::{attributes::*, *};
 
 pub mod constant_pool;

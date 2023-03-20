@@ -1,3 +1,10 @@
+//! A utility module to provide suggestions for possibly misspelt JVM opcodes. Since the assembly
+//! language allows a lot of overlap in terms of labels, opcodes, and other syntactic elements,
+//! type-checking is necessarily more difficult especially when coupled with error recovery via
+//! skipping tokens (panic mode).
+//! This module calculates the Levenshtein distance between a (possible) label and a JVM opcode,
+//! and given a sufficient probability, provides recommendations of the closest matching JVM
+//! opcode.
 use std::cmp::{max, min};
 
 const LEVENSHTEIN_THRESHOLD: f64 = 0.50;

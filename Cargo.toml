@@ -1,10 +1,10 @@
 [package]
 name = "phoron_asm"
 description = "A Jasmin-compatible Assembler for the JVM"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Timmy Jose"]
 homepage = "https://github.com/oyi-lang/phoron_asm"
-documentation = "https://docs.rs/phoron_asm/1.0.0/phoron_asm/"
+documentation = "https://docs.rs/phoron_asm/1.0.2/phoron_asm/"
 repository = "https://github.com/oyi-lang/phoron_asm"
 readme = "README.md"
 license-file = "LICENSE"
